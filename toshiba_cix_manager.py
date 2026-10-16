@@ -7303,8 +7303,9 @@ drift primitives the routes and the Add-Station wizard's Template step use.
 import re
 
 __all__ = [
-    "capture_row_template", "capture_program_set", "apply_row_template",
-    "template_drift", "STRIP_FIELD_RE",
+    "capture_row_template", "capture_program_set", "capture_system",
+    "capture_phone_profile", "apply_row_template", "template_drift",
+    "drift_badge", "STRIP_FIELD_RE",
 ]
 
 # Field names never carried in a template (identity / secret / physical): a
@@ -7367,28 +7368,72 @@ def capture_row_template(view: dict, index, *, name: str = "",
     }
 
 
+def _programs_list(program_views) -> list:
+    return (program_views.get("programs")
+            if isinstance(program_views, dict) else program_views) or []
+
+
+def _capture_program_rows(pv) -> list:
+    """Every row of one program view as ``{index, key, fields}`` with read-only
+    and identity/secret/port fields stripped (the shared body of the program-set
+    and system captures)."""
+    rows = []
+    for r in pv.get("rows") or []:
+        fields = {}
+        for cell in r.get("cells") or []:
+            if cell.get("access") == "r" or _is_stripped(cell):
+                continue
+            fields[cell.get("field_name")] = _cell_val(cell)
+        rows.append({"index": r.get("index"), "key": r.get("key"),
+                     "fields": fields})
+    return rows
+
+
 def capture_program_set(program_views, program_keys, *, name: str = "") -> dict:
     """Capture several whole programs as a program-set template ("HQ COS
     table"). Each row keeps its writable, non-identity fields."""
-    programs = (program_views.get("programs")
-                if isinstance(program_views, dict) else program_views) or []
     wanted = set(program_keys)
     out: dict = {}
-    for pv in programs:
+    for pv in _programs_list(program_views):
         if pv.get("catalog_key") not in wanted and str(pv.get("program_number")) not in wanted:
             continue
-        rows = []
-        for r in pv.get("rows") or []:
-            fields = {}
-            for cell in r.get("cells") or []:
-                if cell.get("access") == "r" or _is_stripped(cell):
-                    continue
-                fields[cell.get("field_name")] = _cell_val(cell)
-            rows.append({"index": r.get("index"),
-                         "key": r.get("key"), "fields": fields})
-        out[pv.get("catalog_key")] = rows
+        out[pv.get("catalog_key")] = _capture_program_rows(pv)
     return {"kind": "program_set", "name": name or "program set",
             "programs": out}
+
+
+def capture_system(program_views, *, name: str = "", exclude=None) -> dict:
+    """Capture the whole switch as a *system template* (DESIGN_PLAN §7.6): every
+    program's writable, non-identity rows. Identity/secret/port fields are
+    stripped like any template, so the result is a portable programming baseline
+    — system/trunk options, COS and numbering tables — a new install can be
+    seeded from and an existing one compared against. ``exclude`` drops programs
+    by catalog key or program number (e.g. per-site station assignment)."""
+    drop = {str(x) for x in (exclude or [])}
+    out: dict = {}
+    for pv in _programs_list(program_views):
+        key = pv.get("catalog_key")
+        if key in drop or str(pv.get("program_number")) in drop:
+            continue
+        rows = _capture_program_rows(pv)
+        if rows:
+            out[key] = rows
+    return {"kind": "system", "name": name or "system template",
+            "programs": out, "program_count": len(out)}
+
+
+def capture_phone_profile(view: dict, index, *, name: str = "",
+                          profile: str = "") -> dict:
+    """Capture one station row as a named *phone profile* — the "Standard DKT
+    user" the Add-Station wizard offers from a dropdown (DESIGN_PLAN §7.6, P4).
+    A phone profile is a row template carrying a profile label: identity, secret
+    and port fields are stripped and the extension is bound to ``$dn`` so the
+    profile re-targets onto any new station. ``template_drift`` / ``drift_badge``
+    against it is the record pane's drift badge."""
+    t = capture_row_template(view, index, name=name)
+    t["kind"] = "phone_profile"
+    t["profile"] = profile or name or t["name"]
+    return t
 
 
 def apply_row_template(template: dict, target_index, bindings: dict) -> dict:
@@ -7421,6 +7466,14 @@ def template_drift(template: dict, row: dict, bindings: dict | None = None) -> l
         if live is not None and live != want:
             drift.append({"field": field, "template": want, "live": live})
     return drift
+
+
+def drift_badge(template: dict, row: dict, bindings: dict | None = None) -> dict:
+    """The drift-badge summary the record pane shows for a row against its
+    template / phone profile: ``{count, clean, fields}``. ``clean`` is True when
+    the row matches (no badge); ``fields`` is the drift detail for the hover."""
+    fields = template_drift(template, row, bindings)
+    return {"count": len(fields), "clean": not fields, "fields": fields}
 
 # ===== lint.py =====================================================
 """Config linter / Problems panel — the L3 semantic layer (DESIGN_PLAN §6).

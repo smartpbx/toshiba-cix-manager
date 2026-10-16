@@ -66,6 +66,63 @@ def test_capture_program_set():
     assert rows and "security_code" not in rows[0]["fields"]
 
 
+def _system_views():
+    return {"programs": [
+        _view(),
+        {"catalog_key": "103SystemOptions", "program_number": "103",
+         "label": "System Options",
+         "rows": [{"index": "1", "key": "1", "cells": [
+             _cell("account_code_digits", 3, "6"),
+             _cell("ip_address", 9, "192.168.1.1"),   # identity -> stripped
+         ]}]},
+        {"catalog_key": "999Empty", "program_number": "999", "label": "Empty",
+         "rows": []},
+    ]}
+
+
+def test_capture_system_all_programs_stripped():
+    syst = template.capture_system(_system_views(), name="Baseline")
+    assert syst["kind"] == "system" and syst["name"] == "Baseline"
+    # every program with rows is captured; the empty one is not
+    assert set(syst["programs"]) == {"200StationAssign", "103SystemOptions"}
+    assert syst["program_count"] == 2
+    opts = syst["programs"]["103SystemOptions"][0]["fields"]
+    assert opts["account_code_digits"] == "6"
+    assert "ip_address" not in opts          # identity field stripped
+    # secret / read-only still gone in the station rows
+    st = syst["programs"]["200StationAssign"][0]["fields"]
+    assert "security_code" not in st and "equipment_port" not in st
+
+
+def test_capture_system_exclude():
+    syst = template.capture_system(_system_views(), exclude=["200"])
+    assert set(syst["programs"]) == {"103SystemOptions"}  # by program number
+
+
+def test_capture_phone_profile_binds_and_drifts():
+    prof = template.capture_phone_profile(
+        _view(), "2", name="Standard DKT", profile="Front line DKT")
+    assert prof["kind"] == "phone_profile" and prof["profile"] == "Front line DKT"
+    assert prof["fields"]["extension"] == "$dn"         # re-targets on apply
+    assert "security_code" not in prof["fields"]
+    # applied onto a new DN, then badged against a drifted live row
+    changes = template.apply_row_template(prof, "7", {"dn": "2300"})
+    assert changes["extension"] == "2300"
+    row = {"cells": [_cell("name", 19, "Changed"), _cell("cos", 5, "3"),
+                     _cell("extension", 2, "2300")]}
+    badge = template.drift_badge(prof, row, {"dn": "2300"})
+    assert badge["count"] == 1 and badge["clean"] is False
+    assert badge["fields"][0]["field"] == "name"
+
+
+def test_drift_badge_clean_when_matching():
+    t = template.capture_row_template(_view(), "2")
+    row = {"cells": [_cell("name", 19, "Front Desk"), _cell("cos", 5, "3"),
+                     _cell("extension", 2, "2104")]}
+    badge = template.drift_badge(t, row, {"dn": "2104"})
+    assert badge["clean"] is True and badge["count"] == 0
+
+
 def _run_all():
     fns = [v for k, v in sorted(globals().items())
            if k.startswith("test_") and callable(v)]
