@@ -10,7 +10,7 @@ import argparse, json, logging, socket, sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Iterable
-__version__ = "2.0.1"
+__version__ = "2.1.0"
 import base64
 
 # ===== snmp.py =====================================================
