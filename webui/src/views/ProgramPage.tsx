@@ -6,18 +6,21 @@ import { RecordForm } from "@/components/program/RecordForm";
 import { GridRecord } from "@/components/program/GridRecord";
 import { SpecialLayout } from "@/components/program/SpecialLayout";
 import { useStore } from "@/store/useStore";
+import { useShallow } from "zustand/react/shallow";
 
 export function ProgramPage({ programKey }: { programKey: string }) {
   const { schema, view, loading, sessionId, ensureProgram, refreshProgram, coldStart } =
-    useStore((s) => ({
-      schema: s.schema,
-      view: s.programViews[programKey],
-      loading: s.loadingKeys.has(programKey),
-      sessionId: s.sessionId,
-      ensureProgram: s.ensureProgram,
-      refreshProgram: s.refreshProgram,
-      coldStart: s.coldStart,
-    }));
+    useStore(
+      useShallow((s) => ({
+        schema: s.schema,
+        view: s.programViews[programKey],
+        loading: s.loadingKeys.has(programKey),
+        sessionId: s.sessionId,
+        ensureProgram: s.ensureProgram,
+        refreshProgram: s.refreshProgram,
+        coldStart: s.coldStart,
+      })),
+    );
 
   React.useEffect(() => {
     ensureProgram(programKey);

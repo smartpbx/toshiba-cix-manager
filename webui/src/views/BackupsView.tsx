@@ -15,6 +15,7 @@ import { DiffPane } from "@/components/backup/DiffPane";
 import { api } from "@/lib/api";
 import type { AnnotatedDiffResult, SnapshotHeader } from "@/lib/types";
 import { useStore } from "@/store/useStore";
+import { useShallow } from "zustand/react/shallow";
 
 const AUTO_KINDS = new Set([
   "auto-pre-write",
@@ -42,12 +43,14 @@ function fmt(iso: string): string {
 }
 
 export function BackupsView() {
-  const { siteId, sessionId, enterFileMode, openHome } = useStore((s) => ({
-    siteId: s.siteId(),
-    sessionId: s.sessionId,
-    enterFileMode: s.enterFileMode,
-    openHome: s.openHome,
-  }));
+  const { siteId, sessionId, enterFileMode, openHome } = useStore(
+    useShallow((s) => ({
+      siteId: s.siteId(),
+      sessionId: s.sessionId,
+      enterFileMode: s.enterFileMode,
+      openHome: s.openHome,
+    })),
+  );
 
   const [snaps, setSnaps] = React.useState<SnapshotHeader[]>([]);
   const [loading, setLoading] = React.useState(false);

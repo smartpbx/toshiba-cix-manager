@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight, Voicemail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { MenuItem } from "@/lib/schema";
 import { useStore, type VmScreen } from "@/store/useStore";
+import { useShallow } from "zustand/react/shallow";
 
 // The Voice Mail root (VM Manager's menu bar as the second nav root —
 // voicemail-map §4.3). Verbatim words, in order.
@@ -33,20 +34,22 @@ export function NavTree() {
     vmStatus,
     activeTabId,
     tabs,
-  } = useStore((s) => ({
-    schema: s.schema,
-    openAreas: s.openAreas,
-    toggleArea: s.toggleArea,
-    setArea: s.setArea,
-    readKeys: s.readKeys,
-    rowCounts: s.rowCounts,
-    openProgram: s.openProgram,
-    openHome: s.openHome,
-    openVm: s.openVm,
-    vmStatus: s.vmStatus,
-    activeTabId: s.activeTabId,
-    tabs: s.tabs,
-  }));
+  } = useStore(
+    useShallow((s) => ({
+      schema: s.schema,
+      openAreas: s.openAreas,
+      toggleArea: s.toggleArea,
+      setArea: s.setArea,
+      readKeys: s.readKeys,
+      rowCounts: s.rowCounts,
+      openProgram: s.openProgram,
+      openHome: s.openHome,
+      openVm: s.openVm,
+      vmStatus: s.vmStatus,
+      activeTabId: s.activeTabId,
+      tabs: s.tabs,
+    })),
+  );
 
   const activeProgramKey = React.useMemo(() => {
     const t = tabs.find((x) => x.id === activeTabId);

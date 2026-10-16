@@ -1,16 +1,19 @@
 import { Home, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/store/useStore";
+import { useShallow } from "zustand/react/shallow";
 
 // The tabbed workspace (DESIGN_PLAN 3.1): each open program is a tab; Home is
 // pinned and never closes. Middle-click or the × closes a program tab.
 export function TabStrip() {
-  const { tabs, activeTabId, setActiveTab, closeTab } = useStore((s) => ({
-    tabs: s.tabs,
-    activeTabId: s.activeTabId,
-    setActiveTab: s.setActiveTab,
-    closeTab: s.closeTab,
-  }));
+  const { tabs, activeTabId, setActiveTab, closeTab } = useStore(
+    useShallow((s) => ({
+      tabs: s.tabs,
+      activeTabId: s.activeTabId,
+      setActiveTab: s.setActiveTab,
+      closeTab: s.closeTab,
+    })),
+  );
 
   return (
     <div className="flex h-9 shrink-0 items-stretch gap-1 overflow-x-auto border-b border-border bg-surface px-2">

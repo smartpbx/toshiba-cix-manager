@@ -5,21 +5,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/store/useStore";
+import { useShallow } from "zustand/react/shallow";
 
 // Connect (DESIGN_PLAN 5.1): reach direct or over the overlay, SNMP address /
 // community / port, an optional site label, then start the snapshot. Also
 // "Open last snapshot" for cold start — browse with the device off.
 export function ConnectDrawer() {
   const { open, setOpen, form, setForm, connect, openColdSnapshot, progress } =
-    useStore((s) => ({
-      open: s.connectDrawerOpen,
-      setOpen: s.setConnectDrawerOpen,
-      form: s.form,
-      setForm: s.setForm,
-      connect: s.connect,
-      openColdSnapshot: s.openColdSnapshot,
-      progress: s.progress,
-    }));
+    useStore(
+      useShallow((s) => ({
+        open: s.connectDrawerOpen,
+        setOpen: s.setConnectDrawerOpen,
+        form: s.form,
+        setForm: s.setForm,
+        connect: s.connect,
+        openColdSnapshot: s.openColdSnapshot,
+        progress: s.progress,
+      })),
+    );
 
   const busy = progress.status === "connecting";
 

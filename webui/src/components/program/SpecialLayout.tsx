@@ -8,6 +8,7 @@ import {
 } from "@/lib/schema";
 import type { Cell, ProgramView, Row } from "@/lib/types";
 import { useStore } from "@/store/useStore";
+import { useShallow } from "zustand/react/shallow";
 import { GridRecord } from "./GridRecord";
 
 // The five special program pages (DESIGN_PLAN §3.3) are hand-built but data-fed.
@@ -207,12 +208,14 @@ function CosMatrix({ program, view }: { program: SchemaProgram; view: ProgramVie
 const KEY_PROGRAM = "205FeatureKey";
 
 function StationKeyStrip({ program, view }: { program: SchemaProgram; view: ProgramView }) {
-  const { schema, keyView, ensureProgram, featureKeys } = useStore((s) => ({
-    schema: s.schema,
-    keyView: s.programViews[KEY_PROGRAM],
-    ensureProgram: s.ensureProgram,
-    featureKeys: s.schema?.feature_keys ?? [],
-  }));
+  const { schema, keyView, ensureProgram, featureKeys } = useStore(
+    useShallow((s) => ({
+      schema: s.schema,
+      keyView: s.programViews[KEY_PROGRAM],
+      ensureProgram: s.ensureProgram,
+      featureKeys: s.schema?.feature_keys ?? [],
+    })),
+  );
   const [selected, setSelected] = React.useState<string | null>(null);
   const [filter, setFilter] = React.useState("");
 

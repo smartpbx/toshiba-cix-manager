@@ -1,15 +1,18 @@
 import { FileClock, X } from "lucide-react";
 import { useStore } from "@/store/useStore";
+import { useShallow } from "zustand/react/shallow";
 
 // The persistent amber "you are viewing a file, not the live switch" banner
 // (backups.md §3 / DESIGN_PLAN 7.3). Shown across the workspace whenever a
 // snapshot is open in file mode; the program pages render read-only underneath.
 export function FileModeBanner() {
-  const { fileMode, exitFileMode, openBackups } = useStore((s) => ({
-    fileMode: s.fileMode,
-    exitFileMode: s.exitFileMode,
-    openBackups: s.openBackups,
-  }));
+  const { fileMode, exitFileMode, openBackups } = useStore(
+    useShallow((s) => ({
+      fileMode: s.fileMode,
+      exitFileMode: s.exitFileMode,
+      openBackups: s.openBackups,
+    })),
+  );
   if (!fileMode) return null;
   const when = fileMode.savedAt ? new Date(fileMode.savedAt).toLocaleString() : "";
   return (

@@ -1,18 +1,19 @@
 import { Globe, Plug } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/store/useStore";
+import { useShallow } from "zustand/react/shallow";
 
 // Site · transport · live identity (DESIGN_PLAN 2.3). DIRECT = accent tint,
 // REMOTE = violet. The dot is reachability / read state.
 export function ConnectionPill() {
   const { progress, identity, form, coldStart, setConnectDrawerOpen } = useStore(
-    (s) => ({
+    useShallow((s) => ({
       progress: s.progress,
       identity: s.identity,
       form: s.form,
       coldStart: s.coldStart,
       setConnectDrawerOpen: s.setConnectDrawerOpen,
-    }),
+    })),
   );
 
   const dot =

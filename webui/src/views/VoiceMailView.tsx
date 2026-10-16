@@ -26,15 +26,18 @@ import type {
   VmSysParams,
 } from "@/lib/types";
 import { useStore, type VmScreen } from "@/store/useStore";
+import { useShallow } from "zustand/react/shallow";
 
 // --------------------------------------------------------------------------
 // Dispatcher — one of the VM screens, gated on a live session
 // --------------------------------------------------------------------------
 export function VoiceMailView({ screen }: { screen: VmScreen }) {
-  const { vmStatus, refreshVmStatus } = useStore((s) => ({
-    vmStatus: s.vmStatus,
-    refreshVmStatus: s.refreshVmStatus,
-  }));
+  const { vmStatus, refreshVmStatus } = useStore(
+    useShallow((s) => ({
+      vmStatus: s.vmStatus,
+      refreshVmStatus: s.refreshVmStatus,
+    })),
+  );
 
   React.useEffect(() => {
     void refreshVmStatus();
@@ -64,10 +67,12 @@ export function VoiceMailView({ screen }: { screen: VmScreen }) {
 // Connect (VM Manager's Connection List / Login) — the offline demo too
 // --------------------------------------------------------------------------
 function VmConnectPanel() {
-  const { vmConnect, vmBusy } = useStore((s) => ({
-    vmConnect: s.vmConnect,
-    vmBusy: s.vmBusy,
-  }));
+  const { vmConnect, vmBusy } = useStore(
+    useShallow((s) => ({
+      vmConnect: s.vmConnect,
+      vmBusy: s.vmBusy,
+    })),
+  );
   const [kind, setKind] = React.useState<"fake" | "serial" | "tcp">("fake");
   const [port, setPort] = React.useState("/dev/ttyUSB0");
   const [host, setHost] = React.useState("");
@@ -220,10 +225,12 @@ function VmHeader({
 // Status (Admin › Port Status)
 // --------------------------------------------------------------------------
 function VmStatusView() {
-  const { vmStatus, refreshVmStatus } = useStore((s) => ({
-    vmStatus: s.vmStatus,
-    refreshVmStatus: s.refreshVmStatus,
-  }));
+  const { vmStatus, refreshVmStatus } = useStore(
+    useShallow((s) => ({
+      vmStatus: s.vmStatus,
+      refreshVmStatus: s.refreshVmStatus,
+    })),
+  );
   if (!vmStatus) return <EmptyState message="No status." />;
   const rows: Array<[string, React.ReactNode]> = [
     ["Firmware", vmStatus.firmware || "—"],

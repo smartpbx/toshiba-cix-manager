@@ -3,6 +3,7 @@ import { ArrowUpRight } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Occurrence } from "@/lib/types";
 import { useStore } from "@/store/useStore";
+import { useShallow } from "zustand/react/shallow";
 
 // "↗ used by N" — the typed where-used chip (improvements.md §2.1): for the
 // selected row's key (a DN / COS / hunt number), ask the value index which
@@ -10,10 +11,12 @@ import { useStore } from "@/store/useStore";
 // behind the chip; it appears only when there is at least one reference, and
 // expands to the list. Works live (session) and in file mode (snapshot).
 export function WhereUsedChip({ rowKey }: { rowKey: string }) {
-  const { sessionId, fileMode } = useStore((s) => ({
-    sessionId: s.sessionId,
-    fileMode: s.fileMode,
-  }));
+  const { sessionId, fileMode } = useStore(
+    useShallow((s) => ({
+      sessionId: s.sessionId,
+      fileMode: s.fileMode,
+    })),
+  );
   const [occ, setOcc] = React.useState<Occurrence[] | null>(null);
   const [open, setOpen] = React.useState(false);
 

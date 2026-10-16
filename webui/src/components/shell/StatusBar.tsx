@@ -1,5 +1,6 @@
 import { Loader2 } from "lucide-react";
 import { useStore } from "@/store/useStore";
+import { useShallow } from "zustand/react/shallow";
 
 function relativeTime(iso?: string | null): string {
   if (!iso) return "—";
@@ -15,14 +16,14 @@ function relativeTime(iso?: string | null): string {
 // the long-op progress on the right while a read runs.
 export function StatusBar() {
   const { progress, meta, readCount, schema, version, coldStart } = useStore(
-    (s) => ({
+    useShallow((s) => ({
       progress: s.progress,
       meta: s.snapshotMeta,
       readCount: s.readKeys.size,
       schema: s.schema,
       version: s.version,
       coldStart: s.coldStart,
-    }),
+    })),
   );
 
   const reading = progress.status === "reading" || progress.status === "connecting";

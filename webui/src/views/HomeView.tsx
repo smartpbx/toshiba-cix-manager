@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { SchemaProgram } from "@/lib/schema";
 import { useStore } from "@/store/useStore";
+import { useShallow } from "zustand/react/shallow";
 
 function Fact({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -27,18 +28,20 @@ export function HomeView() {
     openProgram,
     setPaletteOpen,
     setConnectDrawerOpen,
-  } = useStore((s) => ({
-    schema: s.schema,
-    identity: s.identity,
-    meta: s.snapshotMeta,
-    readCount: s.readKeys.size,
-    rowCounts: s.rowCounts,
-    hasSnapshot: s.progress.status === "done" || s.progress.status === "cold" ||
-      s.readKeys.size > 0,
-    openProgram: s.openProgram,
-    setPaletteOpen: s.setPaletteOpen,
-    setConnectDrawerOpen: s.setConnectDrawerOpen,
-  }));
+  } = useStore(
+    useShallow((s) => ({
+      schema: s.schema,
+      identity: s.identity,
+      meta: s.snapshotMeta,
+      readCount: s.readKeys.size,
+      rowCounts: s.rowCounts,
+      hasSnapshot: s.progress.status === "done" || s.progress.status === "cold" ||
+        s.readKeys.size > 0,
+      openProgram: s.openProgram,
+      setPaletteOpen: s.setPaletteOpen,
+      setConnectDrawerOpen: s.setConnectDrawerOpen,
+    })),
+  );
 
   const byNumber = React.useMemo(() => {
     const m = new Map<string, SchemaProgram>();

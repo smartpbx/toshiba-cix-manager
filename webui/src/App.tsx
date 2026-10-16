@@ -13,6 +13,7 @@ import { VoiceMailView } from "@/views/VoiceMailView";
 import { FileModeBanner } from "@/components/backup/FileModeBanner";
 import { useEventStream } from "@/lib/sse";
 import { useStore } from "@/store/useStore";
+import { useShallow } from "zustand/react/shallow";
 
 function useTheme() {
   const theme = useStore((s) => s.theme);
@@ -24,11 +25,13 @@ function useTheme() {
 }
 
 function Workspace() {
-  const { tabs, activeTabId, schemaError } = useStore((s) => ({
-    tabs: s.tabs,
-    activeTabId: s.activeTabId,
-    schemaError: s.schemaError,
-  }));
+  const { tabs, activeTabId, schemaError } = useStore(
+    useShallow((s) => ({
+      tabs: s.tabs,
+      activeTabId: s.activeTabId,
+      schemaError: s.schemaError,
+    })),
+  );
   const tab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
 
   if (schemaError) {

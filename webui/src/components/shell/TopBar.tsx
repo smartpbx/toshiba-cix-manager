@@ -3,6 +3,7 @@ import { ConnectionPill } from "./ConnectionPill";
 import { ModeBadge } from "./ModeBadge";
 import { ThemeToggle } from "./ThemeToggle";
 import { useStore } from "@/store/useStore";
+import { useShallow } from "zustand/react/shallow";
 
 function Logo() {
   return (
@@ -26,10 +27,12 @@ function Logo() {
 }
 
 export function TopBar() {
-  const { setPaletteOpen, openBackups } = useStore((s) => ({
-    setPaletteOpen: s.setPaletteOpen,
-    openBackups: s.openBackups,
-  }));
+  const { setPaletteOpen, openBackups } = useStore(
+    useShallow((s) => ({
+      setPaletteOpen: s.setPaletteOpen,
+      openBackups: s.openBackups,
+    })),
+  );
   const isMac =
     typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
   return (

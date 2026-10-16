@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/command";
 import type { SchemaField } from "@/lib/schema";
 import { useStore } from "@/store/useStore";
+import { useShallow } from "zustand/react/shallow";
 
 interface FieldHit {
   programKey: string;
@@ -28,13 +29,15 @@ export function CommandPalette() {
     schema,
     programViews,
     openProgram,
-  } = useStore((s) => ({
-    open: s.paletteOpen,
-    setPaletteOpen: s.setPaletteOpen,
-    schema: s.schema,
-    programViews: s.programViews,
-    openProgram: s.openProgram,
-  }));
+  } = useStore(
+    useShallow((s) => ({
+      open: s.paletteOpen,
+      setPaletteOpen: s.setPaletteOpen,
+      schema: s.schema,
+      programViews: s.programViews,
+      openProgram: s.openProgram,
+    })),
+  );
   const [query, setQuery] = React.useState("");
 
   React.useEffect(() => {
