@@ -23,14 +23,19 @@ const CommandDialog = ({
   children,
   open,
   onOpenChange,
+  shouldFilter,
 }: {
   children: React.ReactNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  shouldFilter?: boolean;
 }) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="overflow-hidden p-0 max-w-xl" hideClose>
-      <Command className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-2xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wide [&_[cmdk-group-heading]]:text-fg-2 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-2">
+      <Command
+        shouldFilter={shouldFilter}
+        className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-2xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wide [&_[cmdk-group-heading]]:text-fg-2 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-2"
+      >
         {children}
       </Command>
     </DialogContent>

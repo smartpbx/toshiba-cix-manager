@@ -1,19 +1,14 @@
 import * as React from "react";
 import { TopBar } from "@/components/shell/TopBar";
-import { NavRail } from "@/components/shell/NavRail";
+import { NavTree } from "@/components/shell/NavTree";
+import { TabStrip } from "@/components/shell/TabStrip";
 import { StatusBar } from "@/components/shell/StatusBar";
 import { CommandPalette } from "@/components/shell/CommandPalette";
+import { ConnectDrawer } from "@/components/shell/ConnectDrawer";
 import { EmptyState } from "@/components/PageHeader";
-import { ConnectView } from "@/views/ConnectView";
-import { OverviewView } from "@/views/OverviewView";
-import { StationsView } from "@/views/StationsView";
-import { EquipmentView } from "@/views/EquipmentView";
-import { SystemView } from "@/views/SystemView";
-import { NetworkView } from "@/views/NetworkView";
-import { ProgramsView } from "@/views/ProgramsView";
-import { BackupDiffView } from "@/views/BackupDiffView";
-import { ExportView } from "@/views/ExportView";
-import { api } from "@/lib/api";
+import { HomeView } from "@/views/HomeView";
+import { ProgramPage } from "@/views/ProgramPage";
+import { useEventStream } from "@/lib/sse";
 import { useStore } from "@/store/useStore";
 
 function useTheme() {
@@ -25,67 +20,48 @@ function useTheme() {
   }, [theme]);
 }
 
-function useBoot() {
-  const { setRuntime, setCatalog } = useStore((s) => ({
-    setRuntime: s.setRuntime,
-    setCatalog: s.setCatalog,
+function Workspace() {
+  const { tabs, activeTabId, schemaError } = useStore((s) => ({
+    tabs: s.tabs,
+    activeTabId: s.activeTabId,
+    schemaError: s.schemaError,
   }));
-  React.useEffect(() => {
-    api
-      .health()
-      .then((h) => h?.ok && setRuntime({ version: h.version, writesEnabled: h.writes_enabled }))
-      .catch(() => {});
-    api
-      .catalog()
-      .then((c) => c?.ok && setCatalog(c))
-      .catch(() => {});
-  }, [setRuntime, setCatalog]);
-}
+  const tab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
 
-function ActiveView() {
-  const { view, hasDoc } = useStore((s) => ({
-    view: s.view,
-    hasDoc: !!s.doc,
-  }));
-
-  switch (view) {
-    case "connect":
-      return <ConnectView />;
-    case "overview":
-      return hasDoc ? <OverviewView /> : <EmptyState message="Read a CIX first (Connect)." />;
-    case "stations":
-      return hasDoc ? <StationsView /> : <EmptyState message="Read a CIX first (Connect)." />;
-    case "equipment":
-      return hasDoc ? <EquipmentView /> : <EmptyState message="Read a CIX first (Connect)." />;
-    case "system":
-      return hasDoc ? <SystemView /> : <EmptyState message="Read a CIX first (Connect)." />;
-    case "network":
-      return hasDoc ? <NetworkView /> : <EmptyState message="Read a CIX first (Connect)." />;
-    case "programs":
-      return <ProgramsView />;
-    case "backup":
-      return <BackupDiffView />;
-    case "export":
-      return hasDoc ? <ExportView /> : <EmptyState message="Read a CIX first (Connect)." />;
-    default:
-      return <ConnectView />;
+  if (schemaError) {
+    return <EmptyState message={`Could not load the UI schema: ${schemaError}`} />;
   }
+  if (!tab || tab.kind === "home") return <HomeView />;
+  if (tab.kind === "program" && tab.programKey) {
+    // key forces a fresh mount per program so per-page state resets cleanly
+    return <ProgramPage key={tab.programKey} programKey={tab.programKey} />;
+  }
+  return <HomeView />;
 }
 
 export default function App() {
   useTheme();
-  useBoot();
+  useEventStream();
+  const loadSchema = useStore((s) => s.loadSchema);
+  React.useEffect(() => {
+    void loadSchema();
+  }, [loadSchema]);
+
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden">
       <TopBar />
       <div className="flex min-h-0 flex-1">
-        <NavRail />
-        <main className="min-w-0 flex-1 overflow-hidden bg-background">
-          <ActiveView />
+        <NavTree />
+        <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-background">
+          <TabStrip />
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <Workspace />
+          </div>
         </main>
       </div>
       <StatusBar />
       <CommandPalette />
+      <ConnectDrawer />
     </div>
   );
 }

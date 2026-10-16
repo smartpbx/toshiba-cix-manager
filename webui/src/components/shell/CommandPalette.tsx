@@ -1,16 +1,5 @@
 import * as React from "react";
-import {
-  Boxes,
-  Cpu,
-  Download,
-  Hash,
-  Home,
-  LayoutGrid,
-  Network,
-  Phone,
-  Plug,
-  Save,
-} from "lucide-react";
+import { Hash, Phone, Tag } from "lucide-react";
 import {
   CommandDialog,
   CommandEmpty,
@@ -19,27 +8,32 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { useStore, type ViewId } from "@/store/useStore";
+import type { SchemaField } from "@/lib/schema";
+import { useStore } from "@/store/useStore";
 
-const NAV: Array<{ id: ViewId; label: string; icon: typeof Home; hint: string }> = [
-  { id: "overview", label: "Overview", icon: Home, hint: "Connected Equipment Details" },
-  { id: "stations", label: "Stations", icon: LayoutGrid, hint: "Station Assignments (200…)" },
-  { id: "equipment", label: "Equipment", icon: Boxes, hint: "Hardware Info and Control" },
-  { id: "system", label: "System", icon: Cpu, hint: "System Data (105)" },
-  { id: "network", label: "Network / FTP", icon: Network, hint: "CIX Processor IP (916)" },
-  { id: "programs", label: "Programs", icon: Hash, hint: "Browse by eManager menu area" },
-  { id: "backup", label: "Backup & Diff", icon: Save, hint: "Catalog backup / compare" },
-  { id: "export", label: "Export", icon: Download, hint: "Download JSON / report" },
-  { id: "connect", label: "Connect", icon: Plug, hint: "Reach a CIX over SNMP" },
-];
+interface FieldHit {
+  programKey: string;
+  programLabel: string;
+  field: SchemaField;
+}
 
+// The command palette (DESIGN_PLAN 3.5): one input, sectioned results. Jump by
+// program number, menu/program name, field title, or a DN/box/value held in the
+// snapshot. Filtering is ours (shouldFilter=false) so a numeric query ranks a
+// program number first and a value search can scan the working copy.
 export function CommandPalette() {
-  const { open, setOpen, setView, doc, setStationFilter } = useStore((s) => ({
+  const {
+    open,
+    setPaletteOpen,
+    schema,
+    programViews,
+    openProgram,
+  } = useStore((s) => ({
     open: s.paletteOpen,
-    setOpen: s.setPaletteOpen,
-    setView: s.setView,
-    doc: s.doc,
-    setStationFilter: s.setStationFilter,
+    setPaletteOpen: s.setPaletteOpen,
+    schema: s.schema,
+    programViews: s.programViews,
+    openProgram: s.openProgram,
   }));
   const [query, setQuery] = React.useState("");
 
@@ -47,73 +41,132 @@ export function CommandPalette() {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        setOpen(!open);
+        setPaletteOpen(!open);
       }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open, setOpen]);
+  }, [open, setPaletteOpen]);
 
-  const go = (id: ViewId) => {
-    setView(id);
-    setOpen(false);
-    setQuery("");
-  };
+  const fieldIndex = React.useMemo<FieldHit[]>(() => {
+    if (!schema) return [];
+    const out: FieldHit[] = [];
+    for (const prog of Object.values(schema.programs)) {
+      for (const field of prog.fields) {
+        if (field.control === "hidden") continue;
+        out.push({ programKey: prog.catalog_key, programLabel: prog.label, field });
+      }
+    }
+    return out;
+  }, [schema]);
 
-  // DN jump: numeric query matches station DNs/names (snapshot-first, instant).
-  const stationMatches = React.useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q || !doc?.stations) return [];
-    return doc.stations
-      .filter(
-        (s) =>
-          s.dn.toLowerCase().includes(q) ||
-          (s.name ?? "").toLowerCase().includes(q),
-      )
-      .slice(0, 8);
-  }, [query, doc]);
+  const q = query.trim().toLowerCase();
 
-  const jumpToStation = (dn: string) => {
-    setStationFilter(dn);
-    setView("stations");
-    setOpen(false);
+  const programHits = React.useMemo(() => {
+    if (!schema || !q) return [];
+    const hits = Object.values(schema.programs).filter((p) => {
+      return (
+        (p.program_number && p.program_number.toLowerCase().startsWith(q)) ||
+        p.label.toLowerCase().includes(q) ||
+        p.program_name.toLowerCase().includes(q) ||
+        p.menu_path.toLowerCase().includes(q)
+      );
+    });
+    hits.sort((a, b) => {
+      const an = a.program_number === q ? 0 : a.program_number?.startsWith(q) ? 1 : 2;
+      const bn = b.program_number === q ? 0 : b.program_number?.startsWith(q) ? 1 : 2;
+      return an - bn;
+    });
+    return hits.slice(0, 7);
+  }, [schema, q]);
+
+  const fieldHits = React.useMemo(() => {
+    if (q.length < 2) return [];
+    return fieldIndex
+      .filter((h) => h.field.title.toLowerCase().includes(q))
+      .slice(0, 7);
+  }, [fieldIndex, q]);
+
+  // DN / value jump: scan the working copy's rows for a key or value match.
+  const valueHits = React.useMemo(() => {
+    if (q.length < 2) return [];
+    const out: Array<{ programKey: string; label: string; rowKey: string }> = [];
+    for (const pv of Object.values(programViews)) {
+      for (const row of pv.rows) {
+        const hitKey = (row.key || row.index).toLowerCase().includes(q);
+        const hitVal =
+          !hitKey &&
+          row.cells.some((c) => (c.display_value ?? "").toLowerCase().includes(q));
+        if (hitKey || hitVal) {
+          out.push({ programKey: pv.catalog_key, label: pv.label, rowKey: row.key || row.index });
+          if (out.length >= 8) return out;
+        }
+      }
+    }
+    return out;
+  }, [programViews, q]);
+
+  const go = (key: string, title: string) => {
+    openProgram(key, title);
+    setPaletteOpen(false);
     setQuery("");
   };
 
   return (
-    <CommandDialog open={open} onOpenChange={setOpen}>
+    <CommandDialog open={open} onOpenChange={setPaletteOpen} shouldFilter={false}>
       <CommandInput
-        placeholder="Search programs, DNs, or jump to a page…"
+        placeholder="Jump to a program number, menu, field, or DN…"
         value={query}
         onValueChange={setQuery}
       />
       <CommandList>
-        <CommandEmpty>No matches.</CommandEmpty>
-        {stationMatches.length > 0 && (
-          <CommandGroup heading="Stations">
-            {stationMatches.map((s) => (
+        {q && <CommandEmpty>No matches.</CommandEmpty>}
+        {valueHits.length > 0 && (
+          <CommandGroup heading="In the snapshot">
+            {valueHits.map((h, i) => (
               <CommandItem
-                key={s.dn}
-                value={`dn-${s.dn}-${s.name ?? ""}`}
-                onSelect={() => jumpToStation(s.dn)}
+                key={`v-${h.programKey}-${h.rowKey}-${i}`}
+                value={`v-${i}`}
+                onSelect={() => go(h.programKey, h.label)}
               >
-                <Phone className="h-4 w-4 text-fg-2" />
-                <span className="font-mono tnum">{s.dn}</span>
-                <span className="text-fg-2">{s.name ?? "(unnamed)"}</span>
-                <span className="ml-auto text-2xs text-fg-3">{s.type ?? ""}</span>
+                <Phone className="h-4 w-4 text-fg-3" />
+                <span className="font-mono tnum">{h.rowKey}</span>
+                <span className="ml-auto text-2xs text-fg-3">{h.label}</span>
               </CommandItem>
             ))}
           </CommandGroup>
         )}
-        <CommandGroup heading="Go to">
-          {NAV.map((n) => (
-            <CommandItem key={n.id} value={`nav-${n.label}`} onSelect={() => go(n.id)}>
-              <n.icon className="h-4 w-4 text-fg-2" />
-              <span>{n.label}</span>
-              <span className="ml-auto text-2xs text-fg-3">{n.hint}</span>
-            </CommandItem>
-          ))}
-        </CommandGroup>
+        {programHits.length > 0 && (
+          <CommandGroup heading="Programs">
+            {programHits.map((p) => (
+              <CommandItem
+                key={p.catalog_key}
+                value={`p-${p.catalog_key}`}
+                onSelect={() => go(p.catalog_key, p.label)}
+              >
+                <Hash className="h-4 w-4 text-fg-3" />
+                {p.program_number && <span className="field-badge">{p.program_number}</span>}
+                <span className="truncate">{p.program_name}</span>
+                <span className="ml-auto truncate text-2xs text-fg-3">{p.menu_area}</span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
+        {fieldHits.length > 0 && (
+          <CommandGroup heading="Fields">
+            {fieldHits.map((h, i) => (
+              <CommandItem
+                key={`f-${h.programKey}-${h.field.name}-${i}`}
+                value={`f-${i}`}
+                onSelect={() => go(h.programKey, h.programLabel)}
+              >
+                <Tag className="h-4 w-4 text-fg-3" />
+                <span className="truncate">{h.field.title}</span>
+                <span className="ml-auto truncate text-2xs text-fg-3">{h.programLabel}</span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
       </CommandList>
     </CommandDialog>
   );

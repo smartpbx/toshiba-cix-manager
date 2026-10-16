@@ -1,74 +1,68 @@
+// One fetch helper per verb. The daemon plants an HttpOnly SameSite=Strict
+// cookie on the "/" load, so same-origin fetches authenticate with nothing
+// added (DESIGN_PLAN 2.2); in dev, Vite proxies /api and auth is off.
+
+import type { UISchema } from "./schema";
 import type {
-  BackupResult,
-  CatalogInfo,
-  ConnectResult,
-  DiffResult,
-  DiscoverResult,
+  FullSnapshot,
   Health,
-  ReadResult,
+  JobState,
+  ProgramResult,
+  SessionSnapshot,
+  SnapshotHeader,
+  SnapshotStart,
 } from "./types";
 
-// One fetch helper. The engine answers JSON for everything except "/" and the
-// zip download; those callers use rawPost / the UI's download path directly.
-async function jpost<T>(path: string, body?: unknown): Promise<T> {
-  const res = await fetch(path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body ?? {}),
-  });
+async function jget<T>(path: string): Promise<T> {
+  const res = await fetch(path, { credentials: "same-origin" });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
   return (await res.json()) as T;
 }
 
-async function jget<T>(path: string): Promise<T> {
-  const res = await fetch(path);
+async function jpost<T>(path: string, body?: unknown): Promise<T> {
+  const res = await fetch(path, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body ?? {}),
+  });
+  if (!res.ok && res.status >= 500) throw new Error(`${res.status} ${res.statusText}`);
   return (await res.json()) as T;
 }
 
 export const api = {
   health: () => jget<Health>("/api/health"),
-  catalog: () => jget<CatalogInfo>("/api/catalog"),
-  discover: () => jget<DiscoverResult>("/api/discover"),
+  schema: () => jget<UISchema>("/api/schema"),
 
-  connect: (p: { ip: string; community: string; port: number }) =>
-    jpost<ConnectResult>("/api/connect", p),
-
-  read: (p: {
+  // connect + snapshot-on-connect (core -> all) — returns session + job ids
+  startSnapshot: (p: {
     ip: string;
     community: string;
     port: number;
-    scope: string;
-    timeout?: number;
-    retries?: number;
-  }) => jpost<ReadResult>("/api/read", p),
+    reach: string;
+    site?: string;
+    site_id?: string;
+  }) => jpost<SnapshotStart>("/api/snapshot", p),
 
-  catalogBackup: (p: { ip: string; community: string; port: number }) =>
-    jpost<BackupResult>("/api/catalog-backup", p),
+  job: (id: string) => jget<{ ok: boolean; job: JobState }>(`/api/jobs/${id}`),
 
-  diff: (p: { a: unknown; b: unknown; all?: boolean }) =>
-    jpost<DiffResult>("/api/diff", p),
+  sessionSnapshot: (sessionId: string) =>
+    jget<SessionSnapshot>(`/api/sessions/${sessionId}/snapshot`),
 
-  // Download the engine-built .zip for a read doc (programming.json + report).
-  async backupZip(doc: unknown): Promise<Blob> {
-    const res = await fetch("/api/backup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ doc }),
-    });
-    return res.blob();
-  },
+  program: (sessionId: string, key: string, refresh = false) =>
+    jget<ProgramResult>(
+      `/api/sessions/${sessionId}/program/${encodeURIComponent(key)}` +
+        (refresh ? "?refresh=1" : ""),
+    ),
+
+  // cold start: browse the last snapshot with the device off
+  siteSnapshots: (siteId: string) =>
+    jget<{ ok: boolean; snapshots: SnapshotHeader[] }>(
+      `/api/sites/${encodeURIComponent(siteId)}/snapshots`,
+    ),
+
+  siteSnapshotLatest: (siteId: string) =>
+    jget<{ ok: boolean; snapshot: FullSnapshot | null }>(
+      `/api/sites/${encodeURIComponent(siteId)}/snapshots/latest`,
+    ),
 };
-
-export function downloadBlob(filename: string, blob: Blob) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-export function downloadText(filename: string, text: string, mime = "application/json") {
-  downloadBlob(filename, new Blob([text], { type: mime }));
-}
