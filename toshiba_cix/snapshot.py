@@ -26,7 +26,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from . import __version__
-from .backup import collect, read_identity
+from .backup import build_backup, collect, read_identity
 from .catalog import Catalog, load_catalog
 from .enrich import build_program_views
 
@@ -54,14 +54,19 @@ def core_program_keys(catalog: Catalog) -> list:
 
 
 def read_snapshot(client, catalog: Catalog = None, *, report=None,
-                  on_phase=None, site=None, width: int = 10,
+                  on_phase=None, site=None, transport=None, width: int = 10,
                   max_total: int = 500000) -> dict:
     """Read a CIX core-first then whole; return a cold-start snapshot dict.
 
     ``report(done, total, message)`` drives the UI progress bar; ``on_phase(
     program_views, phase)`` (``phase`` ∈ ``{"core", "all"}``) lets the caller
     ingest each phase's views into a working copy as they land. Both optional.
-    """
+
+    Returns ``{identity, meta, program_views, backup}`` — ``program_views`` is
+    the live render contract for the session working copy, and ``backup`` is the
+    v2 ``toshiba-cix-backup`` document (raw values, hashes, provenance) the
+    snapshot store persists. Both come from the one read, so there is no second
+    walk."""
     catalog = catalog or load_catalog()
     all_keys = [p.key for p in catalog.programs.values()]
     total = len(all_keys)
@@ -85,7 +90,8 @@ def read_snapshot(client, catalog: Catalog = None, *, report=None,
     rest_pairs, rest_err = collect(client, catalog, programs=rest_keys,
                                    width=width, max_total=max_total)
 
-    views = build_program_views(core_pairs + rest_pairs, catalog)
+    all_pairs = core_pairs + rest_pairs
+    views = build_program_views(all_pairs, catalog)
     if on_phase:
         on_phase(views, "all")
     _report(total, "Snapshot complete.")
@@ -98,10 +104,16 @@ def read_snapshot(client, catalog: Catalog = None, *, report=None,
         "source_ip": getattr(client, "host", None),
         "site": site,
         "scope": "all",
-        "oids_read": len(core_pairs) + len(rest_pairs),
+        "oids_read": len(all_pairs),
         "walk_error": walk_error,
     }
-    return {"identity": identity, "meta": meta, "program_views": views}
+    doc = build_backup(all_pairs, catalog, meta={
+        "swid": identity.get("swid"), "chassis_mac": identity.get("chassis_mac"),
+        "site": site, "source_ip": getattr(client, "host", None),
+        "scope": "all", "walk_error": walk_error, "transport": transport,
+    }, snapshot={"kind": "snapshot", "transport": transport})
+    return {"identity": identity, "meta": meta, "program_views": views,
+            "backup": doc}
 
 
 __all__ = ["CORE_PROGRAM_NUMBERS", "core_program_keys", "read_snapshot"]

@@ -38,62 +38,97 @@ CAT = load_catalog()
 
 
 # ===========================================================================
-# unit: SnapshotStore
+# unit: SnapshotStore (now stores the v2 backup doc)
 # ===========================================================================
-def _views():
-    return {"programs": [{"catalog_key": "200StationAssign", "row_count": 3,
-                          "program_number": "200", "menu_area": "Station"}],
-            "stats": {"programs": 1, "rows": 3, "cells": 9}}
+import toshiba_cix.backup as _B  # noqa: E402
+from test_backup import sample_capture as _sample_capture  # noqa: E402
 
 
-def test_store_save_and_latest_roundtrip():
+def _doc(site="Example", names=("Front Desk", "Lobby", "Warehouse")):
+    data, _ = _sample_capture(CAT, names=names)
+    return _B.build_backup(list(data.items()), CAT,
+                           meta={"site": site, "swid": "CIX670 R5.20"},
+                           snapshot={"kind": "snapshot"})
+
+
+def test_store_put_and_latest_roundtrip():
     with tempfile.TemporaryDirectory() as tmp:
-        st = SnapshotStore(tmp)
-        hdr = st.save("104670-toner", _views(),
-                      identity={"swid": "CIX670 R5.20"}, meta={"scope": "all"})
-        assert hdr["sid"] and hdr["kind"] == "snapshot"
-        assert hdr["counts"]["programs"] == 1
+        st = SnapshotStore(tmp, catalog=CAT)
+        entry = st.put("104670-toner", _doc(), kind="manual")
+        assert entry["id"] and entry["kind"] == "manual"
+        assert entry["counts"]["programs"] >= 1 and entry["path"].endswith(".cixbak")
         full = st.latest("104670-toner")
-        assert full["program_views"]["programs"][0]["catalog_key"] == "200StationAssign"
-        assert full["identity"]["swid"] == "CIX670 R5.20"
+        assert "200StationAssign" in full["programs"]
+        assert full["meta"]["swid"] == "CIX670 R5.20"
 
 
-def test_store_lists_newest_first():
+def test_store_dedupes_identical_reads():
     with tempfile.TemporaryDirectory() as tmp:
-        st = SnapshotStore(tmp)
-        a = st.save("s", _views())
-        time.sleep(0.002)
-        b = st.save("s", _views())
-        ids = [h["sid"] for h in st.list("s")]
-        assert ids[0] == b["sid"] and set(ids) == {a["sid"], b["sid"]}
+        st = SnapshotStore(tmp, catalog=CAT)
+        a = st.put("s", _doc(), kind="scheduled")
+        b = st.put("s", _doc(), kind="scheduled")   # identical content
+        assert b.get("dedupe_of") == a["id"] and b["path"] is None
+        # the deduped row still resolves to the original doc for cold start
+        assert st.get("s", b["id"])["meta"]["content_hash"] == a["content_hash"]
+        # a changed read writes a real file
+        c = st.put("s", _doc(names=("Front Desk", "Lobby", "Dock")), kind="scheduled")
+        assert c.get("dedupe_of") is None and c["path"]
 
 
-def test_store_label_pin_delete():
+def test_store_name_pin_and_delete_protection():
     with tempfile.TemporaryDirectory() as tmp:
-        st = SnapshotStore(tmp)
-        h = st.save("s", _views())
-        st.set_label("s", h["sid"], "before PRI")
-        st.set_pinned("s", h["sid"], True)
-        hdr = st.list("s")[0]
-        assert hdr["label"] == "before PRI" and hdr["pinned"] is True
-        assert st.delete("s", h["sid"]) is True
-        assert st.list("s") == []
+        st = SnapshotStore(tmp, catalog=CAT)
+        e = st.put("s", _doc(), kind="manual")
+        st.name("s", e["id"], "before PRI")
+        entry = st.get_entry("s", e["id"])
+        assert entry["name"] == "before PRI" and entry["kind"] == "named"
+        # a named snapshot is protected from deletion
+        ok, reason = st.delete("s", e["id"])
+        assert ok is False and reason == "named"
+        # force removes it
+        ok, _ = st.delete("s", e["id"], force=True)
+        assert ok and st.index("s") == []
+
+
+def test_store_cixbak_roundtrip_and_export_redacts():
+    with tempfile.TemporaryDirectory() as tmp:
+        st = SnapshotStore(tmp, catalog=CAT)
+        e = st.put("s", _doc(), kind="manual")
+        # the .cixbak unpacks back to the stored doc
+        import toshiba_cix.store as S
+        path = os.path.join(tmp, "backups", "s", e["path"])
+        doc, members = S.unpack_cixbak(path)
+        assert "backup.json" in members and "MANIFEST.json" in members
+        assert doc["meta"]["content_hash"] == e["content_hash"]
+        # export is redacted by default
+        fn, data = st.export("s", e["id"])
+        assert fn.endswith(".cixbak")
+        rdoc, _ = S.unpack_cixbak(data)
+        assert rdoc["meta"]["redacted"] is True
+
+
+def test_store_activity_trail_records_snapshots():
+    with tempfile.TemporaryDirectory() as tmp:
+        st = SnapshotStore(tmp, catalog=CAT)
+        st.put("s", _doc(), kind="manual")
+        acts = st.read_activity("s")
+        assert acts and acts[0]["event"] == "snapshot"
 
 
 def test_store_latest_missing_site():
     with tempfile.TemporaryDirectory() as tmp:
         assert SnapshotStore(tmp).latest("never-seen") is None
-        assert SnapshotStore(tmp).list("never-seen") == []
+        assert SnapshotStore(tmp).index("never-seen") == []
 
 
 def test_store_site_id_is_path_safe():
     with tempfile.TemporaryDirectory() as tmp:
-        st = SnapshotStore(tmp)
-        st.save("../../etc/evil", _views())
+        st = SnapshotStore(tmp, catalog=CAT)
+        st.put("../../etc/evil", _doc())
         # nothing escaped the store root
         assert os.path.commonpath([tmp, os.path.abspath(
-            os.path.join(tmp, "snapshots"))]) == os.path.abspath(tmp)
-        assert not os.path.exists("/etc/evil.json")
+            os.path.join(tmp, "backups"))]) == os.path.abspath(tmp)
+        assert not os.path.exists("/etc/evil.cixbak")
 
 
 # ===========================================================================
@@ -116,6 +151,10 @@ def test_read_snapshot_core_then_all_with_progress():
     # the full views carry the stations program read in the capture
     keys = {p["catalog_key"] for p in snap["program_views"]["programs"]}
     assert "200StationAssign" in keys
+    # and the read also produced the v2 backup doc the store persists
+    assert snap["backup"]["format_version"] == 2
+    assert "200StationAssign" in snap["backup"]["programs"]
+    assert snap["backup"]["meta"]["content_hash"].startswith("sha256:")
 
 
 def test_core_program_keys_are_catalog_keys():

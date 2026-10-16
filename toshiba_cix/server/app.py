@@ -77,7 +77,13 @@ class ServerContext:
         if self._snapshots is None:
             root = self.appdirs or AppDirs(store_root())
             root.ensure()
-            self._snapshots = SnapshotStore(root.root)
+            cat = None
+            try:
+                from ..catalog import load_catalog
+                cat = load_catalog()
+            except Exception:  # noqa: BLE001 — the store works without it
+                cat = None
+            self._snapshots = SnapshotStore(root.root, catalog=cat)
         return self._snapshots
 
 

@@ -445,16 +445,19 @@ def route_snapshot_start(ctx, req):
                              "read": len(session.doc)})
 
         snap = read_snapshot(client, cat, report=report, on_phase=on_phase,
-                             site=site, width=reader.width)
+                             site=site, transport=transport, width=reader.width)
         ident = snap["identity"]
         session.set_identity({"software_id": ident.get("swid"),
                               "chassis_mac": ident.get("chassis_mac")})
         session.snapshot_meta = snap["meta"]
         header = None
         try:
-            header = ctx.snapshots().save(site_id, snap["program_views"],
-                                          identity=ident, meta=snap["meta"],
-                                          kind="snapshot")
+            # Persist the v2 backup doc (dedupes on content hash); the store
+            # prunes auto snapshots so the folder does not grow without bound.
+            store = ctx.snapshots()
+            header = store.put(site_id, snap["backup"], kind="snapshot",
+                               transport=transport)
+            store.prune(site_id)
         except Exception as exc:  # noqa: BLE001 — a save failure must not fail the read
             log.warning("snapshot save failed: %s", exc)
         return {"session": session.id, "site_id": site_id, "saved": header,
@@ -579,23 +582,71 @@ def route_session_program_row(ctx, req):
 # --------------------------------------------------------------------------
 # cold start: snapshots on disk (browse with the device off)
 # --------------------------------------------------------------------------
+def _snapshot_header(entry: dict) -> dict:
+    """A store index entry mapped to the UI's timeline/header shape.
+
+    The store speaks the v2 names (``id``, ``read_at``, ``name``); the UI's
+    cold-start code reads ``sid`` / ``saved_at`` / ``label``. Both are provided
+    so neither side has to change, plus the v2 timeline fields."""
+    ident = entry.get("identity") or {}
+    return {
+        "sid": entry.get("id"), "id": entry.get("id"),
+        "saved_at": entry.get("read_at"), "read_at": entry.get("read_at"),
+        "label": entry.get("name"), "name": entry.get("name"),
+        "kind": entry.get("kind"), "pinned": bool(entry.get("pinned")),
+        "tags": entry.get("tags") or [], "note": entry.get("note"),
+        "scope": entry.get("scope"), "counts": entry.get("counts") or {},
+        "swid": entry.get("swid"),
+        "identity": {"swid": entry.get("swid"), **ident},
+        "content_hash": entry.get("content_hash"),
+        "dedupe_of": entry.get("dedupe_of"), "bytes": entry.get("bytes"),
+        "redacted": bool(entry.get("redacted")),
+    }
+
+
+def _full_snapshot(doc: dict, cat) -> dict:
+    """A stored backup doc mapped to the UI's full-snapshot shape (with
+    rendered ``program_views`` so file-mode uses the live program pages)."""
+    meta = doc.get("meta", {})
+    snap = meta.get("snapshot", {})
+    return {
+        "sid": snap.get("id"), "site_id": meta.get("site"),
+        "saved_at": meta.get("read_at"), "label": snap.get("name"),
+        "pinned": bool(snap.get("pinned")), "kind": snap.get("kind"),
+        "identity": {"swid": meta.get("swid"),
+                     "chassis_mac": meta.get("chassis_mac")},
+        "meta": meta,
+        "program_views": program_views_from_backup(doc, cat),
+    }
+
+
 def route_site_snapshots(ctx, req):
-    """GET /api/sites/{id}/snapshots — saved-snapshot headers, newest first."""
+    """GET /api/sites/{id}/snapshots — timeline entries, newest first.
+
+    ``?kind=`` / ``?tag=`` narrow it (the timeline filter)."""
+    entries = ctx.snapshots().index(req.params["id"],
+                                    kind=req.query.get("kind"),
+                                    tag=req.query.get("tag"))
     req.send_json({"ok": True,
-                   "snapshots": ctx.snapshots().list(req.params["id"])})
+                   "snapshots": [_snapshot_header(e) for e in entries]})
 
 
 def route_site_snapshot_latest(ctx, req):
     """GET /api/sites/{id}/snapshots/latest — the full last snapshot (cold start)."""
-    snap = ctx.snapshots().latest(req.params["id"])
-    req.send_json({"ok": snap is not None, "snapshot": snap})
+    doc = ctx.snapshots().latest(req.params["id"])
+    if doc is None:
+        req.send_json({"ok": False, "snapshot": None})
+        return
+    req.send_json({"ok": True, "snapshot": _full_snapshot(doc, load_catalog())})
 
 
 def route_site_snapshot_get(ctx, req):
-    """GET /api/sites/{id}/snapshots/{sid} — one full saved snapshot."""
-    snap = ctx.snapshots().get(req.params["id"], req.params["sid"])
-    req.send_json({"ok": snap is not None, "snapshot": snap},
-                  200 if snap is not None else 404)
+    """GET /api/sites/{id}/snapshots/{sid} — one full saved snapshot (file mode)."""
+    doc = ctx.snapshots().get(req.params["id"], req.params["sid"])
+    if doc is None:
+        req.send_json({"ok": False, "snapshot": None}, 404)
+        return
+    req.send_json({"ok": True, "snapshot": _full_snapshot(doc, load_catalog())})
 
 
 # --------------------------------------------------------------------------
