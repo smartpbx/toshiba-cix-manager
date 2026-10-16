@@ -1,0 +1,1405 @@
+{
+ "_comment": "Curated rw fields that move on their own \u2014 hidden by default in diffs so real programming changes are not buried (backups.md \u00a74.2). Keyed by field OID. A tech can add more from the diff row menu.",
+ "fields": {
+  "1.3.6.1.4.1.186.1.22.11.1.1": {
+   "field": "trafficMeasureActivate",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.10": {
+   "field": "trafficMeasureWorkingDayZone3Activate",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.11": {
+   "field": "trafficMeasureWorkingDayZone3Start",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.12": {
+   "field": "trafficMeasureWorkingDayZone3End",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.13": {
+   "field": "trafficMeasureNonWorkingDayZone1Activate",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.14": {
+   "field": "trafficMeasureNonWorkingDayZone1Start",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.15": {
+   "field": "trafficMeasureNonWorkingDayZone1End",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.16": {
+   "field": "trafficMeasureNonWorkingDayZone2Activate",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.17": {
+   "field": "trafficMeasureNonWorkingDayZone2Start",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.18": {
+   "field": "trafficMeasureNonWorkingDayZone2End",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.19": {
+   "field": "trafficMeasureNonWorkingDayZone3Activate",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.2": {
+   "field": "trafficMeasureMemoryCardOutput",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.20": {
+   "field": "trafficMeasureNonWorkingDayZone3Start",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.21": {
+   "field": "trafficMeasureNonWorkingDayZone3End",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.22": {
+   "field": "trafficMeasureHolidayZone1Activate",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.23": {
+   "field": "trafficMeasureHolidayZone1Start",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.24": {
+   "field": "trafficMeasureHolidayZone1End",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.25": {
+   "field": "trafficMeasureHolidayZone2Activate",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.26": {
+   "field": "trafficMeasureHolidayZone2Start",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.27": {
+   "field": "trafficMeasureHolidayZone2End",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.28": {
+   "field": "trafficMeasureHolidayZone3Activate",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.29": {
+   "field": "trafficMeasureHolidayZone3Start",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.3": {
+   "field": "trafficMeasureTenantNumber",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.30": {
+   "field": "trafficMeasureHolidayZone3End",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.31": {
+   "field": "trafficMeasureIntensityUnit",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.32": {
+   "field": "trafficMeasureDtmfActivate",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.33": {
+   "field": "trafficMeasureConferenceActivate",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.4": {
+   "field": "trafficMeasureWorkingDayZone1Activate",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.5": {
+   "field": "trafficMeasureWorkingDayZone1Start",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.6": {
+   "field": "trafficMeasureWorkingDayZone1End",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.7": {
+   "field": "trafficMeasureWorkingDayZone2Activate",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.8": {
+   "field": "trafficMeasureWorkingDayZone2Start",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.1.9": {
+   "field": "trafficMeasureWorkingDayZone2End",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.2.1.1.1": {
+   "field": "trafficMeasureIlg",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.2.1.1.2": {
+   "field": "trafficMeasureIlgActivate",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.2.2.1.1": {
+   "field": "trafficMeasureOlg",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.2.2.1.2": {
+   "field": "trafficMeasureOlgActivate",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.2.3.1.1": {
+   "field": "trafficMeasureDidIlg",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.2.3.1.2": {
+   "field": "trafficMeasureDidDidNumber",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.2.3.1.3": {
+   "field": "trafficMeasureDidActivate",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.2.4.1.1": {
+   "field": "trafficMeasureNoDidIlg",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.2.4.1.2": {
+   "field": "trafficMeasureNoDidOrNotDetermine",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.2.4.1.3": {
+   "field": "trafficMeasureNoDidActivate",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.2.5.1.1": {
+   "field": "trafficMeasureHuntingGroup",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.11.2.5.1.2": {
+   "field": "trafficMeasureHuntingGroupActivate",
+   "program": "921TrafficMeasure"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.1": {
+   "field": "mainCpuStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.10.1": {
+   "field": "generalMemoryStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.10.2": {
+   "field": "generalMemoryControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.10.3.1.1": {
+   "field": "smdiVmsIndex",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.10.3.1.2": {
+   "field": "smdiVmsStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.10.3.1.3": {
+   "field": "smdiVmsControl",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.10.4.1": {
+   "field": "serialSmdrStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.10.4.2": {
+   "field": "serialSmdrControl",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.11.1": {
+   "field": "backupMemoryStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.11.2": {
+   "field": "backupMemoryControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.12.1": {
+   "field": "modemStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.12.2": {
+   "field": "modemControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.13.1": {
+   "field": "smartMediaStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.13.2": {
+   "field": "smartMediaControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.14.1": {
+   "field": "lanControllerStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.14.2": {
+   "field": "lanControllerControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.14.3.1.1": {
+   "field": "ctiServerIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.14.3.1.2": {
+   "field": "ctiServerStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.14.3.1.3": {
+   "field": "ctiServerControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.15.1": {
+   "field": "networkClockStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.15.2": {
+   "field": "networkClockControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.16.1": {
+   "field": "lanControllerStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.16.1.1": {
+   "field": "ipStationCpnDn",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.16.1.2": {
+   "field": "ipStationCpnStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.16.1.3": {
+   "field": "ipStationCpnControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.16.2": {
+   "field": "lanControllerControl",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.16.3.1.1": {
+   "field": "ctiServerIndex",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.16.3.1.2": {
+   "field": "ctiServerStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.16.3.1.3": {
+   "field": "ctiServerControl",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.17.1": {
+   "field": "networkClockStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.17.1.1": {
+   "field": "ipTrunkCpnChGroup",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.17.1.2": {
+   "field": "ipTrunkCpnStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.17.1.3": {
+   "field": "ipTrunkCpnControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.17.2": {
+   "field": "networkClockControl",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.18.1": {
+   "field": "coolingFanStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.18.1.1": {
+   "field": "ipStationCpnDn",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.18.1.2": {
+   "field": "ipStationCpnStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.18.1.3": {
+   "field": "ipStationCpnControl",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.18.2": {
+   "field": "coolingFanControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.19.1.1": {
+   "field": "sipTrunkCpnServiceIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.19.1.2": {
+   "field": "sipTrunkCpnStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.19.1.3": {
+   "field": "sipTrunkCpnControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.2": {
+   "field": "mainCpuControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.20.1": {
+   "field": "coolingFanStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.20.2": {
+   "field": "coolingFanControl",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.21.1.1": {
+   "field": "sipTrunkCpnServiceIndex",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.21.1.2": {
+   "field": "sipTrunkCpnStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.21.1.3": {
+   "field": "sipTrunkCpnControl",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.1": {
+   "field": "dhwySubCpu1Status",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.2": {
+   "field": "dhwySubCpu1Control",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.3.1": {
+   "field": "d1Cabinet1Status",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.3.2": {
+   "field": "d1Cabinet1Control",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.3.3": {
+   "field": "d1C1IfCardGroupStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.3.4": {
+   "field": "d1C1IfCardGroupControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.3.5": {
+   "field": "d1C1IfCardNumber",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.3.6.1.1": {
+   "field": "d1C1PortGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.3.6.1.2": {
+   "field": "d1C1PortGroupStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.3.6.1.3": {
+   "field": "d1C1PortGroupControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.3.7.1.1": {
+   "field": "d1C1IpStationGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.3.7.1.2": {
+   "field": "d1C1IpStationDn",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.3.7.1.3": {
+   "field": "d1C1IpStationStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.3.8.1.1": {
+   "field": "d1C1IpTrunkGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.3.8.1.2": {
+   "field": "d1C1IpTrunkChGrp",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.3.8.1.3": {
+   "field": "d1C1IpTrunkStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.4.1": {
+   "field": "d1Cabinet2Status",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.4.2": {
+   "field": "d1Cabinet2Control",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.4.3": {
+   "field": "d1C2IfCardGroupStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.4.4": {
+   "field": "d1C2IfCardGroupControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.4.5": {
+   "field": "d1C2IfCardNumber",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.4.6.1.1": {
+   "field": "d1C2PortGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.4.6.1.2": {
+   "field": "d1C2PortGroupStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.4.6.1.3": {
+   "field": "d1C2PortGroupControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.4.7.1.1": {
+   "field": "d1C2IpStationGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.4.7.1.2": {
+   "field": "d1C2IpStationDn",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.4.7.1.3": {
+   "field": "d1C2IpStationStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.4.8.1.1": {
+   "field": "d1C2IpTrunkGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.4.8.1.2": {
+   "field": "d1C2IpTrunkChGrp",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.3.4.8.1.3": {
+   "field": "d1C2IpTrunkStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.1": {
+   "field": "dhwySubCpu2Status",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.2": {
+   "field": "dhwySubCpu2Control",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.3.1": {
+   "field": "d2Cabinet1Status",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.3.2": {
+   "field": "d2Cabinet1Control",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.3.3": {
+   "field": "d2C1IfCardGroupStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.3.4": {
+   "field": "d2C1IfCardGroupControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.3.5": {
+   "field": "d2C1IfCardNumber",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.3.6.1.1": {
+   "field": "d2C1PortGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.3.6.1.2": {
+   "field": "d2C1PortGroupStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.3.6.1.3": {
+   "field": "d2C1PortGroupControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.3.7.1.1": {
+   "field": "d2C1IpStationGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.3.7.1.2": {
+   "field": "d2C1IpStationDn",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.3.7.1.3": {
+   "field": "d2C1IpStationStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.3.8.1.1": {
+   "field": "d2C1IpTrunkGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.3.8.1.2": {
+   "field": "d2C1IpTrunkChGrp",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.3.8.1.3": {
+   "field": "d2C1IpTrunkStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.4.1": {
+   "field": "d2Cabinet2Status",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.4.2": {
+   "field": "d2Cabinet2Control",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.4.3": {
+   "field": "d2C2IfCardGroupStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.4.4": {
+   "field": "d2C2IfCardGroupControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.4.5": {
+   "field": "d2C2IfCardNumber",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.4.6.1.1": {
+   "field": "d2C2PortGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.4.6.1.2": {
+   "field": "d2C2PortGroupStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.4.6.1.3": {
+   "field": "d2C2PortGroupControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.4.7.1.1": {
+   "field": "d2C2IpStationGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.4.7.1.2": {
+   "field": "d2C2IpStationDn",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.4.7.1.3": {
+   "field": "d2C2IpStationStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.4.8.1.1": {
+   "field": "d2C2IpTrunkGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.4.8.1.2": {
+   "field": "d2C2IpTrunkChGrp",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.4.4.8.1.3": {
+   "field": "d2C2IpTrunkStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.1": {
+   "field": "dhwySubCpu3Status",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.2": {
+   "field": "dhwySubCpu3Control",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.3.1": {
+   "field": "d3Cabinet1Status",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.3.2": {
+   "field": "d3Cabinet1Control",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.3.3": {
+   "field": "d3C1IfCardGroupStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.3.4": {
+   "field": "d3C1IfCardGroupControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.3.5": {
+   "field": "d3C1IfCardNumber",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.3.6.1.1": {
+   "field": "d3C1PortGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.3.6.1.2": {
+   "field": "d3C1PortGroupStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.3.6.1.3": {
+   "field": "d3C1PortGroupControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.3.7.1.1": {
+   "field": "d3C1IpStationGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.3.7.1.2": {
+   "field": "d3C1IpStationDn",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.3.7.1.3": {
+   "field": "d3C1IpStationStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.3.8.1.1": {
+   "field": "d3C1IpTrunkGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.3.8.1.2": {
+   "field": "d3C1IpTrunkChGrp",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.3.8.1.3": {
+   "field": "d3C1IpTrunkStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.4.1": {
+   "field": "d3Cabinet2Status",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.4.2": {
+   "field": "d3Cabinet2Control",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.4.3": {
+   "field": "d3C2IfCardGroupStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.4.4": {
+   "field": "d3C2IfCardGroupControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.4.5": {
+   "field": "d3C2IfCardNumber",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.4.6.1.1": {
+   "field": "d3C2PortGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.4.6.1.2": {
+   "field": "d3C2PortGroupStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.4.6.1.3": {
+   "field": "d3C2PortGroupControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.4.7.1.1": {
+   "field": "d3C2IpStationGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.4.7.1.2": {
+   "field": "d3C2IpStationDn",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.4.7.1.3": {
+   "field": "d3C2IpStationStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.4.8.1.1": {
+   "field": "d3C2IpTrunkGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.4.8.1.2": {
+   "field": "d3C2IpTrunkChGrp",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.5.4.8.1.3": {
+   "field": "d3C2IpTrunkStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.1": {
+   "field": "dhwySubCpu4Status",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.2": {
+   "field": "dhwySubCpu4Control",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.3.1": {
+   "field": "d4Cabinet1Status",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.3.2": {
+   "field": "d4Cabinet1Control",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.3.3": {
+   "field": "d4C1IfCardGroupStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.3.4": {
+   "field": "d4C1IfCardGroupControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.3.5": {
+   "field": "d4C1IfCardNumber",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.3.6.1.1": {
+   "field": "d4C1PortGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.3.6.1.2": {
+   "field": "d4C1PortGroupStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.3.6.1.3": {
+   "field": "d4C1PortGroupControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.3.7.1.1": {
+   "field": "d4C1IpStationGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.3.7.1.2": {
+   "field": "d4C1IpStationDn",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.3.7.1.3": {
+   "field": "d4C1IpStationStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.3.8.1.1": {
+   "field": "d4C1IpTrunkGroupIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.3.8.1.2": {
+   "field": "d4C1IpTrunkChGrp",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.3.8.1.3": {
+   "field": "d4C1IpTrunkStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.4.1": {
+   "field": "d4Cabinet2Status",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.4.2": {
+   "field": "d4Cabinet2Control",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.4.3": {
+   "field": "d4C2IfCardGroupStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.4.4": {
+   "field": "d4C2IfCardGroupControl",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.4.5": {
+   "field": "d4C2IfCardNumber",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.4.6.1.1": {
+   "field": "d4C2PortGroupIndex",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.4.6.1.2": {
+   "field": "d4C2PortGroupStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.4.6.1.3": {
+   "field": "d4C2PortGroupControl",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.4.7.1.1": {
+   "field": "d4C2IpStationGroupIndex",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.4.7.1.2": {
+   "field": "d4C2IpStationDn",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.4.7.1.3": {
+   "field": "d4C2IpStationStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.4.8.1.1": {
+   "field": "d4C2IpTrunkGroupIndex",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.4.8.1.2": {
+   "field": "d4C2IpTrunkChGrp",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.6.4.8.1.3": {
+   "field": "d4C2IpTrunkStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.1": {
+   "field": "pcmSubCpuStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.2": {
+   "field": "pcmSubCpuControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.3.1": {
+   "field": "d5Cabinet1Status",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.3.2": {
+   "field": "d5Cabinet1Control",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.3.3": {
+   "field": "d5C1IfCardGroupStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.3.4": {
+   "field": "d5C1IfCardGroupControl",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.3.5": {
+   "field": "d5C1IfCardNumber",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.3.6.1.1": {
+   "field": "d5C1PortGroupIndex",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.3.6.1.2": {
+   "field": "d5C1PortGroupStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.3.6.1.3": {
+   "field": "d5C1PortGroupControl",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.3.7.1.1": {
+   "field": "d5C1IpStationGroupIndex",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.3.7.1.2": {
+   "field": "d5C1IpStationDn",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.3.7.1.3": {
+   "field": "d5C1IpStationStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.3.8.1.1": {
+   "field": "d5C1IpTrunkGroupIndex",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.3.8.1.2": {
+   "field": "d5C1IpTrunkChGrp",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.3.8.1.3": {
+   "field": "d5C1IpTrunkStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.4.1": {
+   "field": "d5Cabinet2Status",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.4.2": {
+   "field": "d5Cabinet2Control",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.4.3": {
+   "field": "d5C2IfCardGroupStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.4.4": {
+   "field": "d5C2IfCardGroupControl",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.4.5": {
+   "field": "d5C2IfCardNumber",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.4.6.1.1": {
+   "field": "d5C2PortGroupIndex",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.4.6.1.2": {
+   "field": "d5C2PortGroupStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.4.6.1.3": {
+   "field": "d5C2PortGroupControl",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.4.7.1.1": {
+   "field": "d5C2IpStationGroupIndex",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.4.7.1.2": {
+   "field": "d5C2IpStationDn",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.4.7.1.3": {
+   "field": "d5C2IpStationStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.4.8.1.1": {
+   "field": "d5C2IpTrunkGroupIndex",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.4.8.1.2": {
+   "field": "d5C2IpTrunkChGrp",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.7.4.8.1.3": {
+   "field": "d5C2IpTrunkStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.1": {
+   "field": "serialSubCpuStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.2": {
+   "field": "serialSubCpuControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.3.1": {
+   "field": "d6Cabinet1Status",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.3.1.1": {
+   "field": "smdiVmsIndex",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.3.1.2": {
+   "field": "smdiVmsStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.3.1.3": {
+   "field": "smdiVmsControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.3.2": {
+   "field": "d6Cabinet1Control",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.3.3": {
+   "field": "d6C1IfCardGroupStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.3.4": {
+   "field": "d6C1IfCardGroupControl",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.3.5": {
+   "field": "d6C1IfCardNumber",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.3.6.1.1": {
+   "field": "d6C1PortGroupIndex",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.3.6.1.2": {
+   "field": "d6C1PortGroupStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.3.6.1.3": {
+   "field": "d6C1PortGroupControl",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.3.7.1.1": {
+   "field": "d6C1IpStationGroupIndex",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.3.7.1.2": {
+   "field": "d6C1IpStationDn",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.3.7.1.3": {
+   "field": "d6C1IpStationStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.3.8.1.1": {
+   "field": "d6C1IpTrunkGroupIndex",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.3.8.1.2": {
+   "field": "d6C1IpTrunkChGrp",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.3.8.1.3": {
+   "field": "d6C1IpTrunkStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.4.1": {
+   "field": "serialSmdrStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.4.2": {
+   "field": "serialSmdrControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.4.3": {
+   "field": "d6C2IfCardGroupStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.4.4": {
+   "field": "d6C2IfCardGroupControl",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.4.5": {
+   "field": "d6C2IfCardNumber",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.4.6.1.1": {
+   "field": "d6C2PortGroupIndex",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.4.6.1.2": {
+   "field": "d6C2PortGroupStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.4.6.1.3": {
+   "field": "d6C2PortGroupControl",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.4.7.1.1": {
+   "field": "d6C2IpStationGroupIndex",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.4.7.1.2": {
+   "field": "d6C2IpStationDn",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.4.7.1.3": {
+   "field": "d6C2IpStationStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.4.8.1.1": {
+   "field": "d6C2IpTrunkGroupIndex",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.4.8.1.2": {
+   "field": "d6C2IpTrunkChGrp",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.8.4.8.1.3": {
+   "field": "d6C2IpTrunkStatus",
+   "program": "component"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.9.1": {
+   "field": "programMemoryStatus",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.4.1.9.2": {
+   "field": "programMemoryControl",
+   "program": "component_P_D"
+  },
+  "1.3.6.1.4.1.186.1.22.5.1.1.1": {
+   "field": "keyStartDate",
+   "program": "errorAlarmLog"
+  },
+  "1.3.6.1.4.1.186.1.22.5.1.1.10": {
+   "field": "searchNext",
+   "program": "errorAlarmLog"
+  },
+  "1.3.6.1.4.1.186.1.22.5.1.1.2": {
+   "field": "keyEndDate",
+   "program": "errorAlarmLog"
+  },
+  "1.3.6.1.4.1.186.1.22.5.1.1.3": {
+   "field": "keyStartRankCode",
+   "program": "errorAlarmLog"
+  },
+  "1.3.6.1.4.1.186.1.22.5.1.1.4": {
+   "field": "keyEndRankCode",
+   "program": "errorAlarmLog"
+  },
+  "1.3.6.1.4.1.186.1.22.5.1.1.5": {
+   "field": "keyErrorCode",
+   "program": "errorAlarmLog"
+  },
+  "1.3.6.1.4.1.186.1.22.5.1.1.6": {
+   "field": "keyOrgCode",
+   "program": "errorAlarmLog"
+  },
+  "1.3.6.1.4.1.186.1.22.5.1.1.7": {
+   "field": "searchNumber",
+   "program": "errorAlarmLog"
+  },
+  "1.3.6.1.4.1.186.1.22.5.1.1.8": {
+   "field": "searchResultNumber",
+   "program": "errorAlarmLog"
+  },
+  "1.3.6.1.4.1.186.1.22.5.1.1.9": {
+   "field": "searchFirst",
+   "program": "errorAlarmLog"
+  },
+  "1.3.6.1.4.1.186.1.22.5.1.2": {
+   "field": "logManagementInfo",
+   "program": "errorAlarmLog"
+  },
+  "1.3.6.1.4.1.186.1.22.5.1.3": {
+   "field": "expandLogManagementInfo",
+   "program": "errorAlarmLog"
+  },
+  "1.3.6.1.4.1.186.1.22.5.2.1.1.1": {
+   "field": "messageTraceStartStop",
+   "program": "eventTrace"
+  },
+  "1.3.6.1.4.1.186.1.22.5.2.1.1.2": {
+   "field": "messageTraceSize",
+   "program": "eventTrace"
+  },
+  "1.3.6.1.4.1.186.1.22.5.2.1.1.3": {
+   "field": "messageTraceCategory",
+   "program": "eventTrace"
+  },
+  "1.3.6.1.4.1.186.1.22.5.2.1.1.4": {
+   "field": "judgeOfCompletionMessageTrace",
+   "program": "eventTrace"
+  },
+  "1.3.6.1.4.1.186.1.22.5.2.1.2.1": {
+   "field": "changeSide",
+   "program": "eventTrace"
+  },
+  "1.3.6.1.4.1.186.1.22.5.2.1.2.2": {
+   "field": "judgeOfCompletionChangeSide",
+   "program": "eventTrace"
+  },
+  "1.3.6.1.4.1.186.1.22.5.2.1.3.1": {
+   "field": "isdnTrunkAll",
+   "program": "eventTrace"
+  },
+  "1.3.6.1.4.1.186.1.22.5.2.2.1.1.1": {
+   "field": "eventTracePortCabinetNumber",
+   "program": "eventTrace"
+  },
+  "1.3.6.1.4.1.186.1.22.5.2.2.1.1.2": {
+   "field": "eventTracePortSlotNumber",
+   "program": "eventTrace"
+  },
+  "1.3.6.1.4.1.186.1.22.5.2.2.1.1.3": {
+   "field": "eventTracePortPortNumber",
+   "program": "eventTrace"
+  },
+  "1.3.6.1.4.1.186.1.22.5.2.2.1.1.4": {
+   "field": "eventTracePortTraceKind",
+   "program": "eventTrace"
+  },
+  "1.3.6.1.4.1.186.1.22.5.2.2.1.1.5": {
+   "field": "eventTracePortTraceLevel",
+   "program": "eventTrace"
+  },
+  "1.3.6.1.4.1.186.1.22.5.4.1": {
+   "field": "errAlmNmlFileDateNumber",
+   "program": "fileDate"
+  },
+  "1.3.6.1.4.1.186.1.22.5.4.2.1.1": {
+   "field": "errAlmNmlFileDateIndex",
+   "program": "fileDate"
+  },
+  "1.3.6.1.4.1.186.1.22.5.4.2.1.2": {
+   "field": "errAlmNmlFileName",
+   "program": "fileDate"
+  },
+  "1.3.6.1.4.1.186.1.22.5.4.2.1.3": {
+   "field": "errAlmNmlCreateDate",
+   "program": "fileDate"
+  },
+  "1.3.6.1.4.1.186.1.22.5.4.2.1.4": {
+   "field": "errAlmNmlModifyDate",
+   "program": "fileDate"
+  },
+  "1.3.6.1.4.1.186.1.22.5.4.3": {
+   "field": "errAlmExpFileDateNumber",
+   "program": "fileDate"
+  },
+  "1.3.6.1.4.1.186.1.22.5.4.4.1.1": {
+   "field": "errAlmExpFileDateIndex",
+   "program": "fileDate"
+  },
+  "1.3.6.1.4.1.186.1.22.5.4.4.1.2": {
+   "field": "errAlmExpFileName",
+   "program": "fileDate"
+  },
+  "1.3.6.1.4.1.186.1.22.5.4.4.1.3": {
+   "field": "errAlmExpCreateDate",
+   "program": "fileDate"
+  },
+  "1.3.6.1.4.1.186.1.22.5.4.4.1.4": {
+   "field": "errAlmExpModifyDate",
+   "program": "fileDate"
+  },
+  "1.3.6.1.4.1.186.1.22.5.4.5": {
+   "field": "snpAdmFileDateNumber",
+   "program": "fileDate"
+  },
+  "1.3.6.1.4.1.186.1.22.5.4.6.1.1": {
+   "field": "snpAdmFileDateIndex",
+   "program": "fileDate"
+  },
+  "1.3.6.1.4.1.186.1.22.5.4.6.1.2": {
+   "field": "snpAdmFileName",
+   "program": "fileDate"
+  },
+  "1.3.6.1.4.1.186.1.22.5.4.6.1.3": {
+   "field": "snpAdmCreateDate",
+   "program": "fileDate"
+  },
+  "1.3.6.1.4.1.186.1.22.5.4.6.1.4": {
+   "field": "snpAdmModifyDate",
+   "program": "fileDate"
+  },
+  "1.3.6.1.4.1.186.1.22.5.4.7": {
+   "field": "dktAdmFileDateNumber",
+   "program": "fileDate"
+  },
+  "1.3.6.1.4.1.186.1.22.5.4.8.1.1": {
+   "field": "dktAdmFileDateIndex",
+   "program": "fileDate"
+  },
+  "1.3.6.1.4.1.186.1.22.5.4.8.1.2": {
+   "field": "dktAdmFileName",
+   "program": "fileDate"
+  },
+  "1.3.6.1.4.1.186.1.22.5.4.8.1.3": {
+   "field": "dktAdmCreateDate",
+   "program": "fileDate"
+  },
+  "1.3.6.1.4.1.186.1.22.5.4.8.1.4": {
+   "field": "dktAdmModifyDate",
+   "program": "fileDate"
+  },
+  "1.3.6.1.4.1.186.1.22.6.1": {
+   "field": "alarmStatus",
+   "program": "alarm"
+  },
+  "1.3.6.1.4.1.186.1.22.6.2.1": {
+   "field": "reasonNumber",
+   "program": "alarm"
+  },
+  "1.3.6.1.4.1.186.1.22.6.2.2.1.1": {
+   "field": "reasonIndex",
+   "program": "alarm"
+  },
+  "1.3.6.1.4.1.186.1.22.6.2.2.1.2": {
+   "field": "reasonName",
+   "program": "alarm"
+  },
+  "1.3.6.1.4.1.186.1.22.6.2.2.1.3": {
+   "field": "alarmTimeStamp",
+   "program": "alarm"
+  },
+  "1.3.6.1.4.1.186.1.22.6.3": {
+   "field": "restartReason",
+   "program": "alarm"
+  },
+  "1.3.6.1.4.1.186.1.22.7.3.1.1": {
+   "field": "year",
+   "program": "setCalendar"
+  },
+  "1.3.6.1.4.1.186.1.22.7.3.1.2": {
+   "field": "month",
+   "program": "setCalendar"
+  },
+  "1.3.6.1.4.1.186.1.22.7.3.1.3": {
+   "field": "date",
+   "program": "setCalendar"
+  },
+  "1.3.6.1.4.1.186.1.22.7.3.1.4": {
+   "field": "hour",
+   "program": "setCalendar"
+  },
+  "1.3.6.1.4.1.186.1.22.7.3.1.5": {
+   "field": "minute",
+   "program": "setCalendar"
+  },
+  "1.3.6.1.4.1.186.1.22.7.3.1.6": {
+   "field": "second",
+   "program": "setCalendar"
+  },
+  "1.3.6.1.4.1.186.1.22.7.3.1.7": {
+   "field": "day",
+   "program": "setCalendar"
+  },
+  "1.3.6.1.4.1.186.1.22.7.3.1.8": {
+   "field": "leap",
+   "program": "setCalendar"
+  },
+  "1.3.6.1.4.1.186.1.22.7.6.1": {
+   "field": "upFunction",
+   "program": "updateprogram"
+  },
+  "1.3.6.1.4.1.186.1.22.7.6.10": {
+   "field": "checkFinishWriteFlash",
+   "program": "updateprogram"
+  },
+  "1.3.6.1.4.1.186.1.22.7.6.2": {
+   "field": "upCopiedBlocks",
+   "program": "updateprogram"
+  },
+  "1.3.6.1.4.1.186.1.22.7.6.3": {
+   "field": "upTotalBlocks",
+   "program": "updateprogram"
+  },
+  "1.3.6.1.4.1.186.1.22.7.6.4": {
+   "field": "upActiveSideNumber",
+   "program": "updateprogram"
+  },
+  "1.3.6.1.4.1.186.1.22.7.6.5": {
+   "field": "upActiveSideStatus",
+   "program": "updateprogram"
+  },
+  "1.3.6.1.4.1.186.1.22.7.6.6": {
+   "field": "upStandbySideStatus",
+   "program": "updateprogram"
+  },
+  "1.3.6.1.4.1.186.1.22.7.6.7": {
+   "field": "upStatus",
+   "program": "updateprogram"
+  },
+  "1.3.6.1.4.1.186.1.22.7.6.8": {
+   "field": "upTotalFiles",
+   "program": "updateprogram"
+  },
+  "1.3.6.1.4.1.186.1.22.7.6.9": {
+   "field": "upVersion",
+   "program": "updateprogram"
+  },
+  "1.3.6.1.4.1.186.1.22.7.7.1": {
+   "field": "backupFunction",
+   "program": "backupData"
+  },
+  "1.3.6.1.4.1.186.1.22.7.7.2": {
+   "field": "backupState",
+   "program": "backupData"
+  },
+  "1.3.6.1.4.1.186.1.22.7.7.3": {
+   "field": "currentData",
+   "program": "backupData"
+  },
+  "1.3.6.1.4.1.186.1.22.7.7.4": {
+   "field": "allData",
+   "program": "backupData"
+  }
+ }
+}

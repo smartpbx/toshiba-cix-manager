@@ -78,6 +78,11 @@ def _embedded_catalog() -> str:
                           "bundled eManager catalog")
 
 
+def _embedded_volatile_fields() -> str:
+    return _embedded_data("volatile_fields.json", "EMBEDDED_VOLATILE_FIELDS_JSON",
+                          "curated volatile-field list (diff hiding)")
+
+
 def _embedded_enum_labels() -> str:
     return _embedded_data("enum_labels.json", "EMBEDDED_ENUM_LABELS_JSON",
                           "bundled enum value labels")
@@ -109,7 +114,8 @@ def build(order, out_name, *, title, with_web, tail):
         # single-file build is self-contained (catalog.py reads these globals
         # first, before any bundled-file lookup).
         aliases["catalog.py"] = [_embedded_catalog(), _embedded_enum_labels(),
-                                 _embedded_program_menus()]
+                                 _embedded_program_menus(),
+                                 _embedded_volatile_fields()]
         # The generated UI schema rides with the schema module (same embed →
         # _MEIPASS → packaged-data resolution as the catalog).
         aliases["server/schema.py"] = [_embedded_ui_schema()]
@@ -168,8 +174,8 @@ def main() -> None:
     )
     build(
         ["snmp.py", "decode.py", "scan.py", "catalog.py", "write.py",
-         "backup.py", "enrich.py", "diff.py", "restore.py", "discover.py",
-         "report.py", "cli.py", "update.py",
+         "backup.py", "enrich.py", "diff.py", "diff_view.py", "restore.py",
+         "discover.py", "report.py", "cli.py", "update.py",
          # generic single-program read + snapshot engine (depend on backup /
          # enrich / catalog above) and the snapshot store (stdlib only).
          "programs.py", "snapshot.py", "store.py",
