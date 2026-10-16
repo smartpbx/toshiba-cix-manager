@@ -134,7 +134,7 @@ class FakeClient:
         self._sorted = sorted(data, key=_oid_key)
 
     # serial walk
-    def walk(self, root, *, max_oids=20000):
+    def walk(self, root, *, max_oids=20000, deadline=None):
         for oid in self._sorted:
             if oid == root or oid.startswith(root + "."):
                 yield oid, self._data[oid]
@@ -163,9 +163,11 @@ class FakeClient:
         from toshiba_cix.snmp import SnmpV1
         return SnmpV1.enumerate_children(self, base, max_children=max_children)
 
-    def bulk_walk(self, roots, *, width=20, max_total=500000):
+    def bulk_walk(self, roots, *, width=20, max_total=500000, deadline=None,
+                  status=None):
         from toshiba_cix.snmp import SnmpV1
-        return SnmpV1.bulk_walk(self, roots, width=width, max_total=max_total)
+        return SnmpV1.bulk_walk(self, roots, width=width, max_total=max_total,
+                                deadline=deadline, status=status)
 
 
 def _oid_key(oid: str):

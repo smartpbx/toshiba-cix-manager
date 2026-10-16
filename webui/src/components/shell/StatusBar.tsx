@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { useShallow } from "zustand/react/shallow";
 
@@ -15,21 +15,32 @@ function relativeTime(iso?: string | null): string {
 // Status bar (DESIGN_PLAN 3.1): snapshot age (amber past 30 min), counts, and
 // the long-op progress on the right while a read runs.
 export function StatusBar() {
-  const { progress, meta, readCount, schema, version, coldStart } = useStore(
-    useShallow((s) => ({
-      progress: s.progress,
-      meta: s.snapshotMeta,
-      readCount: s.readKeys.size,
-      schema: s.schema,
-      version: s.version,
-      coldStart: s.coldStart,
-    })),
-  );
+  const { progress, meta, readCount, schema, version, coldStart, programStatus, openProblems } =
+    useStore(
+      useShallow((s) => ({
+        progress: s.progress,
+        meta: s.snapshotMeta,
+        readCount: s.readKeys.size,
+        schema: s.schema,
+        version: s.version,
+        coldStart: s.coldStart,
+        programStatus: s.programStatus,
+        openProblems: s.openProblems,
+      })),
+    );
 
   const reading = progress.status === "reading" || progress.status === "connecting";
   const age = relativeTime(meta?.read_at);
   const stale =
     meta?.read_at && Date.now() - Date.parse(meta.read_at) > 30 * 60 * 1000;
+
+  // Programs the last read could not complete — live from the session status,
+  // falling back to what a cold-opened snapshot saved.
+  const liveProblems = Object.values(programStatus).filter(
+    (st) => st.outcome === "error" || st.outcome === "timeout" || st.outcome === "capped",
+  ).length;
+  const problemCount = liveProblems || meta?.program_problems?.length || 0;
+  const cumOids = progress.detail?.oids;
 
   return (
     <footer data-chrome="status" className="flex h-statusbar shrink-0 items-center gap-3 border-t border-border bg-surface px-3 text-2xs text-fg-2 tnum">
@@ -51,6 +62,19 @@ export function StatusBar() {
               <span>{meta.oids_read} OIDs</span>
             </>
           )}
+          {problemCount > 0 && !reading && (
+            <>
+              <span className="text-fg-3">·</span>
+              <button
+                className="flex items-center gap-1 text-warn hover:underline"
+                onClick={() => openProblems()}
+                title="One or more programs did not read fully — open the Problems panel"
+              >
+                <AlertTriangle className="h-3 w-3" />
+                {problemCount} incomplete
+              </button>
+            </>
+          )}
         </>
       ) : (
         <span>No snapshot yet — connect to a CIX.</span>
@@ -59,11 +83,14 @@ export function StatusBar() {
       {reading && (
         <span className="flex items-center gap-1.5 text-fg">
           <Loader2 className="h-3 w-3 animate-spin" />
-          {progress.message}
+          <span className="max-w-[46ch] truncate">{progress.message}</span>
           {progress.total > 0 && (
             <span className="text-fg-3">
               {progress.done}/{progress.total}
             </span>
+          )}
+          {cumOids != null && cumOids > 0 && (
+            <span className="text-fg-3">· {cumOids} OIDs</span>
           )}
         </span>
       )}

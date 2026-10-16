@@ -7,6 +7,8 @@ import type {
   JobState,
   ModeState,
   PendingGroup,
+  ProgressDetail,
+  ProgramStatus,
   ProgramView,
   SnapshotHeader,
   SnapshotMeta,
@@ -55,6 +57,7 @@ interface Progress {
   message: string;
   jobId: string | null;
   error?: string | null;
+  detail?: ProgressDetail | null;
 }
 
 interface AppState {
@@ -89,6 +92,7 @@ interface AppState {
   programViews: Record<string, ProgramView>;
   readKeys: Set<string>;
   rowCounts: Record<string, number>;
+  programStatus: Record<string, ProgramStatus>;
   loadingKeys: Set<string>;
   ensureProgram: (key: string) => void;
   refreshProgram: (key: string) => Promise<void>;
@@ -157,6 +161,17 @@ function readStoredTheme(): Theme {
     /* private mode / blocked storage */
   }
   return "system";
+}
+
+// A saved snapshot records only its non-clean programs (meta.program_problems);
+// turn that list into the key→status map the nav / Problems panel read, so a
+// cold-opened snapshot still shows which programs failed.
+function statusMapFromProblems(
+  problems?: ProgramStatus[],
+): Record<string, ProgramStatus> {
+  const out: Record<string, ProgramStatus> = {};
+  for (const p of problems ?? []) out[p.key] = p;
+  return out;
 }
 
 const HOME_TAB: Tab = { id: "home", kind: "home", title: "Home" };
@@ -235,6 +250,7 @@ export const useStore = create<AppState>((set, get) => ({
         programViews: {},
         readKeys: new Set(),
         rowCounts: {},
+        programStatus: {},
         pending: [],
         pendingFieldCount: 0,
         pendingValidation: null,
@@ -282,6 +298,7 @@ export const useStore = create<AppState>((set, get) => ({
         programViews: views,
         readKeys: new Set(Object.keys(views)),
         rowCounts,
+        programStatus: statusMapFromProblems(snap.meta?.program_problems),
         identity: snap.identity ?? null,
         snapshotMeta: snap.meta ?? null,
         connectDrawerOpen: false,
@@ -308,8 +325,9 @@ export const useStore = create<AppState>((set, get) => ({
           status: "done",
           done: job.total,
           total: job.total,
-          message: "Snapshot complete.",
+          message: job.message || "Snapshot complete.",
           jobId: job.id,
+          detail: job.detail ?? null,
         },
       });
       void get().refreshSessionIndex();
@@ -322,6 +340,7 @@ export const useStore = create<AppState>((set, get) => ({
           message: job.error ?? "Snapshot failed.",
           jobId: job.id,
           error: job.error,
+          detail: job.detail ?? null,
         },
       });
     } else {
@@ -332,6 +351,7 @@ export const useStore = create<AppState>((set, get) => ({
           total: job.total,
           message: job.message || "Reading…",
           jobId: job.id,
+          detail: job.detail ?? null,
         },
       });
     }
@@ -356,6 +376,7 @@ export const useStore = create<AppState>((set, get) => ({
       set({
         readKeys: new Set(snap.read_keys),
         rowCounts,
+        programStatus: snap.program_status ?? get().programStatus,
         identity: snap.identity ?? get().identity,
         snapshotMeta: snap.meta ?? get().snapshotMeta,
       });
@@ -367,6 +388,7 @@ export const useStore = create<AppState>((set, get) => ({
   programViews: {},
   readKeys: new Set(),
   rowCounts: {},
+  programStatus: {},
   loadingKeys: new Set(),
   ensureProgram(key) {
     const { programViews, loadingKeys, sessionId, coldStart } = get();
@@ -379,7 +401,12 @@ export const useStore = create<AppState>((set, get) => ({
       .program(sessionId, key)
       .then((res) => {
         if (res.ok && res.program) {
-          set((s) => ({ programViews: { ...s.programViews, [key]: res.program! } }));
+          set((s) => ({
+            programViews: { ...s.programViews, [key]: res.program! },
+            programStatus: res.status
+              ? { ...s.programStatus, [key]: res.status }
+              : s.programStatus,
+          }));
         }
       })
       .catch(() => {})
@@ -402,6 +429,9 @@ export const useStore = create<AppState>((set, get) => ({
           programViews: { ...s.programViews, [key]: res.program! },
           readKeys: new Set(s.readKeys).add(key),
           rowCounts: { ...s.rowCounts, [key]: res.program!.row_count },
+          programStatus: res.status
+            ? { ...s.programStatus, [key]: res.status }
+            : s.programStatus,
         }));
       }
     } catch {
@@ -618,6 +648,7 @@ export const useStore = create<AppState>((set, get) => ({
         programViews: views,
         readKeys: new Set(Object.keys(views)),
         rowCounts,
+        programStatus: statusMapFromProblems(snap.meta?.program_problems),
         identity: snap.identity ?? null,
         snapshotMeta: snap.meta ?? null,
         fileMode: {

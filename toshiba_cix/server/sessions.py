@@ -41,6 +41,7 @@ class Session:
         self.identity = None
         self.doc = {}                 # working copy: catalog_key -> program_view
         self.freshness = {}           # catalog_key -> read timestamp
+        self.program_status = {}      # catalog_key -> read status (collect_program)
         self.snapshot_meta = {}       # meta of the last read (scope, walk_error…)
         self.changeset = Changeset()  # staged edits (layer 2 — nothing on wire)
         self.last_applied = None      # ops of the last applied changeset (Undo)
@@ -92,6 +93,14 @@ class Session:
         if key:
             self.doc[key] = pv
             self.freshness[key] = time.time()
+
+    def set_program_status(self, status: dict) -> None:
+        """Record one program's read outcome (from snapshot.read_snapshot's
+        per-program ``on_program`` callback), so the nav / Problems panel can
+        tell read-empty from read-FAILED from not-read-yet."""
+        key = status.get("key")
+        if key:
+            self.program_status[key] = status
 
     def program_view(self, catalog_key: str):
         """The working-copy view for a catalog key, or ``None`` if unread."""
