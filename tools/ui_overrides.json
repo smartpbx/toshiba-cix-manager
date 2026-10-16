@@ -1,0 +1,77 @@
+{
+  "_note": "Hand-maintained layer over the generated UI schema (DESIGN_PLAN 3.3/3.4, 11-P0). Keyed by catalog key. Everything here is DATA the builder bakes into ui_schema.json; the archetype/tier/danger/special-layout of a program is never code. Defaults the builder applies without an entry: archetype = grid_record when the program has a key field, else form; tier = 3 if danger else 1.",
+
+  "archetype": {
+    "100CardSlot": "special",
+    "103ClassOfService": "special",
+    "200StationAssign": "special",
+    "210PickUpGrp": "special",
+    "502TermPagingGrp": "special",
+    "320ISDNBchPosition": "special",
+    "116DataInitialize": "action",
+    "119InitializeLockPassword": "action",
+    "systemRestart": "action",
+    "flashMemoryTest": "action",
+    "memoryAccess": "action",
+    "dosCommand": "action",
+    "updateprogram": "action",
+    "setCalendar": "action",
+    "backupData": "action"
+  },
+
+  "special_layout": {
+    "200StationAssign": "station_key_strip",
+    "100CardSlot": "card_slot_grid",
+    "103ClassOfService": "cos_matrix",
+    "210PickUpGrp": "group_matrix",
+    "502TermPagingGrp": "group_matrix",
+    "320ISDNBchPosition": "pri_bchannels"
+  },
+
+  "danger": [
+    "150SystemIPData",
+    "110PassWord",
+    "118LockPassword",
+    "119InitializeLockPassword",
+    "116DataInitialize",
+    "communityName",
+    "macAddress",
+    "memoryAccess",
+    "dosCommand",
+    "flashMemoryTest",
+    "updateprogram",
+    "systemRestart",
+    "backupData"
+  ],
+
+  "never_write": [
+    "116DataInitialize",
+    "memoryAccess",
+    "dosCommand",
+    "flashMemoryTest",
+    "updateprogram",
+    "systemRestart",
+    "readVersion",
+    "errorStatus",
+    "errorAlarmLog",
+    "eventTrace",
+    "systemAdminLog"
+  ],
+
+  "primary_fields": {
+    "200StationAssign": ["stationStationName", "stationEquipment", "stationType", "stationCos"],
+    "300TrunkAssign": ["trunkEquipment", "trunkIlg", "trunkOlg", "trunkSignaling"],
+    "579VoiceMailDataForSystem": ["vmSystemApplication", "vmSystemMessageDeskNo", "vmSystemCallerNumber"]
+  },
+
+  "display_no": {},
+
+  "level0": [
+    "118LockPassword",
+    "119InitializeLockPassword",
+    "116DataInitialize",
+    "memoryAccess"
+  ],
+
+  "simplified_hidden_areas": ["IP-Telephony"]
+}

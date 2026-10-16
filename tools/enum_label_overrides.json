@@ -1,0 +1,14 @@
+{
+  "_note": "Global MOF-symbol -> caption overrides applied by labels.enum_caption BEFORE the deterministic title-caser. Add an entry only when the mechanical cast is clearly wrong; keep the transform rules in labels.py small. Keyed by the raw symbol as it appears in enum_labels.json.",
+  "oN": "On",
+  "oFF": "Off",
+  "non-workingDay": "Non-working Day",
+  "built-inModem": "Built-in Modem",
+  "noNeed": "No Need",
+  "no-need": "No Need",
+  "notAllowed": "Not Allowed",
+  "notPermitted": "Not Permitted",
+  "notConnected": "Not Connected",
+  "notDetermined": "Not Determined",
+  "noData": "No Data"
+}

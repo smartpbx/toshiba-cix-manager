@@ -1,0 +1,50 @@
+name: Tests
+
+# The engine is pure stdlib (DESIGN_PLAN 2.1), so the suite runs with no pip
+# installs on the two Python versions the release builds target (3.8 field
+# floor, 3.12 CI/prod). It also gates the generated data/amalgam artifacts:
+# ui_schema.json must be a fresh build of its inputs, and the single-file
+# amalgams must match a fresh run of build_standalone.py — the same "committed
+# artifact == fresh build" contract the Web UI workflow enforces for webui.html.
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run the stdlib test suite
+        run: |
+          set -e
+          fail=0
+          for t in tests/test_*.py; do
+            echo "=== $t ==="
+            python3 "$t" || fail=1
+          done
+          exit $fail
+
+  artifacts-fresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: ui_schema.json is a fresh build of its inputs
+        run: python3 tools/build_ui_schema.py --check
+      - name: Single-file amalgams match a fresh build
+        run: |
+          python3 build_standalone.py
+          git diff --exit-code -- toshiba_cix_standalone.py toshiba_cix_manager.py \
+            || { echo "::error::amalgams are stale — run: python3 build_standalone.py"; exit 1; }
