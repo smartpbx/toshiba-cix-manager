@@ -1591,13 +1591,34 @@ def _background_update_check() -> None:
             print("  Use 'Check for updates' in the web UI to install it.")
 
 
+def _emit_endpoint_line(url: str, token: str | None, port: int) -> None:
+    """Print the loopback endpoint as one machine-readable line, then flush.
+
+    The Tauri desktop shell (``packaging/sidecar_entry.py``) spawns the engine
+    as a sidecar and reads this line from stdout to learn which ``127.0.0.1``
+    port + launch token to point the native WebView at. The marker prefix lets
+    the Rust side ignore every other line the engine prints. Pure stdout — no
+    new dependency, and the normal ``--serve`` path never emits it.
+    """
+    payload = json.dumps({"url": url, "token": token, "port": port})
+    print(f"@@SWITCHROOM_ENDPOINT@@ {payload}", flush=True)
+
+
 def serve(host: str = "127.0.0.1", port: int = 8765, *,
-          open_browser: bool = True, portable: bool = False) -> None:
+          open_browser: bool = True, portable: bool = False,
+          autoexit: bool = True, emit_endpoint: bool = False) -> None:
     """Launch the full app: finalize any staged update, then serve with the
     loopback token + Origin guard on, an OS-chosen port and app-mode browser.
 
     ``portable=True`` keeps the store (sites.json, journal, backups) beside the
     executable for a USB stick instead of the per-OS app-data dir.
+
+    ``autoexit=False`` keeps the daemon alive when the last SSE client leaves —
+    used by the Tauri desktop shell, which owns the process lifecycle itself.
+    ``emit_endpoint=True`` prints the ``@@SWITCHROOM_ENDPOINT@@`` line (above)
+    so that shell can discover the port + token. The launch token is taken from
+    ``$SWITCHROOM_TOKEN`` when set (so the shell can mint and pass it) and
+    generated otherwise — the two web paths are byte-for-byte unchanged.
     """
     import threading
 
@@ -1606,13 +1627,20 @@ def serve(host: str = "127.0.0.1", port: int = 8765, *,
         from .update import relaunch
         relaunch(pending["relaunch_argv"])   # does not return on success
 
-    ctx = make_context(token=generate_token(), appdirs=from_args(portable=portable))
+    token = os.environ.get("SWITCHROOM_TOKEN") or generate_token()
+    ctx = make_context(token=token, appdirs=from_args(portable=portable))
     print(f"Toshiba CIX Manager {__version__}")
     print("  Read-only SNMP. Writes gated behind explicit confirm. Ctrl-C to stop.")
     threading.Thread(target=_background_update_check, daemon=True).start()
+
+    def _on_ready(url: str) -> None:
+        print(f"  Open: {url}")
+        if emit_endpoint:
+            _emit_endpoint_line(url, ctx.auth.token, ctx.port)
+
     try:
-        run_server(ctx, host, port, open_browser=open_browser, autoexit=True,
-                   block=True, on_ready=lambda url: print(f"  Open: {url}"))
+        run_server(ctx, host, port, open_browser=open_browser, autoexit=autoexit,
+                   block=True, on_ready=_on_ready)
     except KeyboardInterrupt:
         print("\nStopping.")
 
@@ -1631,10 +1659,17 @@ def main(argv=None) -> int:
                    help="do not auto-open the browser")
     p.add_argument("--portable", action="store_true",
                    help="keep the store beside the executable (USB stick)")
+    p.add_argument("--no-autoexit", action="store_true",
+                   help="never self-exit when the last client leaves "
+                        "(the Tauri desktop shell owns the lifecycle)")
+    p.add_argument("--emit-endpoint", action="store_true",
+                   help="print a machine-readable @@SWITCHROOM_ENDPOINT@@ line "
+                        "(url/token/port) for the Tauri desktop shell")
     args = p.parse_args(argv)
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(message)s")
     serve(args.host, args.port, open_browser=not args.no_browser,
-          portable=args.portable)
+          portable=args.portable, autoexit=not args.no_autoexit,
+          emit_endpoint=args.emit_endpoint)
     return 0
 
 

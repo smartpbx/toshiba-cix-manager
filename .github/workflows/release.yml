@@ -1,9 +1,15 @@
 name: Build release artifacts
 
-# Builds the self-contained Windows .exe and Linux AppImage. On a version tag
-# (v*) they are attached to the GitHub Release; on manual dispatch they are
-# uploaded as workflow artifacts for testing. Built binaries are never committed
-# to git — they live only in Releases / workflow artifacts.
+# Builds the self-contained Windows .exe and Linux AppImage (the stdlib app),
+# plus the Tauri native-desktop bundles (Switchroom: .deb/.AppImage on Linux,
+# .msi/NSIS .exe on Windows). On a version tag (v*) they are attached to the
+# GitHub Release; on manual dispatch they are uploaded as workflow artifacts
+# for testing. Built binaries are never committed to git — they live only in
+# Releases / workflow artifacts.
+#
+# The desktop jobs each build the Python engine as a PyInstaller sidecar on the
+# matching OS (PyInstaller can't cross-compile) and then `tauri build`. Rust +
+# Node are build-time toolchains only; nothing here ships in the Python wheel.
 
 on:
   push:
@@ -55,3 +61,79 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: dist/Toshiba_CIX_Manager-x86_64.AppImage
+
+  # ---- Switchroom native desktop shell (Tauri v2) --------------------------
+  linux-desktop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: System deps for the Linux WebView (WebKitGTK)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file \
+            libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev pkg-config
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build the engine sidecar (PyInstaller, build-time only)
+        run: |
+          python -m pip install --upgrade pip pyinstaller
+          python packaging/build_sidecar.py
+      - name: Build the desktop app (.deb + .AppImage)
+        working-directory: desktop
+        run: |
+          npm ci
+          npm run tauri build
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Switchroom-linux-desktop
+          path: |
+            desktop/src-tauri/target/release/bundle/deb/*.deb
+            desktop/src-tauri/target/release/bundle/appimage/*.AppImage
+      - name: Attach to release (tags only)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            desktop/src-tauri/target/release/bundle/deb/*.deb
+            desktop/src-tauri/target/release/bundle/appimage/*.AppImage
+
+  windows-desktop:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build the engine sidecar (PyInstaller, build-time only)
+        run: |
+          python -m pip install --upgrade pip pyinstaller
+          python packaging/build_sidecar.py
+      - name: Build the desktop app (.msi + NSIS .exe)
+        working-directory: desktop
+        run: |
+          npm ci
+          npm run tauri build -- --bundles nsis,msi
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Switchroom-windows-desktop
+          path: |
+            desktop/src-tauri/target/release/bundle/nsis/*-setup.exe
+            desktop/src-tauri/target/release/bundle/msi/*.msi
+      - name: Attach to release (tags only)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            desktop/src-tauri/target/release/bundle/nsis/*-setup.exe
+            desktop/src-tauri/target/release/bundle/msi/*.msi

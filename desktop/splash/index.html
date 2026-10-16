@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Switchroom</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b0f14;
+        --fg: #e6edf3;
+        --muted: #8b98a5;
+        --accent: #4f9cf9;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; margin: 0; }
+      body {
+        background: var(--bg);
+        color: var(--fg);
+        font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        display: grid;
+        place-items: center;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      .wrap { text-align: center; }
+      .mark {
+        font-size: 22px;
+        font-weight: 650;
+        letter-spacing: 0.2px;
+        margin-bottom: 14px;
+      }
+      .spinner {
+        width: 26px;
+        height: 26px;
+        margin: 0 auto 14px;
+        border: 3px solid rgba(255, 255, 255, 0.14);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+      }
+      .status { color: var(--muted); font-size: 13px; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) {
+        .spinner { animation: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="spinner" aria-hidden="true"></div>
+      <div class="mark">Switchroom</div>
+      <div class="status">Starting the engine&hellip;</div>
+    </div>
+  </body>
+</html>

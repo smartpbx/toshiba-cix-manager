@@ -1,0 +1,31 @@
+[package]
+name = "switchroom"
+version = "0.1.0"
+description = "Switchroom — native desktop shell for the Toshiba CIX Manager engine"
+authors = ["E-wee"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.77"
+
+# The Python engine is bundled as a Tauri sidecar (externalBin); see
+# ../../packaging/build_sidecar.py and desktop/README.md. Rust is a build-time
+# toolchain only — it never ships in the Python wheel / amalgam.
+
+[build-dependencies]
+tauri-build = { version = "2.1.0", features = [] }
+
+[dependencies]
+tauri = { version = "2.2.0", features = [] }
+tauri-plugin-shell = "2.2.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+getrandom = "0.2"
+
+[profile.release]
+# A smaller, faster-to-ship bundle: the UI and all logic live in the webview +
+# the Python sidecar, so the Rust shell can be aggressively optimised for size.
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
