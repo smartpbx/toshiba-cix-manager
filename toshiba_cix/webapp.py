@@ -177,7 +177,23 @@ def route_catalog(ctx, req):
 
 def route_update_check(ctx, req):
     try:
-        req.send_json(check_for_update())
+        info = check_for_update()
+        # Enrich with the plan so the UI knows whether an install is *possible*
+        # here (``can_apply``) and how it will install (``install_method``).
+        # ``replaceable`` alone is wrong for .deb/.msi — those install but do not
+        # self-replace. Guarded: a plan failure must never fail the check.
+        try:
+            plan = plan_update(info)
+            info = {
+                **info,
+                "can_apply": plan.get("can_apply", False),
+                "install_method": plan.get("install_method") or info.get("install_method"),
+                "plan_reason": plan.get("reason"),
+                "target_path": plan.get("target_path"),
+            }
+        except Exception:  # noqa: BLE001
+            pass
+        req.send_json(info)
     except Exception as exc:  # noqa: BLE001  — check must never 500
         req.send_json({"ok": False, "error": f"{type(exc).__name__}: {exc}"})
 
@@ -1602,7 +1618,9 @@ def _background_update_check() -> None:
     if info.get("ok") and info.get("newer"):
         print(f"  Update available: v{info.get('latest')} "
               f"(you have {info.get('current')}) — {info.get('html_url')}")
-        if info.get("replaceable"):
+        # self_replace (AppImage/.exe) and installer (.deb/.msi) can both install
+        # from the UI; only a git/pip "source" build can't.
+        if info.get("install_method") in ("self_replace", "installer"):
             print("  Use 'Check for updates' in the web UI to install it.")
 
 

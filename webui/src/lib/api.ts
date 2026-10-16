@@ -18,6 +18,8 @@ import type {
   SessionSnapshot,
   SnapshotHeader,
   SnapshotStart,
+  UpdateApplyResult,
+  UpdateInfo,
   VmBoxDetail,
   VmBoxRow,
   VmDiff,
@@ -53,6 +55,12 @@ const s = (id: string) => encodeURIComponent(id);
 export const api = {
   health: () => jget<Health>("/api/health"),
   schema: () => jget<UISchema>("/api/schema"),
+
+  // Self-updater (toshiba_cix/update.py). checkUpdate is a safe GET — the
+  // backend swallows every network error into {ok:false}; applyUpdate is the
+  // confirm-gated install. See webapp route_update_check / route_update_apply.
+  checkUpdate: () => jget<UpdateInfo>("/api/update"),
+  applyUpdate: () => jpost<UpdateApplyResult>("/api/update", { confirm: true }),
 
   // P4: config linter (Problems panel) over the working copy.
   lint: (sessionId: string) =>
