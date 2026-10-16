@@ -223,6 +223,158 @@ export interface FullSnapshot {
   };
 }
 
+// ---- Voice Mail (Stratagy LVMU) leg — DESIGN_PLAN §8 ----------------------
+export interface VmStatus {
+  connected: boolean;
+  transport: string;
+  port: string;
+  firmware: string;
+  admin_box: string;
+  log_name: string;
+  trace_frames: number;
+  shutdown?: string | null;
+  writes_enabled: boolean;
+}
+
+export interface VmBoxRow {
+  box: string;
+  name: string;
+  reserved: boolean;
+}
+
+export interface VmMailbox {
+  box: string;
+  name: string;
+  extension: string;
+  comment: string;
+  security_code: string;
+  created: string | null;
+  modified: string | null;
+  record_len: number;
+  unproven: string[];
+  error?: string;
+}
+
+export interface VmEditorField {
+  name: string;
+  tab: string;
+  label: string;
+  tooltip?: string;
+  type: string;
+  status: "confirmed" | "inferred" | "unknown";
+  dot: "green" | "amber" | "grey";
+  writable: boolean;
+  range?: string;
+  enum?: string[];
+  lock?: boolean;
+  wire?: string;
+}
+
+export interface VmEditorModel {
+  tabs: Array<{ tab: string; fields: VmEditorField[] }>;
+  writes_enabled: boolean;
+  values: Record<string, unknown>;
+  meta?: Record<string, unknown>;
+}
+
+export interface VmBoxDetail {
+  ok: boolean;
+  mailbox: VmMailbox;
+  editor: VmEditorModel;
+  reserved: boolean;
+}
+
+export interface VmSysParam {
+  name: string;
+  value: string;
+  raw_value: string;
+  enabled: boolean;
+  group: string;
+  description: string;
+  possible: string;
+  default: string;
+  decoded?: string | null;
+}
+
+export interface VmFinding {
+  severity: string;
+  param: string;
+  message: string;
+}
+
+export interface VmSysParams {
+  params: VmSysParam[];
+  groups: string[];
+  findings: VmFinding[];
+  help_status: string;
+}
+
+export interface VmDialCode {
+  code: string;
+  value: string;
+  label: string;
+}
+
+export interface VmCompare {
+  available: boolean;
+  reason?: string;
+  model?: string;
+  default_name?: string;
+  clean?: boolean;
+  dial_codes: Array<{ code: string; kind: string; default: string | null; live: string | null; label?: string }>;
+  integration: Array<{ pattern: string; kind: string }>;
+}
+
+export interface VmPbxDb {
+  pbx_name: string;
+  model: string;
+  dial_codes: VmDialCode[];
+  integration: Array<{ index: string; pattern: string }>;
+  compare?: VmCompare;
+}
+
+export interface VmReportTemplate {
+  id: string;
+  name: string;
+  columns: string[];
+}
+
+export interface VmReport {
+  template: string;
+  columns: Array<{ name: string; label: string }>;
+  rows: string[][];
+  row_count: number;
+}
+
+export interface VmBoxDiff {
+  changes: Array<{ field: string; old: unknown; new: unknown; sensitive: boolean }>;
+  raw: Record<string, { bytes_differ: number; offsets: number[]; len_a: number; len_b: number }>;
+  changed: boolean;
+}
+
+export interface VmDiff {
+  added: string[];
+  removed: string[];
+  boxes: Record<string, VmBoxDiff>;
+  sysparams: Array<{ name: string; old: unknown; new: unknown }>;
+  summary: {
+    boxes_added: number;
+    boxes_removed: number;
+    boxes_changed: number;
+    sysparams_changed: number;
+  };
+}
+
+export interface VmPlan {
+  box: string;
+  mode: string;
+  writes_enabled: boolean;
+  planned: Array<Record<string, unknown>>;
+  refused: Array<{ field: string; reason: string }>;
+  apply_allowed: boolean;
+  reason: string;
+}
+
 export type Reach = "direct" | "remote";
 
 export interface ConnectionForm {

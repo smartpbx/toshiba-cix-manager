@@ -64,7 +64,7 @@ from .update import apply_update, check_for_update, finalize_pending_update, pla
 from .write import WRITES_ENABLED, CIXWriter, WriteError
 # Voicemail leg (DESIGN_PLAN §8). Bare names so the single-file build resolves
 # them as globals after it flattens the package.
-from . import vm_catalog, vm_reports, vm_serial
+from . import vm_backup, vm_catalog, vm_reports, vm_serial
 from .vm_session import VmSession, VmSessionManager, VmNotConnected
 
 log = logging.getLogger("toshiba_cix.webapp")
@@ -1059,6 +1059,14 @@ def route_vm_trace(ctx, req):
         req.send_text(text, content_type="text/plain; charset=utf-8")
 
 
+def route_vm_diff(ctx, req):
+    """Mailbox-level diff of two JSON backups (decoded fields + raw fallback)."""
+    body = req.body() or {}
+    a = body.get("a") or {}
+    b = body.get("b") or {}
+    req.send_json({"ok": True, "diff": vm_backup.diff_backups(a, b)})
+
+
 def register_vm_routes(ctx: ServerContext) -> None:
     """Voice Mail leg — read-only screens + plan-only save (DESIGN_PLAN §8)."""
     r = ctx.router
@@ -1075,6 +1083,7 @@ def register_vm_routes(ctx: ServerContext) -> None:
     r.post("/api/vm/backup/json", route_vm_backup_json)
     r.get("/api/vm/reports/templates", route_vm_reports_templates)
     r.post("/api/vm/reports/run", route_vm_reports_run)
+    r.post("/api/vm/diff", route_vm_diff)
     r.get("/api/vm/trace", route_vm_trace)
 
 

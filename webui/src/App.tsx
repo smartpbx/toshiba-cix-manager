@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/PageHeader";
 import { HomeView } from "@/views/HomeView";
 import { ProgramPage } from "@/views/ProgramPage";
 import { BackupsView } from "@/views/BackupsView";
+import { VoiceMailView } from "@/views/VoiceMailView";
 import { FileModeBanner } from "@/components/backup/FileModeBanner";
 import { useEventStream } from "@/lib/sse";
 import { useStore } from "@/store/useStore";
@@ -35,6 +36,9 @@ function Workspace() {
   }
   if (!tab || tab.kind === "home") return <HomeView />;
   if (tab.kind === "backups") return <BackupsView />;
+  if (tab.kind === "vm" && tab.vmScreen) {
+    return <VoiceMailView key={tab.vmScreen} screen={tab.vmScreen} />;
+  }
   if (tab.kind === "program" && tab.programKey) {
     // key forces a fresh mount per program so per-page state resets cleanly
     return <ProgramPage key={tab.programKey} programKey={tab.programKey} />;

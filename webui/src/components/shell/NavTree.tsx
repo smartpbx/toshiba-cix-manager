@@ -1,8 +1,19 @@
 import * as React from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Voicemail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { MenuItem } from "@/lib/schema";
-import { useStore } from "@/store/useStore";
+import { useStore, type VmScreen } from "@/store/useStore";
+
+// The Voice Mail root (VM Manager's menu bar as the second nav root —
+// voicemail-map §4.3). Verbatim words, in order.
+const VM_ITEMS: Array<{ screen: VmScreen; title: string }> = [
+  { screen: "status", title: "Status" },
+  { screen: "boxes", title: "Users · Box List" },
+  { screen: "sysparams", title: "System Parameters" },
+  { screen: "integration", title: "Telephone System Integration" },
+  { screen: "backup", title: "Backup to JSON" },
+  { screen: "reports", title: "Reports" },
+];
 
 // The eManager menu tree, verbatim and in order (DESIGN_PLAN 3.2). Each menu
 // item opens a tab for its (first) program; an item whose programs returned no
@@ -18,6 +29,8 @@ export function NavTree() {
     rowCounts,
     openProgram,
     openHome,
+    openVm,
+    vmStatus,
     activeTabId,
     tabs,
   } = useStore((s) => ({
@@ -29,6 +42,8 @@ export function NavTree() {
     rowCounts: s.rowCounts,
     openProgram: s.openProgram,
     openHome: s.openHome,
+    openVm: s.openVm,
+    vmStatus: s.vmStatus,
     activeTabId: s.activeTabId,
     tabs: s.tabs,
   }));
@@ -124,6 +139,44 @@ export function NavTree() {
           </div>
         );
       })}
+
+      {/* Voice Mail — the second root (VM Manager's menu bar). */}
+      <div className="mt-2 border-t border-border px-2 pt-2">
+        <button
+          onClick={() => toggleArea("__vm__")}
+          className="flex w-full items-center gap-1 rounded-md px-1.5 py-1 text-2xs font-semibold uppercase tracking-wide text-fg-2 hover:bg-surface-2"
+        >
+          {openAreas["__vm__"] ? (
+            <ChevronDown className="h-3 w-3" />
+          ) : (
+            <ChevronRight className="h-3 w-3" />
+          )}
+          <Voicemail className="h-3 w-3" />
+          <span>Voice Mail</span>
+          {vmStatus?.connected && (
+            <span
+              className="ml-auto h-1.5 w-1.5 rounded-full bg-ok"
+              title="Voicemail session connected"
+            />
+          )}
+        </button>
+        {(openAreas["__vm__"] ?? false) &&
+          VM_ITEMS.map((item) => {
+            const active = activeTabId === `vm:${item.screen}`;
+            return (
+              <button
+                key={item.screen}
+                onClick={() => openVm(item.screen, item.title.split(" · ").pop()!)}
+                className={cn(
+                  "flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-sm",
+                  active ? "bg-accent-tint text-primary" : "hover:bg-surface-2",
+                )}
+              >
+                <span className="min-w-0 flex-1 truncate">{item.title}</span>
+              </button>
+            );
+          })}
+      </div>
     </nav>
   );
 }

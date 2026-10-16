@@ -4,6 +4,7 @@ import { PageHeader, EmptyState } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { RecordForm } from "@/components/program/RecordForm";
 import { GridRecord } from "@/components/program/GridRecord";
+import { SpecialLayout } from "@/components/program/SpecialLayout";
 import { useStore } from "@/store/useStore";
 
 export function ProgramPage({ programKey }: { programKey: string }) {
@@ -94,6 +95,8 @@ export function ProgramPage({ programKey }: { programKey: string }) {
     );
   } else if (view.row_count === 0) {
     body = <EmptyState message="No rows for this program in the snapshot." />;
+  } else if (prog.archetype === "special") {
+    body = <SpecialLayout program={prog} view={view} />;
   } else if (prog.archetype === "form" || (view.row_count === 1 && prog.archetype !== "grid_record")) {
     // Scalar / Form program: the single record as a full-width grouped form.
     body = (

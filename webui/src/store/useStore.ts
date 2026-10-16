@@ -8,14 +8,24 @@ import type {
   ProgramView,
   SnapshotHeader,
   SnapshotMeta,
+  VmStatus,
 } from "@/lib/types";
 
 type Theme = "system" | "light" | "dark";
 
+export type VmScreen =
+  | "status"
+  | "boxes"
+  | "sysparams"
+  | "integration"
+  | "backup"
+  | "reports";
+
 export interface Tab {
   id: string;
-  kind: "home" | "program" | "backups";
+  kind: "home" | "program" | "backups" | "vm";
   programKey?: string;
+  vmScreen?: VmScreen;
   title: string;
 }
 
@@ -80,12 +90,20 @@ interface AppState {
   ensureProgram: (key: string) => void;
   refreshProgram: (key: string) => Promise<void>;
 
+  // voicemail (Stratagy LVMU leg) ------------------------------------------
+  vmStatus: VmStatus | null;
+  vmBusy: boolean;
+  refreshVmStatus: () => Promise<void>;
+  vmConnect: (spec: Record<string, unknown>) => Promise<string | null>;
+  vmDisconnect: () => Promise<void>;
+
   // tabs -------------------------------------------------------------------
   tabs: Tab[];
   activeTabId: string;
   openProgram: (key: string, title: string) => void;
   openHome: () => void;
   openBackups: () => void;
+  openVm: (screen: VmScreen, title: string) => void;
   closeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
 
@@ -365,6 +383,40 @@ export const useStore = create<AppState>((set, get) => ({
     }
   },
 
+  vmStatus: null,
+  vmBusy: false,
+  async refreshVmStatus() {
+    try {
+      const res = await api.vm.status();
+      if (res.ok) set({ vmStatus: res.status });
+    } catch {
+      /* transient */
+    }
+  },
+  async vmConnect(spec) {
+    set({ vmBusy: true });
+    try {
+      const res = await api.vm.connect(spec);
+      if (res.ok && res.status) {
+        set({ vmStatus: res.status });
+        return null;
+      }
+      return res.error ?? "Connect failed.";
+    } catch (e) {
+      return (e as Error).message;
+    } finally {
+      set({ vmBusy: false });
+    }
+  },
+  async vmDisconnect() {
+    try {
+      await api.vm.disconnect();
+    } catch {
+      /* ignore */
+    }
+    await get().refreshVmStatus();
+  },
+
   tabs: [HOME_TAB],
   activeTabId: "home",
   openProgram(key, title) {
@@ -388,6 +440,15 @@ export const useStore = create<AppState>((set, get) => ({
       set({ tabs: [...tabs, { id, kind: "backups", title: "Backups" }] });
     }
     set({ activeTabId: id });
+  },
+  openVm(screen, title) {
+    const id = `vm:${screen}`;
+    const { tabs } = get();
+    if (!tabs.some((t) => t.id === id)) {
+      set({ tabs: [...tabs, { id, kind: "vm", vmScreen: screen, title }] });
+    }
+    set({ activeTabId: id });
+    void get().refreshVmStatus();
   },
   closeTab(id) {
     if (id === "home") return;

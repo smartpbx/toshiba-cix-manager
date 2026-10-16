@@ -13,6 +13,16 @@ import type {
   SessionSnapshot,
   SnapshotHeader,
   SnapshotStart,
+  VmBoxDetail,
+  VmBoxRow,
+  VmDiff,
+  VmEditorModel,
+  VmPbxDb,
+  VmPlan,
+  VmReport,
+  VmReportTemplate,
+  VmStatus,
+  VmSysParams,
 } from "./types";
 
 async function jget<T>(path: string): Promise<T> {
@@ -143,6 +153,47 @@ export const api = {
     `/api/sites/${s(siteId)}/compare-live`,
     body,
   ),
+
+  // -- Voice Mail (Stratagy LVMU) leg (DESIGN_PLAN §8) --------------------
+  vm: {
+    ports: () => jpost<{ ok: boolean; ports: string[] }>("/api/vm/ports"),
+    connect: (spec: Record<string, unknown>) =>
+      jpost<{ ok: boolean; status?: VmStatus; error?: string }>("/api/vm/connect", spec),
+    disconnect: () => jpost<{ ok: boolean }>("/api/vm/disconnect"),
+    status: () => jget<{ ok: boolean; status: VmStatus }>("/api/vm/status"),
+    catalog: () => jget<{ ok: boolean; editor: VmEditorModel }>("/api/vm/catalog"),
+    boxes: (refresh = false) =>
+      jget<{ ok: boolean; boxes: VmBoxRow[] }>(
+        "/api/vm/boxes" + (refresh ? "?refresh=1" : ""),
+      ),
+    box: (id: string, refresh = false) =>
+      jget<VmBoxDetail>(
+        `/api/vm/boxes/${s(id)}` + (refresh ? "?refresh=1" : ""),
+      ),
+    saveBox: (id: string, changes: Record<string, unknown>) =>
+      jpost<{ ok: boolean; plan: VmPlan }>(`/api/vm/boxes/${s(id)}/save`, { changes }),
+    sysparams: (refresh = false) =>
+      jget<{ ok: boolean; sysparams: VmSysParams }>(
+        "/api/vm/sysparams" + (refresh ? "?refresh=1" : ""),
+      ),
+    pbxdb: (compare = false) =>
+      jget<{ ok: boolean; pbxdb: VmPbxDb }>(
+        "/api/vm/pbxdb" + (compare ? "?compare=1" : ""),
+      ),
+    backupJson: (site?: string) =>
+      jpost<{ ok: boolean; backup: Record<string, unknown> }>(
+        "/api/vm/backup/json", { site },
+      ),
+    diff: (a: Record<string, unknown>, b: Record<string, unknown>) =>
+      jpost<{ ok: boolean; diff: VmDiff }>("/api/vm/diff", { a, b }),
+    reportTemplates: () =>
+      jget<{ ok: boolean; templates: VmReportTemplate[] }>("/api/vm/reports/templates"),
+    runReport: (template: string, first?: string, last?: string) =>
+      jpost<{ ok: boolean; report: VmReport }>("/api/vm/reports/run", {
+        template, first, last,
+      }),
+    traceUrl: () => "/api/vm/trace",
+  },
 };
 
 export interface DiffSource {
