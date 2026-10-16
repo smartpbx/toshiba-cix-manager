@@ -2281,14 +2281,50 @@ is the only stable identifier. Each entry still carries ``number`` and ``name``.
 """
 
 
+import copy
+import hashlib
+import json
+import re
 from datetime import datetime, timezone
 
 
 FORMAT = "toshiba-cix-backup"
-FORMAT_VERSION = 1
+# v2 (backups.md §1): adds meta.snapshot{id,kind,name,…}, content_hash,
+# program_hashes, identity_programs, sensitive_fields, redacted, and an optional
+# voicemail section. v1 files stay openable — a v2 reader treats missing keys as
+# defaults (see :func:`load_document`).
+FORMAT_VERSION = 2
+
+# The sibling format-family members (templates, change sets, exported diffs) all
+# load through :func:`load_document`, dispatching on ``format``.
+FORMAT_TEMPLATE = "toshiba-cix-template"
+FORMAT_CHANGESET = "toshiba-cix-changeset"
+FORMAT_DIFF = "toshiba-cix-diff"
 
 SOFTWARE_ID_OID = f"{ENTERPRISE_ROOT}.7.2.1.0"
 CHASSIS_MAC_OID = f"{ENTERPRISE_ROOT}.7.9.1.0"
+
+# The marker a redacted secret carries in an exported file (backups.md §1.3). It
+# is *never* a value that can be written back: :mod:`restore` refuses it.
+REDACTED_KEY = "__redacted__"
+
+# Programs whose rows make a *system* unique (its IP plan, LAN, SNMP community,
+# chassis MAC). The tool writes the present subset into ``meta.identity_programs``
+# so the cross-system restore (backups.md §6.3) and cross-site diff (§4.4) can
+# exclude them even when an older file is opened by a newer tool. Keyed by
+# catalog key; resolved against the live catalog so a key the catalog lacks is
+# simply dropped.
+IDENTITY_PROGRAM_KEYS = (
+    "150SystemIPData", "151BIPUConfiuration", "801LAN",
+    "communityName", "macAddress",
+)
+
+# Field names whose value is a secret (system/lock/remote/admin passwords, SNMP
+# community strings, FTP credentials). The exporter redacts these by default and
+# every diff renderer masks them (backups.md §1.3). A conservative name match —
+# the catalog's own field names are descriptive.
+_SENSITIVE_RE = re.compile(r"(passw|pwd|secret|communityname|communityid)",
+                           re.IGNORECASE)
 
 
 # --------------------------------------------------------------------------
@@ -2363,6 +2399,122 @@ def read_identity(client) -> dict:
 
 
 # --------------------------------------------------------------------------
+# v2: canonical form, content hashing, identity / secrets, redaction (pure)
+# --------------------------------------------------------------------------
+def canonical_json(obj) -> str:
+    """Canonical JSON for hashing / `git diff`: sorted keys, no whitespace.
+
+    Rows and programs are already emitted in a deterministic order by
+    :func:`build_backup`; ``sort_keys`` fixes field (dict) order, so a switch
+    that has not changed serialises to the same string every time and two
+    laptops reading the same switch hash identically (backups.md §1.1)."""
+    return json.dumps(obj, sort_keys=True, separators=(",", ":"),
+                      ensure_ascii=False)
+
+
+def _sha256(text: str) -> str:
+    return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def content_hash(doc: dict) -> str:
+    """A hash over ``{programs, unmatched}`` only — never ``meta``.
+
+    Excluding ``meta`` is what lets a scheduled re-read that found nothing
+    changed dedupe against the prior snapshot (backups.md §1.1, §2.3)."""
+    return _sha256(canonical_json({
+        "programs": doc.get("programs", {}),
+        "unmatched": doc.get("unmatched", []),
+    }))
+
+
+def program_hashes(doc: dict) -> dict:
+    """Per-program content hashes, for cheap "which programs changed" checks."""
+    out: dict = {}
+    for key, bucket in (doc.get("programs") or {}).items():
+        out[key] = _sha256(canonical_json(bucket))
+    return out
+
+
+def identity_program_keys(catalog: Catalog) -> list:
+    """The identity program keys :data:`IDENTITY_PROGRAM_KEYS` the catalog has."""
+    return [k for k in IDENTITY_PROGRAM_KEYS if catalog.program(k) is not None]
+
+
+def is_sensitive_field(field_name) -> bool:
+    """True when a field name denotes a secret (password / community / FTP cred)."""
+    return bool(field_name and _SENSITIVE_RE.search(str(field_name)))
+
+
+def sensitive_field_refs(catalog: Catalog) -> list:
+    """``"<progkey>/*/<field>"`` refs for every secret field in the catalog.
+
+    Stored in ``meta.sensitive_fields`` so the exporter and the diff renderer
+    redact / mask the same set the *writer* considered secret, even in a file a
+    newer tool opens. The ``*`` is the row wildcard — every row's value of that
+    field is sensitive."""
+    refs: list = []
+    for prog in catalog.programs.values():
+        for fld in prog.fields:
+            name = fld.get("name")
+            if is_sensitive_field(name):
+                refs.append(f"{prog.key}/*/{name}")
+    return sorted(set(refs))
+
+
+def _sensitive_fields_by_program(doc: dict, catalog: Catalog | None) -> dict:
+    """``{prog_key: {field_name}}`` the redactor masks, from meta or the catalog."""
+    by_prog: dict = {}
+    refs = (doc.get("meta", {}) or {}).get("sensitive_fields")
+    if not refs and catalog is not None:
+        refs = sensitive_field_refs(catalog)
+    for ref in refs or []:
+        parts = str(ref).split("/")
+        if len(parts) == 3:
+            by_prog.setdefault(parts[0], set()).add(parts[2])
+    return by_prog
+
+
+def redact(doc: dict, *, catalog: Catalog | None = None) -> dict:
+    """A deep copy with every sensitive field value replaced by a salted marker.
+
+    Export / Share / Conduit push use this (backups.md §1.3). The marker is
+    ``{"__redacted__": "sha256:<salted hash>"}``; the salt is the snapshot id so
+    the same password still compares equal *within* a diff of two redacted files
+    from one lineage but not across sites. ``programs`` shape is untouched (same
+    keys, same rows) so a redacted file still opens in the viewer and diffs. A
+    redacted value can never be written back — :mod:`restore` treats the marker
+    as unsendable."""
+    out = copy.deepcopy(doc)
+    salt = (out.get("meta", {}) or {}).get("snapshot", {}).get("id") or ""
+    by_prog = _sensitive_fields_by_program(out, catalog)
+    for key, bucket in (out.get("programs") or {}).items():
+        secret_names = by_prog.get(key)
+        if not secret_names:
+            continue
+        for row in bucket.get("rows", []):
+            fields = row.get("fields", {})
+            for fk in list(fields):
+                # field_key may be "name#oidsuffix" for duplicated columns.
+                if fk.split("#", 1)[0] in secret_names and fields[fk] not in (
+                        None, "", MISSING_SENTINEL):
+                    digest = hashlib.sha256(
+                        (salt + "\x00" + str(fields[fk])).encode("utf-8")
+                    ).hexdigest()
+                    fields[fk] = {REDACTED_KEY: "sha256:" + digest}
+    out.setdefault("meta", {})["redacted"] = True
+    return out
+
+
+# A value that decode produced for "no data" — never redacted (nothing to hide).
+MISSING_SENTINEL = decode_value(Value("missing"))
+
+
+def is_redacted_value(value) -> bool:
+    """True when a stored value is a redaction marker (cannot be restored)."""
+    return isinstance(value, dict) and REDACTED_KEY in value
+
+
+# --------------------------------------------------------------------------
 # build (pure)
 # --------------------------------------------------------------------------
 def _row_sort_key(index: str):
@@ -2382,13 +2534,41 @@ def _human_key(index: str) -> str:
     return ri.key
 
 
-def build_backup(pairs, catalog: Catalog, *, meta: dict | None = None) -> dict:
-    """Assemble a backup dict from collected ``(oid, Value)`` pairs. Pure.
+def _snapshot_meta(content_h: str, snapshot: dict | None, meta: dict) -> dict:
+    """The ``meta.snapshot`` block (backups.md §1): id, kind, provenance.
+
+    The id is ``<utc stamp>-<content_hash[:6]>`` — sortable, and equal for two
+    identical reads (so dedupe keys on it fall out naturally)."""
+    snap = dict(snapshot or {})
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    short = content_h.split(":", 1)[-1][:6]
+    snap.setdefault("id", f"{stamp}-{short}")
+    snap.setdefault("kind", "manual")
+    snap.setdefault("name", None)
+    snap.setdefault("note", None)
+    snap.setdefault("tags", [])
+    snap.setdefault("pinned", False)
+    snap.setdefault("parent", None)
+    snap.setdefault("operator", None)
+    snap.setdefault("transport", meta.get("transport") if meta else None)
+    snap.setdefault("trigger", None)
+    return snap
+
+
+def build_backup(pairs, catalog: Catalog, *, meta: dict | None = None,
+                 snapshot: dict | None = None) -> dict:
+    """Assemble a v2 backup dict from collected ``(oid, Value)`` pairs. Pure.
 
     Every OID is attributed to its catalog field by longest-prefix match and
     filed under ``program key → row (by instance tail) → field``. OIDs with no
     catalog field survive verbatim in ``unmatched`` so a backup never silently
     drops data the device returned.
+
+    ``snapshot`` supplies the v2 ``meta.snapshot`` provenance (kind, name, tags,
+    parent, operator, transport, trigger); anything omitted gets a safe default.
+    The content hash, per-program hashes, identity-program list and sensitive-
+    field refs are computed here so every file carries its own dedupe key and
+    the lists the writer considered identity / secret.
     """
     programs: dict[str, dict] = {}
     rows_by_prog: dict[str, dict[str, dict]] = {}
@@ -2417,10 +2597,11 @@ def build_backup(pairs, catalog: Catalog, *, meta: dict | None = None) -> dict:
             row_count += 1
         row["fields"][prog.field_key(fld)] = catalog.decode_field_value(fld, val)
 
-    # finalise: deterministic row order per program
+    # finalise: deterministic row order per program, deterministic unmatched
     for prog_key, bucket in programs.items():
         bucket["rows"] = sorted(rows_by_prog[prog_key].values(),
                                 key=lambda r: _row_sort_key(r["index"]))
+    unmatched.sort(key=lambda e: e.get("oid", ""))
 
     full_meta = {
         "swid": None, "chassis_mac": None, "site": None,
@@ -2435,21 +2616,34 @@ def build_backup(pairs, catalog: Catalog, *, meta: dict | None = None) -> dict:
     full_meta["rows_count"] = row_count
     full_meta["unmatched_count"] = len(unmatched)
 
-    return {
+    doc = {
         "format": FORMAT,
         "format_version": FORMAT_VERSION,
         "meta": full_meta,
         "programs": dict(sorted(programs.items())),
         "unmatched": unmatched,
     }
+    # v2 meta: hashes and the identity / secret lists, over the final programs.
+    content_h = content_hash(doc)
+    full_meta["content_hash"] = content_h
+    full_meta["program_hashes"] = program_hashes(doc)
+    full_meta["identity_programs"] = identity_program_keys(catalog)
+    full_meta["sensitive_fields"] = sensitive_field_refs(catalog)
+    full_meta.setdefault("redacted", False)
+    full_meta["snapshot"] = _snapshot_meta(content_h, snapshot, full_meta)
+    return doc
 
 
 # --------------------------------------------------------------------------
 # orchestration (I/O)
 # --------------------------------------------------------------------------
 def backup(client, catalog: Catalog | None = None, *, site: str | None = None,
-           programs=None, width: int = 10, max_total: int = 500000) -> dict:
-    """Read a live CIX and return a backup dict (read-only)."""
+           programs=None, width: int = 10, max_total: int = 500000,
+           snapshot: dict | None = None, transport: str | None = None) -> dict:
+    """Read a live CIX and return a v2 backup dict (read-only).
+
+    ``snapshot`` and ``transport`` flow into ``meta.snapshot`` provenance so the
+    snapshot store can record who/what/how without a second read."""
     catalog = catalog or load_catalog()
     ident = read_identity(client)
     pairs, error = collect(client, catalog, programs=programs, width=width,
@@ -2461,8 +2655,56 @@ def backup(client, catalog: Catalog | None = None, *, site: str | None = None,
         "source_ip": getattr(client, "host", None),
         "scope": "all" if not programs else list(programs),
         "walk_error": error,
+        "transport": transport,
     }
-    return build_backup(pairs, catalog, meta=meta)
+    return build_backup(pairs, catalog, meta=meta, snapshot=snapshot)
+
+
+# --------------------------------------------------------------------------
+# format family (pure)
+# --------------------------------------------------------------------------
+def load_document(path_or_obj) -> dict:
+    """Load any format-family JSON (backup / template / change set / diff).
+
+    Accepts a path or an already-parsed dict and returns it unchanged after a
+    light shape check, so every reader in the app funnels through one entry
+    point (backups.md §1.4). A v1 backup loads as-is; its missing v2 keys are
+    defaulted by the readers that need them."""
+    if isinstance(path_or_obj, dict):
+        doc = path_or_obj
+    else:
+        with open(path_or_obj, encoding="utf-8") as fh:
+            doc = json.load(fh)
+    fmt = doc.get("format")
+    if fmt not in (FORMAT, FORMAT_TEMPLATE, FORMAT_CHANGESET, FORMAT_DIFF):
+        raise ValueError(f"not a Switchroom document (format={fmt!r})")
+    return doc
+
+
+def ensure_v2(doc: dict, catalog: Catalog | None = None) -> dict:
+    """Return ``doc`` upgraded in place to v2: fill the hashes / lists / snapshot.
+
+    A v1 file (or one built before the v2 fields existed) gains ``content_hash``,
+    ``program_hashes``, ``identity_programs``, ``sensitive_fields`` and a
+    ``meta.snapshot`` block without touching ``programs``. Idempotent — a file
+    already carrying a content hash is returned unchanged."""
+    meta = doc.setdefault("meta", {})
+    if meta.get("content_hash"):
+        return doc
+    doc["format"] = doc.get("format", FORMAT)
+    doc["format_version"] = FORMAT_VERSION
+    content_h = content_hash(doc)
+    meta["content_hash"] = content_h
+    meta["program_hashes"] = program_hashes(doc)
+    if catalog is not None:
+        meta.setdefault("identity_programs", identity_program_keys(catalog))
+        meta.setdefault("sensitive_fields", sensitive_field_refs(catalog))
+    else:
+        meta.setdefault("identity_programs", [])
+        meta.setdefault("sensitive_fields", [])
+    meta.setdefault("redacted", False)
+    meta["snapshot"] = _snapshot_meta(content_h, meta.get("snapshot"), meta)
+    return doc
 
 
 # --------------------------------------------------------------------------
@@ -2475,6 +2717,8 @@ def _hr(title: str, char: str = "=") -> str:
 def _render_value(catalog, prog_key, fieldkey, value) -> str:
     if value is None:
         return ""
+    if is_redacted_value(value):
+        return "••••"
     if catalog is not None and isinstance(value, int) and not isinstance(value, bool):
         prog = catalog.program(prog_key)
         if prog is not None:
@@ -2551,9 +2795,14 @@ def render_backup_text(backup_doc: dict, *, catalog: Catalog | None = None,
 
 
 __all__ = [
-    "FORMAT", "FORMAT_VERSION", "SOFTWARE_ID_OID", "CHASSIS_MAC_OID",
+    "FORMAT", "FORMAT_VERSION", "FORMAT_TEMPLATE", "FORMAT_CHANGESET",
+    "FORMAT_DIFF", "REDACTED_KEY", "IDENTITY_PROGRAM_KEYS",
+    "SOFTWARE_ID_OID", "CHASSIS_MAC_OID",
     "walk_roots", "collect", "read_identity", "build_backup", "backup",
     "render_backup_text",
+    "canonical_json", "content_hash", "program_hashes",
+    "identity_program_keys", "is_sensitive_field", "sensitive_field_refs",
+    "redact", "is_redacted_value", "load_document", "ensure_v2",
 ]
 
 # ===== enrich.py ===================================================
