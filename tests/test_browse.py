@@ -136,11 +136,12 @@ def test_store_site_id_is_path_safe():
 # ===========================================================================
 def test_read_snapshot_core_then_all_with_progress():
     data, _ = sample_capture(CAT)
-    phases, reports = [], []
+    phases, reports, seen = [], [], []
     snap = snapshot.read_snapshot(
         BackupFake(data), CAT, site="Example",
-        report=lambda d, t, m: reports.append((d, t, m)),
-        on_phase=lambda v, ph: phases.append((ph, len(v["programs"]))))
+        report=lambda d, t, m, detail=None: reports.append((d, t, m, detail)),
+        on_phase=lambda v, ph: phases.append((ph, len(v["programs"]))),
+        on_program=lambda st: seen.append(st))
     # identity read into meta via the job
     assert snap["identity"]["swid"] == "LA520MT067PNDN2---EM.00"
     assert snap["meta"]["site"] == "Example" and snap["meta"]["walk_error"] is None
@@ -148,6 +149,14 @@ def test_read_snapshot_core_then_all_with_progress():
     names = [p for p, _ in phases]
     assert names == ["core", "all"]
     assert reports[0][0] == 0 and reports[-1][0] == reports[-1][1]
+    # granular progress: at least one report named a specific program
+    assert any(r[3] and r[3].get("program_key") for r in reports)
+    # on_program fired once per catalog program, every one carrying an outcome
+    assert len(seen) == len(CAT.programs)
+    assert all(st["outcome"] in _B.PROGRAM_READ_OUTCOMES for st in seen)
+    # and read_snapshot returns a status for every program
+    assert set(snap["program_status"]) == set(CAT.programs)
+    assert snap["meta"]["program_problems"] == []   # clean fake, nothing failed
     # the full views carry the stations program read in the capture
     keys = {p["catalog_key"] for p in snap["program_views"]["programs"]}
     assert "200StationAssign" in keys
@@ -358,6 +367,98 @@ def test_http_unknown_program_is_404():
         raise AssertionError("expected 404 for an unknown program")
     finally:
         h.close()
+
+
+# ===========================================================================
+# unit: per-program read bounding (timeout / cap / error) — the stall fix
+# ===========================================================================
+from toshiba_cix.snmp import Response, SnmpError, Value, VarBind  # noqa: E402
+
+
+class RunawayClient:
+    """A fake agent whose subtree never terminates: every GETNEXT returns a
+    strictly-larger OID still inside the branch, so a walk only ever stops on
+    the OID cap or the wall-clock deadline (never end-of-MIB). ``delay`` sleeps
+    per round so the timeout path can be exercised deterministically."""
+
+    def __init__(self, delay: float = 0.0):
+        self.host, self.community, self.port = "10.0.0.9", "communityName", 161
+        self.delay = delay
+
+    def getnext(self, oids):
+        if self.delay:
+            time.sleep(self.delay)
+        return Response(1, 0, 0,
+                        [VarBind(q + ".1", Value("octet", raw=b"x")) for q in oids])
+
+    def bulk_walk(self, roots, *, width=20, max_total=500000, deadline=None,
+                  status=None):
+        from toshiba_cix.snmp import SnmpV1
+        return SnmpV1.bulk_walk(self, roots, width=width, max_total=max_total,
+                                deadline=deadline, status=status)
+
+
+def test_collect_program_caps_a_runaway():
+    pairs, st = _B.collect_program(RunawayClient(), CAT, "200",
+                                   max_oids=30, max_seconds=None)
+    assert st["outcome"] == "capped"
+    assert st["oids"] > 0 and len(pairs) == st["oids"]
+    assert "cap" in (st["error"] or "")
+
+
+def test_collect_program_times_out_and_continues():
+    pairs, st = _B.collect_program(RunawayClient(delay=0.05), CAT, "200",
+                                   max_oids=10_000_000, max_seconds=0.12)
+    assert st["outcome"] == "timeout"
+    assert "timed out" in (st["error"] or "")
+    assert st["elapsed"] is not None
+
+
+class DeadSubtreeClient(RunawayClient):
+    """GETNEXT always fails (a subtree the agent will not answer)."""
+
+    def getnext(self, oids):
+        raise SnmpError("no response (simulated dead subtree)")
+
+
+def test_collect_program_survives_transport_error():
+    # collect_program must NEVER raise — a dead subtree becomes a status.
+    pairs, st = _B.collect_program(DeadSubtreeClient(), CAT, "200",
+                                   max_oids=1000, max_seconds=1.0)
+    assert pairs == [] and st["outcome"] == "error"
+    assert "no response" in (st["error"] or "")
+
+
+class OneProgramErrorFake(BackupFake):
+    """Lexical fake that reads normally except inside one program's subtree,
+    where every GETNEXT fails — so read_snapshot must skip it and carry on."""
+
+    def __init__(self, data, bad_group_oid):
+        super().__init__(data)
+        self._bad = bad_group_oid
+
+    def getnext(self, oids):
+        if any(o == self._bad or o.startswith(self._bad + ".") for o in oids):
+            raise SnmpError("simulated dead subtree")
+        return super().getnext(oids)
+
+
+def test_read_snapshot_skips_a_failing_program_and_surfaces_it():
+    data, _ = sample_capture(CAT)
+    bad = CAT.program("500")                      # a non-core program (rest phase)
+    assert _B.walk_roots(CAT, ["500"])            # it has field OIDs to fail on
+    client = OneProgramErrorFake(data, bad.group_oid)
+    snap = snapshot.read_snapshot(client, CAT, site="X",
+                                  program_timeout=2.0, program_max_oids=5000)
+    # the whole read still completed and still captured the healthy programs
+    keys = {p["catalog_key"] for p in snap["program_views"]["programs"]}
+    assert "200StationAssign" in keys
+    # the one bad program is recorded as a failure, not silently empty
+    st = snap["program_status"][bad.key]
+    assert st["outcome"] == "error" and st["error"]
+    problems = {p["key"] for p in snap["meta"]["program_problems"]}
+    assert bad.key in problems
+    assert snap["meta"]["walk_error"]             # surfaced on the snapshot
 
 
 def _run_all():

@@ -460,6 +460,7 @@ def route_snapshot_start(ctx, req):
                              "read": len(session.doc)})
 
         snap = read_snapshot(client, cat, report=report, on_phase=on_phase,
+                             on_program=session.set_program_status,
                              site=site, transport=transport, width=reader.width)
         ident = snap["identity"]
         session.set_identity({"software_id": ident.get("swid"),
@@ -512,9 +513,13 @@ def route_session_snapshot(ctx, req):
                  "menu_area": pv.get("menu_area"),
                  "row_count": pv.get("row_count", 0)}
                 for pv in s.doc.values()]
+    problems = [st for st in s.program_status.values()
+                if st.get("outcome") in ("timeout", "capped", "error")]
     req.send_json({"ok": True, "identity": s.identity,
                    "meta": s.snapshot_meta, "read_keys": s.read_keys(),
-                   "programs": programs})
+                   "programs": programs,
+                   "program_status": s.program_status,
+                   "program_problems": problems})
 
 
 def _resolve_prog_or_404(ctx, req, cat):
@@ -550,15 +555,25 @@ def route_session_program(ctx, req):
             req.send_json({"ok": False, "error": str(exc)})
             return
         s.put_program_view(view)
+        # A live re-read supersedes whatever the snapshot recorded for this
+        # program, so the Problems panel clears a cleared fault.
+        status = {"key": prog.key, "number": prog.number, "name": prog.name,
+                  "oids": None, "rounds": None, "elapsed": None,
+                  "outcome": ("error" if error else
+                              ("ok" if view.get("row_count") else "empty")),
+                  "error": error}
+        s.set_program_status(status)
         req.send_json({"ok": True, "program": view, "source": "live",
-                       "error": error})
+                       "error": error, "status": status})
         return
     view = s.program_view(prog.key)
+    status = s.program_status.get(prog.key)
     if view is None:
         req.send_json({"ok": True, "program": empty_program_view(cat, prog.key),
-                       "source": "unread"})
+                       "source": "unread", "status": status})
         return
-    req.send_json({"ok": True, "program": view, "source": "snapshot"})
+    req.send_json({"ok": True, "program": view, "source": "snapshot",
+                   "status": status})
 
 
 def route_session_program_row(ctx, req):
