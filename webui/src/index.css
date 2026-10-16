@@ -158,3 +158,32 @@
 * {
   scrollbar-width: thin;
 }
+
+/* Print stylesheet (DESIGN_PLAN §6, P4): a program page / review / report
+   prints as a clean document. Hide the app chrome (top bar, nav tree, tab
+   strip, pending rail, status bar), drop background fills, and let the active
+   view flow down the page instead of scrolling inside a fixed-height box. The
+   chrome is tagged data-chrome so print never depends on utility-class order. */
+@media print {
+  :root { --app-print: 1; }
+  header[class*="h-topbar"],
+  aside,
+  [data-chrome="nav"],
+  [data-chrome="tabs"],
+  [data-chrome="status"],
+  [data-chrome="rail"],
+  .no-print {
+    display: none !important;
+  }
+  html, body, #root { height: auto !important; overflow: visible !important; }
+  .flex.h-screen { height: auto !important; display: block !important; }
+  main { overflow: visible !important; }
+  main * { overflow: visible !important; }
+  * {
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #000 !important;
+  }
+  table { border-collapse: collapse; }
+  th, td { border: 1px solid #999 !important; }
+}

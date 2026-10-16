@@ -10,6 +10,8 @@ import { HomeView } from "@/views/HomeView";
 import { ProgramPage } from "@/views/ProgramPage";
 import { BackupsView } from "@/views/BackupsView";
 import { VoiceMailView } from "@/views/VoiceMailView";
+import { ProblemsView } from "@/views/ProblemsView";
+import { HelpView } from "@/views/HelpView";
 import { FileModeBanner } from "@/components/backup/FileModeBanner";
 import { PendingRail } from "@/components/write/PendingRail";
 import { ReviewWriteDialog } from "@/components/write/ReviewWriteDialog";
@@ -41,6 +43,8 @@ function Workspace() {
   }
   if (!tab || tab.kind === "home") return <HomeView />;
   if (tab.kind === "backups") return <BackupsView />;
+  if (tab.kind === "problems") return <ProblemsView />;
+  if (tab.kind === "help") return <HelpView />;
   if (tab.kind === "vm" && tab.vmScreen) {
     return <VoiceMailView key={tab.vmScreen} screen={tab.vmScreen} />;
   }

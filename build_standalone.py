@@ -88,6 +88,11 @@ def _embedded_references() -> str:
                           "field -> referenced entity kind (where-used)")
 
 
+def _embedded_lint_rules() -> str:
+    return _embedded_data("lint_rules.json", "EMBEDDED_LINT_RULES_JSON",
+                          "config-linter rules (Problems panel)")
+
+
 def _embedded_enum_labels() -> str:
     return _embedded_data("enum_labels.json", "EMBEDDED_ENUM_LABELS_JSON",
                           "bundled enum value labels")
@@ -131,7 +136,8 @@ def build(order, out_name, *, title, with_web, tail):
         aliases["catalog.py"] = [_embedded_catalog(), _embedded_enum_labels(),
                                  _embedded_program_menus(),
                                  _embedded_volatile_fields(),
-                                 _embedded_references()]
+                                 _embedded_references(),
+                                 _embedded_lint_rules()]
         # The generated UI schema rides with the schema module (same embed →
         # _MEIPASS → packaged-data resolution as the catalog).
         aliases["server/schema.py"] = [_embedded_ui_schema()]
@@ -212,6 +218,9 @@ def main() -> None:
          # bulk-edit planners, and the staged changeset. Listed after programs/
          # write/snmp because they reference those as flattened globals.
          "validate.py", "review.py", "bulk.py", "changeset.py",
+         # P4 polish (pure): hover/row history, templates, the config linter and
+         # the wizard planners (depend on programs / write / index above).
+         "history.py", "template.py", "lint.py", "wizards.py",
          # voicemail leg (DESIGN_PLAN §8): byte pipe -> framing/link -> decoders
          # -> sysparams/pbxdb/catalog -> reports/backup -> the exclusive session.
          # Listed before webapp.py, which registers their routes.

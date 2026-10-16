@@ -26,7 +26,7 @@ export type VmScreen =
 
 export interface Tab {
   id: string;
-  kind: "home" | "program" | "backups" | "vm";
+  kind: "home" | "program" | "backups" | "vm" | "problems" | "help";
   programKey?: string;
   vmScreen?: VmScreen;
   title: string;
@@ -127,6 +127,8 @@ interface AppState {
   openProgram: (key: string, title: string) => void;
   openHome: () => void;
   openBackups: () => void;
+  openProblems: () => void;
+  openHelp: () => void;
   openVm: (screen: VmScreen, title: string) => void;
   closeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
@@ -547,6 +549,22 @@ export const useStore = create<AppState>((set, get) => ({
     const id = "backups";
     if (!tabs.some((t) => t.id === id)) {
       set({ tabs: [...tabs, { id, kind: "backups", title: "Backups" }] });
+    }
+    set({ activeTabId: id });
+  },
+  openProblems() {
+    const { tabs } = get();
+    const id = "problems";
+    if (!tabs.some((t) => t.id === id)) {
+      set({ tabs: [...tabs, { id, kind: "problems", title: "Problems" }] });
+    }
+    set({ activeTabId: id });
+  },
+  openHelp() {
+    const { tabs } = get();
+    const id = "help";
+    if (!tabs.some((t) => t.id === id)) {
+      set({ tabs: [...tabs, { id, kind: "help", title: "Help" }] });
     }
     set({ activeTabId: id });
   },

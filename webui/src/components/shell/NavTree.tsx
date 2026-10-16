@@ -64,7 +64,7 @@ export function NavTree() {
 
   if (!schema) {
     return (
-      <nav className="w-[var(--nav-w)] shrink-0 border-r border-border bg-surface p-3 text-xs text-fg-3">
+      <nav data-chrome="nav" className="w-[var(--nav-w)] shrink-0 border-r border-border bg-surface p-3 text-xs text-fg-3">
         Loading menu…
       </nav>
     );
@@ -75,7 +75,7 @@ export function NavTree() {
     item.programs.reduce((n, p) => n + (rowCounts[p] ?? 0), 0);
 
   return (
-    <nav className="flex w-[var(--nav-w)] shrink-0 flex-col overflow-auto border-r border-border bg-surface py-2">
+    <nav data-chrome="nav" className="flex w-[var(--nav-w)] shrink-0 flex-col overflow-auto border-r border-border bg-surface py-2">
       <button
         onClick={openHome}
         className={cn(

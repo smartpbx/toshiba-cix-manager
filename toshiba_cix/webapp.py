@@ -58,6 +58,11 @@ from .scan import CIXReader
 from .changeset import plan_rows, simulate_oplog
 from .review import three_way
 from .validate import validate_ops
+# P4 polish: config linter + wizard planners (pure; preview only, no apply).
+# Bare names (no `as` alias): the single-file build strips the import line and
+# resolves these as flattened globals, so they must match the source names.
+from .lint import lint_views
+from .wizards import PLANNERS
 from .bulk import fill_down, find_replace, pattern_fill, paste, set_for_selection
 from .server.app import ServerContext, register_core_routes, run_server
 from .server.auth import generate_token
@@ -1412,8 +1417,52 @@ def route_session_undo(ctx, req):
     req.send_json({"ok": True, "review": review})
 
 
+def route_session_lint(ctx, req):
+    """GET /api/sessions/{id}/lint — the Problems panel: run the config linter
+    over the working copy (DESIGN_PLAN §6). Read-only, no network."""
+    s = _session_or_404(ctx, req)
+    if s is None:
+        return
+    views = {"programs": list(s.doc.values())}
+    index = None
+    try:
+        if s.doc:
+            index = build_index_from_views(views)
+    except Exception:  # noqa: BLE001
+        index = None
+    req.send_json({"ok": True, **lint_views(views, index=index)})
+
+
+def route_session_wizard_plan(ctx, req):
+    """POST /api/sessions/{id}/wizard/{name}/plan — run a wizard planner over the
+    working copy and return a three-way review PREVIEW (DESIGN_PLAN 5.7: planners
+    only, gated, no apply). Pure — no network, nothing staged or sent."""
+    s = _session_or_404(ctx, req)
+    if s is None:
+        return
+    name = req.params["name"]
+    planner = PLANNERS.get(name)
+    if planner is None:
+        req.send_json({"ok": False, "error": f"unknown wizard {name!r}"}, 404)
+        return
+    body = req.body() or {}
+    snapshot = {"programs": list(s.doc.values())}
+    try:
+        ops = planner(body.get("inputs") or {}, snapshot)
+    except Exception as exc:  # noqa: BLE001
+        req.send_json({"ok": False, "error": str(exc)}, 400)
+        return
+    base_rows = [r for pv in s.doc.values() for r in pv.get("rows") or []]
+    review = three_way(ops, base_rows, base_rows, transport=s.transport,
+                       simulate=True)
+    review["validation"] = validate_ops(ops, None)
+    req.send_json({"ok": True, "wizard": name, "review": review,
+                   "ops": [o.as_dict() for o in ops]})
+
+
 def register_write_routes(ctx: ServerContext) -> None:
-    """P2 write path (two-phase, gated): staging, review, Simulate / apply."""
+    """P2 write path (two-phase, gated): staging, review, Simulate / apply;
+    plus the P4 Problems panel and wizard planners (preview only)."""
     r = ctx.router
     r.get("/api/sessions/{id}/pending", route_session_pending_get)
     r.post("/api/sessions/{id}/pending", route_session_pending_stage)
@@ -1422,6 +1471,8 @@ def register_write_routes(ctx: ServerContext) -> None:
     r.post("/api/sessions/{id}/review", route_session_review)
     r.post("/api/sessions/{id}/apply", route_session_apply)
     r.post("/api/sessions/{id}/undo", route_session_undo)
+    r.get("/api/sessions/{id}/lint", route_session_lint)
+    r.post("/api/sessions/{id}/wizard/{name}/plan", route_session_wizard_plan)
 
 
 def register_vm_routes(ctx: ServerContext) -> None:

@@ -502,6 +502,28 @@ export interface OpLog {
   note: string;
 }
 
+// ---- P4: config linter / Problems panel ----------------------------------
+export interface LintFinding {
+  rule: string;
+  severity: "error" | "warn" | "info";
+  message: string;
+  program: string | null;
+  program_number: string | null;
+  menu_path: string | null;
+  index: string | null;
+  row_key: string | null;
+  field: string | null;
+  value: string | null;
+  fix: { program_key: string; index: string; changes: Record<string, string> } | null;
+}
+
+export interface LintResult {
+  ok: boolean;
+  findings: LintFinding[];
+  counts: { error: number; warn: number; info: number };
+  rule_count: number;
+}
+
 export type Reach = "direct" | "remote";
 
 export interface ConnectionForm {

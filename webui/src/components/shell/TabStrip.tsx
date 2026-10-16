@@ -16,7 +16,7 @@ export function TabStrip() {
   );
 
   return (
-    <div className="flex h-9 shrink-0 items-stretch gap-1 overflow-x-auto border-b border-border bg-surface px-2">
+    <div data-chrome="tabs" className="flex h-9 shrink-0 items-stretch gap-1 overflow-x-auto border-b border-border bg-surface px-2">
       {tabs.map((tab) => {
         const active = tab.id === activeTabId;
         return (

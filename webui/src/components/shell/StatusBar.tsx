@@ -32,7 +32,7 @@ export function StatusBar() {
     meta?.read_at && Date.now() - Date.parse(meta.read_at) > 30 * 60 * 1000;
 
   return (
-    <footer className="flex h-statusbar shrink-0 items-center gap-3 border-t border-border bg-surface px-3 text-2xs text-fg-2 tnum">
+    <footer data-chrome="status" className="flex h-statusbar shrink-0 items-center gap-3 border-t border-border bg-surface px-3 text-2xs text-fg-2 tnum">
       {meta ? (
         <>
           <span>

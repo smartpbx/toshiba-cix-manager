@@ -190,6 +190,40 @@ def test_undo_restages_old_value():
     assert s.changeset.staged[PKEY]["2"]["name"] == "Front Desk"
 
 
+# -- P4: Problems panel + wizard preview (no network) -----------------------
+def test_lint_route_returns_findings():
+    ctx = webapp.make_context()
+    s = ctx.sessions.create(site="Kellys Lumber")
+    s.put_program_view({
+        "catalog_key": "800Snmp", "program_number": "800", "label": "SNMP",
+        "menu_area": "Maint", "menu_path": "Maint > SNMP", "row_count": 1,
+        "rows": [{"index": "1", "key": "1", "cells": [
+            {"field_name": "communityName", "col": 2, "oid": "x",
+             "raw_value": "communityName", "display_value": "communityName",
+             "syntax": "OCTET STRING", "access": "rw"}]}]})
+    req = FakeReq(params={"id": s.id})
+    webapp.route_session_lint(ctx, req)
+    assert req.json["ok"]
+    assert any(f["rule"] == "default-community" for f in req.json["findings"])
+
+
+def test_wizard_route_preview_no_network():
+    ctx, s = _ctx_session(with_client=True)   # LoudClient attached
+    req = FakeReq(body={"inputs": {"dn": "2200", "name": "New", "type": "4"}},
+                  params={"id": s.id, "name": "add_station"})
+    webapp.route_session_wizard_plan(ctx, req)  # must not call LoudClient
+    assert req.json["ok"] and req.json["wizard"] == "add_station"
+    assert req.json["review"]["simulate"] is True
+    assert len(req.json["ops"]) == 2 and all(o["row_create"] for o in req.json["ops"])
+
+
+def test_wizard_route_unknown_404():
+    ctx, s = _ctx_session()
+    req = FakeReq(body={"inputs": {}}, params={"id": s.id, "name": "nope"})
+    webapp.route_session_wizard_plan(ctx, req)
+    assert req.status == 404
+
+
 def _run_all():
     fns = [v for k, v in sorted(globals().items())
            if k.startswith("test_") and callable(v)]

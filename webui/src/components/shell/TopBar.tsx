@@ -1,4 +1,4 @@
-import { History, Search } from "lucide-react";
+import { CircleHelp, History, ListChecks, Search } from "lucide-react";
 import { ConnectionPill } from "./ConnectionPill";
 import { ModeBadge } from "./ModeBadge";
 import { ThemeToggle } from "./ThemeToggle";
@@ -27,10 +27,12 @@ function Logo() {
 }
 
 export function TopBar() {
-  const { setPaletteOpen, openBackups } = useStore(
+  const { setPaletteOpen, openBackups, openProblems, openHelp } = useStore(
     useShallow((s) => ({
       setPaletteOpen: s.setPaletteOpen,
       openBackups: s.openBackups,
+      openProblems: s.openProblems,
+      openHelp: s.openHelp,
     })),
   );
   const isMac =
@@ -59,6 +61,20 @@ export function TopBar() {
       >
         <History className="h-4 w-4" />
         <span className="hidden sm:inline">Backups</span>
+      </button>
+      <button
+        onClick={openProblems}
+        className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-surface-2 text-fg-2 hover:border-line-strong"
+        title="Problems (config linter)"
+      >
+        <ListChecks className="h-4 w-4" />
+      </button>
+      <button
+        onClick={openHelp}
+        className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-surface-2 text-fg-2 hover:border-line-strong"
+        title="Coming from eManager?"
+      >
+        <CircleHelp className="h-4 w-4" />
       </button>
       <ModeBadge />
       <ThemeToggle />

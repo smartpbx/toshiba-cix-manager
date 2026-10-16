@@ -73,6 +73,7 @@ export function PendingRail() {
   if (!railOpen) {
     return (
       <button
+        data-chrome="rail"
         onClick={() => setRailOpen(true)}
         className="flex w-10 shrink-0 flex-col items-center gap-2 border-l border-border bg-surface py-3 text-xs text-fg-2 hover:bg-surface-2"
         title="Show pending changes"
@@ -84,7 +85,7 @@ export function PendingRail() {
   }
 
   return (
-    <aside className="flex w-[320px] shrink-0 flex-col border-l border-border bg-surface">
+    <aside data-chrome="rail" className="flex w-[320px] shrink-0 flex-col border-l border-border bg-surface">
       <div className="flex items-center gap-2 border-b border-border px-3 py-2">
         <span className="text-sm font-semibold">Pending changes</span>
         <Badge variant={errorCount ? "bad" : "warn"}>{count}</Badge>

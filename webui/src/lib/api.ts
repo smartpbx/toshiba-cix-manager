@@ -9,6 +9,7 @@ import type {
   FullSnapshot,
   Health,
   JobState,
+  LintResult,
   ModeState,
   OpLog,
   PendingResult,
@@ -52,6 +53,10 @@ const s = (id: string) => encodeURIComponent(id);
 export const api = {
   health: () => jget<Health>("/api/health"),
   schema: () => jget<UISchema>("/api/schema"),
+
+  // P4: config linter (Problems panel) over the working copy.
+  lint: (sessionId: string) =>
+    jget<LintResult>(`/api/sessions/${s(sessionId)}/lint`),
 
   // connect + snapshot-on-connect (core -> all) — returns session + job ids
   startSnapshot: (p: {
