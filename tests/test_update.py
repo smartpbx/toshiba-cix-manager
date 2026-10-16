@@ -14,9 +14,11 @@ import io
 import json
 import os
 import shutil
+import ssl
 import stat
 import sys
 import tempfile
+import types
 import urllib.error
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -721,6 +723,147 @@ def test_apply_installer_download_failure_hands_off_nothing():
         assert res["ok"] is False and res["action"] == "download_failed"
         assert called == []            # a failed download is never handed off
         assert os.listdir(d) == []      # temp download cleaned up
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+# ===========================================================================
+# SSL CA-bundle resolution (the v2.1.2 updater TLS fix)
+#
+# A frozen build ships a CPython whose default verify paths point at the build
+# machine, so ssl.create_default_context() can find no CAs on the user's box and
+# TLS to api.github.com fails with CERTIFICATE_VERIFY_FAILED. _ssl_context()
+# must recover by loading a CA bundle from $SSL_CERT_FILE, a system path, or
+# certifi. These tests mimic that empty-trust-store build with no network.
+# ===========================================================================
+@contextlib.contextmanager
+def _env(name, value):
+    missing = object()
+    old = os.environ.get(name, missing)
+    if value is None:
+        os.environ.pop(name, None)
+    else:
+        os.environ[name] = value
+    try:
+        yield
+    finally:
+        if old is missing:
+            os.environ.pop(name, None)
+        else:
+            os.environ[name] = old
+
+
+def _dump_default_cas(path) -> bool:
+    """Write the environment's default CA certs to ``path`` as PEM. Returns
+    False if this Python has no default trust store (then the caller skips)."""
+    ders = ssl.create_default_context().get_ca_certs(binary_form=True)
+    if not ders:
+        return False
+    with open(path, "w", encoding="ascii") as fh:
+        for der in ders:
+            fh.write(ssl.DER_cert_to_PEM_cert(der))
+    return True
+
+
+def _empty_context() -> ssl.SSLContext:
+    """A verifying context with an EMPTY trust store — what a frozen build's
+    default context effectively is on the user's machine."""
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    assert not ctx.get_ca_certs()   # guard: the premise of every test below
+    return ctx
+
+
+def test_ssl_candidate_ca_files_env_is_first():
+    with _env("SSL_CERT_FILE", "/tmp/some-operator-override.pem"):
+        order = list(update._candidate_ca_files())
+    assert order[0] == "/tmp/some-operator-override.pem"
+    # the common system bundles always follow the override
+    for p in update._SYSTEM_CA_BUNDLES:
+        assert p in order
+
+
+def test_ssl_fill_from_env_file_into_empty_context():
+    d = tempfile.mkdtemp(prefix="cix-ca-")
+    try:
+        pem = os.path.join(d, "bundle.pem")
+        if not _dump_default_cas(pem):
+            return  # no default trust store here; nothing to dump
+        ctx = _empty_context()
+        with _env("SSL_CERT_FILE", pem):
+            loaded = update._fill_ca_certs(ctx)
+        assert loaded == pem
+        assert ctx.get_ca_certs()   # the empty context now trusts the bundle
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+def test_ssl_fill_from_system_path_when_no_env():
+    d = tempfile.mkdtemp(prefix="cix-ca-")
+    try:
+        pem = os.path.join(d, "system-ca.pem")
+        if not _dump_default_cas(pem):
+            return
+        ctx = _empty_context()
+        # No env override; the only "system" bundle is our dumped PEM.
+        with _env("SSL_CERT_FILE", None), \
+                _patched(update, "_SYSTEM_CA_BUNDLES", (pem,)):
+            loaded = update._fill_ca_certs(ctx)
+        assert loaded == pem
+        assert ctx.get_ca_certs()
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+def test_ssl_fill_falls_back_to_certifi():
+    """With no env and no usable system path, the certifi bundle is the last
+    resort. A stub certifi proves the branch without requiring it installed."""
+    d = tempfile.mkdtemp(prefix="cix-ca-")
+    try:
+        pem = os.path.join(d, "certifi-ca.pem")
+        if not _dump_default_cas(pem):
+            return
+        stub = types.ModuleType("certifi")
+        stub.where = lambda: pem
+        ctx = _empty_context()
+        saved = sys.modules.get("certifi")
+        sys.modules["certifi"] = stub
+        try:
+            with _env("SSL_CERT_FILE", None), \
+                    _patched(update, "_SYSTEM_CA_BUNDLES", ("/nonexistent/ca.crt",)):
+                loaded = update._fill_ca_certs(ctx)
+        finally:
+            if saved is None:
+                sys.modules.pop("certifi", None)
+            else:
+                sys.modules["certifi"] = saved
+        assert loaded == pem
+        assert ctx.get_ca_certs()
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+def test_ssl_context_keeps_working_defaults():
+    # When the platform default context already has CAs, use it as-is.
+    base = ssl.create_default_context()
+    if not base.get_ca_certs():
+        return  # no default trust store; the fallback paths cover this case
+    ctx = update._ssl_context()
+    assert ctx.get_ca_certs()
+    assert ctx.verify_mode == ssl.CERT_REQUIRED   # never a silent downgrade
+
+
+def test_ssl_context_recovers_when_defaults_are_empty():
+    # Mimic the frozen build: create_default_context() yields an empty store.
+    d = tempfile.mkdtemp(prefix="cix-ca-")
+    try:
+        pem = os.path.join(d, "bundle.pem")
+        if not _dump_default_cas(pem):
+            return
+        with _patched(update.ssl, "create_default_context", _empty_context), \
+                _env("SSL_CERT_FILE", pem):
+            ctx = update._ssl_context()
+        assert ctx.get_ca_certs()                 # recovered a bundle
+        assert ctx.verify_mode == ssl.CERT_REQUIRED
     finally:
         shutil.rmtree(d, ignore_errors=True)
 

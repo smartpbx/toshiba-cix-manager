@@ -26,7 +26,10 @@ Design rules (all enforced below):
   working binary intact. An *installer* handoff stages the package in a
   user-writable directory (never the package-manager-owned binary dir) and only
   then launches the OS installer.
-* **No new dependencies** — ``urllib`` + ``subprocess`` (both stdlib).
+* **No new runtime dependencies** — ``urllib`` + ``subprocess`` (both stdlib).
+  ``certifi`` is an *optional* CA-bundle fallback (a data file only, imported
+  lazily in :func:`_ssl_context`): it is bundled into the frozen builds so a CA
+  bundle always ships, but a bare source / pip checkout runs fine without it.
 
 Public surface::
 
@@ -288,13 +291,88 @@ def select_asset(assets, packaging: dict):
 # --------------------------------------------------------------------------- #
 # network
 # --------------------------------------------------------------------------- #
+# Common system CA-bundle locations, tried (in this order) only when the default
+# context comes up empty. The first one that exists and loads wins.
+_SYSTEM_CA_BUNDLES = (
+    "/etc/ssl/certs/ca-certificates.crt",   # Debian / Ubuntu
+    "/etc/pki/tls/certs/ca-bundle.crt",     # Fedora / RHEL / CentOS
+    "/etc/ssl/cert.pem",                    # macOS (OpenSSL) / Alpine
+)
+
+
+def _candidate_ca_files():
+    """Yield CA-bundle paths to try, most authoritative first.
+
+    ``$SSL_CERT_FILE`` (an operator override) → the common per-distro system
+    bundles → the ``certifi`` bundle. ``certifi`` is imported lazily and its
+    absence is non-fatal: it ships in the frozen builds (so a CA bundle always
+    ships) but a bare source checkout can rely on the system paths instead.
+    """
+    env = os.environ.get("SSL_CERT_FILE")
+    if env:
+        yield env
+    yield from _SYSTEM_CA_BUNDLES
+    try:
+        import certifi
+    except Exception:  # noqa: BLE001 — ImportError, or a broken certifi install
+        return
+    try:
+        yield certifi.where()
+    except Exception:  # noqa: BLE001
+        return
+
+
+def _fill_ca_certs(ctx: ssl.SSLContext) -> str | None:
+    """Load a CA bundle into ``ctx`` from the first working candidate.
+
+    Returns the path that was loaded, or ``None`` if none resolved. Verification
+    is never relaxed — on failure the caller keeps a verifying (but empty)
+    context so a clear TLS error surfaces rather than a silent downgrade.
+    """
+    for cafile in _candidate_ca_files():
+        if not cafile:
+            continue
+        try:
+            if not os.path.isfile(cafile):
+                continue
+            ctx.load_verify_locations(cafile)
+        except (OSError, ssl.SSLError):
+            continue
+        try:
+            if ctx.get_ca_certs():
+                return cafile
+        except Exception:  # noqa: BLE001
+            return cafile
+    return None
+
+
+def _ssl_context() -> ssl.SSLContext:
+    """A verifying TLS context that finds a CA bundle even in a frozen build.
+
+    The PyInstaller sidecar and the python-build-standalone AppImage ship a
+    CPython whose default verify paths point at the *build* machine, so
+    ``ssl.create_default_context()`` on the user's machine can end up with an
+    empty trust store and fail every handshake with ``CERTIFICATE_VERIFY_FAILED``
+    (the symptom the self-updater hit against ``api.github.com``). When the
+    default context has no CA certs, fall back to a shipped/system bundle.
+    """
+    ctx = ssl.create_default_context()
+    try:
+        has_cas = bool(ctx.get_ca_certs())
+    except Exception:  # noqa: BLE001 — be defensive about odd ssl backends
+        has_cas = False
+    if not has_cas:
+        _fill_ca_certs(ctx)
+    return ctx
+
+
 def _http_get(url: str, *, accept: str | None = None, timeout: float = 15.0):
     """Minimal GET returning ``(status, body_bytes)``. Raises on transport error."""
     headers = {"User-Agent": USER_AGENT}
     if accept:
         headers["Accept"] = accept
     req = urllib.request.Request(url, headers=headers)
-    ctx = ssl.create_default_context()
+    ctx = _ssl_context()
     with urllib.request.urlopen(req, timeout=timeout, context=ctx) as resp:
         status = getattr(resp, "status", None) or resp.getcode()
         return status, resp.read()
@@ -404,7 +482,7 @@ def _download(url: str, dest: str, *, timeout: float = 120.0,
     """
     headers = {"User-Agent": USER_AGENT, "Accept": "application/octet-stream"}
     req = urllib.request.Request(url, headers=headers)
-    ctx = ssl.create_default_context()
+    ctx = _ssl_context()
     written = 0
     with urllib.request.urlopen(req, timeout=timeout, context=ctx) as resp:
         status = getattr(resp, "status", None) or resp.getcode()

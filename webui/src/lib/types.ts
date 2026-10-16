@@ -603,3 +603,29 @@ export interface ConnectionForm {
   site: string;
   site_id: string;
 }
+
+// A saved site in the on-disk site book (toshiba_cix/sites.py), served by
+// GET /api/sites. The Connect drawer lists these as one-click reconnect cards.
+export interface SiteIdentity {
+  software_id?: string | null;
+  chassis_mac?: string | null;
+  swid?: string | null;
+}
+
+export interface SitePbx {
+  host?: string | null;
+  port?: number;
+  community?: string;
+  via?: "direct" | "overlay" | "agent";
+  identity?: SiteIdentity;
+}
+
+export interface Site {
+  id: string;
+  name: string;
+  pbx: SitePbx;
+  vm?: Record<string, unknown>;
+  notes?: string;
+  last_connected?: string | null;
+  conduit_component_id?: number | null;
+}

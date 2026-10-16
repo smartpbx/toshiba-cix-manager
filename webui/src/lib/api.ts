@@ -16,6 +16,7 @@ import type {
   ProgramResult,
   ReviewResult,
   SessionSnapshot,
+  Site,
   SnapshotHeader,
   SnapshotStart,
   UpdateApplyResult,
@@ -65,6 +66,22 @@ export const api = {
   // P4: config linter (Problems panel) over the working copy.
   lint: (sessionId: string) =>
     jget<LintResult>(`/api/sessions/${s(sessionId)}/lint`),
+
+  // -- saved sites (toshiba_cix/sites.py; DESIGN_PLAN 5.1) ----------------
+  // The Connect drawer lists these as one-click reconnect cards. A successful
+  // connect upserts the system (host-matched) via the backend, so the list
+  // fills itself; these verbs cover explicit add / rename / delete.
+  sites: () => jget<{ ok: boolean; sites: Site[] }>("/api/sites"),
+  upsertSite: (site: Partial<Site>) =>
+    jpost<{ ok: boolean; site?: Site; error?: string }>("/api/sites", site),
+  renameSite: (id: string, patch: Partial<Site>) =>
+    jbody<{ ok: boolean; site?: Site; error?: string }>(
+      "PUT",
+      `/api/sites/${s(id)}`,
+      patch,
+    ),
+  deleteSite: (id: string) =>
+    jbody<{ ok: boolean; deleted?: string }>("DELETE", `/api/sites/${s(id)}`),
 
   // connect + snapshot-on-connect (core -> all) — returns session + job ids
   startSnapshot: (p: {
