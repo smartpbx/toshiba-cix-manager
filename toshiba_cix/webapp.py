@@ -28,6 +28,7 @@ import logging
 import os
 import socket
 import sys
+import threading
 import zipfile
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -43,6 +44,7 @@ from .report import render as render_report
 from .restore import restore
 from .scan import CIXReader
 from .snmp import SnmpError, SnmpV1
+from .update import apply_update, check_for_update, finalize_pending_update, plan_update
 from .write import WRITES_ENABLED, CIXWriter, WriteError
 
 log = logging.getLogger("toshiba_cix.webapp")
@@ -149,6 +151,9 @@ class CIXHandler(BaseHTTPRequestHandler):
         if path == "/api/catalog":
             self._handle_catalog()
             return
+        if path == "/api/update":
+            self._handle_update_check()
+            return
         self._send_json({"ok": False, "error": "not found"}, status=404)
 
     def do_POST(self):  # noqa: N802
@@ -175,6 +180,8 @@ class CIXHandler(BaseHTTPRequestHandler):
             self._handle_diff(params)
         elif path == "/api/restore":
             self._handle_restore(params)
+        elif path == "/api/update":
+            self._handle_update_apply(params)
         else:
             self._send_json({"ok": False, "error": "not found"}, status=404)
 
@@ -425,6 +432,32 @@ class CIXHandler(BaseHTTPRequestHandler):
             return
         self._send_json(result)
 
+    # -- self-update ------------------------------------------------------
+    def _handle_update_check(self):
+        """GET /api/update — a *safe* check against GitHub Releases. Never
+        downloads or replaces anything."""
+        try:
+            self._send_json(check_for_update())
+        except Exception as exc:  # noqa: BLE001  — check must never 500
+            self._send_json({"ok": False, "error": f"{type(exc).__name__}: {exc}"})
+
+    def _handle_update_apply(self, params):
+        """POST /api/update — download + install the latest release. Requires an
+        explicit ``{"confirm": true}``; a plain POST only reports the plan."""
+        if not bool(params.get("confirm")):
+            self._send_json(
+                {"ok": False, "error": "apply requires an explicit confirm",
+                 "plan": plan_update()}, status=400)
+            return
+        try:
+            result = apply_update(confirm=True)
+        except Exception as exc:  # noqa: BLE001
+            log.exception("update apply failed")
+            self._send_json({"ok": False,
+                             "error": f"{type(exc).__name__}: {exc}"})
+            return
+        self._send_json(result)
+
 
 def build_backup_zip(doc: dict) -> bytes:
     """Pack a read into a .zip: programming.json + report.txt + raw OID walk."""
@@ -469,14 +502,40 @@ def _pick_port(host: str, preferred: int) -> int:
     return preferred
 
 
+def _background_update_check() -> None:
+    """Non-blocking, best-effort 'is there a newer release?' notice.
+
+    Runs in a daemon thread at launch. It ONLY prints a one-line notice — it
+    never downloads or replaces anything (that is always an explicit user
+    action via the web UI / CLI). Every error is swallowed.
+    """
+    try:
+        info = check_for_update()
+    except Exception:  # noqa: BLE001
+        return
+    if info.get("ok") and info.get("newer"):
+        print(f"  Update available: v{info.get('latest')} "
+              f"(you have {info.get('current')}) — {info.get('html_url')}")
+        if info.get("replaceable"):
+            print("  Use 'Check for updates' in the web UI to install it.")
+
+
 def serve(host: str = "127.0.0.1", port: int = 8765, *,
           open_browser: bool = True) -> None:
+    # If a Windows update was staged on a previous run, swap it in first.
+    pending = finalize_pending_update()
+    if pending.get("ok") and pending.get("relaunch_argv"):
+        from .update import relaunch
+        relaunch(pending["relaunch_argv"])   # does not return on success
+
     port = _pick_port(host, port)
     httpd = ThreadingHTTPServer((host, port), CIXHandler)
     url = f"http://{host}:{port}"
     print(f"Toshiba CIX Manager {__version__}")
     print(f"  Open: {url}")
     print("  Read-only SNMP. Writes are stubbed (not enabled). Ctrl-C to stop.")
+    # Fire the update check in the background so the UI/console comes up at once.
+    threading.Thread(target=_background_update_check, daemon=True).start()
     if open_browser:
         try:
             import webbrowser

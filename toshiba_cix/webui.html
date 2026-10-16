@@ -28,6 +28,9 @@
             padding:3px 8px;border-radius:20px}
   .status{margin-left:auto;color:var(--muted);font-size:12px;text-align:right}
   .status b{color:var(--fg)}
+  .updbox{display:flex;align-items:center;gap:8px}
+  .updmsg{font-size:12px;color:var(--muted)}
+  .updmsg b{color:var(--warn)}
   main{padding:16px;max-width:1180px;margin:0 auto}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
         padding:16px;margin-bottom:16px}
@@ -104,6 +107,11 @@
   <h1>Toshiba CIX Manager</h1>
   <span class="ro-badge" id="modeBadge" title="Reads are plain SNMP GETs. Writes require an explicit Confirm &amp; write and are read-back verified.">READ-ONLY</span>
   <div class="status" id="status">Not connected</div>
+  <div class="updbox" id="updateBox">
+    <span id="updMsg" class="updmsg"></span>
+    <button class="btn ghost small" id="btnUpdCheck" title="Check GitHub for a newer release">Check for updates</button>
+    <button class="btn small hide" id="btnUpdApply">Update</button>
+  </div>
 </header>
 
 <main>
@@ -757,6 +765,42 @@ $("#btnCatRestoreGo").onclick = async ()=>{
   if(h && h.writes_enabled){ b.textContent = "WRITES: CONFIRM-GATED"; }
   else { b.textContent = "READ-ONLY"; }
 }catch(e){} })();
+
+/* ---------- Self-update ---------- */
+let UPD = null;   // last /api/update check result
+function renderUpdate(info){
+  UPD = info;
+  const msg = $("#updMsg"), apply = $("#btnUpdApply");
+  apply.classList.add("hide");
+  if(!info || !info.ok){ msg.textContent = info && info.error ? "update check failed" : ""; return; }
+  if(info.newer){
+    msg.innerHTML = '<b>v'+esc(info.latest)+' available</b> (you have '+esc(info.current)+')';
+    if(info.replaceable && info.asset_url){ apply.classList.remove("hide"); }
+    else { msg.innerHTML += ' &mdash; <a href="'+esc(info.html_url)+'" target="_blank" rel="noopener">get it</a>'; }
+  } else {
+    msg.textContent = "Up to date (v"+esc(info.current)+")";
+  }
+}
+$("#btnUpdCheck").onclick = async ()=>{
+  const btn=$("#btnUpdCheck"); btn.disabled=true; const old=btn.textContent; btn.textContent="Checking…";
+  try{ renderUpdate(await api("/api/update")); }
+  catch(e){ $("#updMsg").textContent = "update check failed"; }
+  finally{ btn.disabled=false; btn.textContent=old; }
+};
+$("#btnUpdApply").onclick = async ()=>{
+  if(!UPD || !UPD.newer) return;
+  if(!confirm("Download v"+UPD.latest+" and replace this application? It will restart afterwards.")) return;
+  const btn=$("#btnUpdApply"); btn.disabled=true; const old=btn.textContent; btn.textContent="Updating…";
+  $("#updMsg").innerHTML = '<span class="spinner"></span>Downloading v'+esc(UPD.latest)+'&hellip;';
+  try{
+    const res = await api("/api/update", {confirm:true});
+    if(res && res.ok){ $("#updMsg").innerHTML = '<b>'+esc(res.message||"Updated.")+'</b>'; btn.classList.add("hide"); }
+    else { $("#updMsg").textContent = "Update failed: "+esc((res&&(res.message||res.error))||"unknown error"); }
+  }catch(e){ $("#updMsg").textContent = "Update failed: "+esc(e.message); }
+  finally{ btn.disabled=false; btn.textContent=old; }
+};
+/* non-blocking check on launch — surfaces an available update, never installs */
+(async ()=>{ try{ renderUpdate(await api("/api/update")); }catch(e){} })();
 </script>
 </body>
 </html>

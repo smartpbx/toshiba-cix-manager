@@ -29,7 +29,7 @@ a = Analysis(
         "toshiba_cix.discover", "toshiba_cix.write", "toshiba_cix.scan",
         "toshiba_cix.decode", "toshiba_cix.report", "toshiba_cix.snmp",
         "toshiba_cix.catalog", "toshiba_cix.backup", "toshiba_cix.diff",
-        "toshiba_cix.restore", "toshiba_cix.manage_cli",
+        "toshiba_cix.restore", "toshiba_cix.manage_cli", "toshiba_cix.update",
     ],
     hookspath=[],
     runtime_hooks=[],
