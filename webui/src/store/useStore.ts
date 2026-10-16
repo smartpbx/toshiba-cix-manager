@@ -10,6 +10,7 @@ import type {
   ProgressDetail,
   ProgramStatus,
   ProgramView,
+  Site,
   SnapshotHeader,
   SnapshotMeta,
   UpdateApplyResult,
@@ -83,6 +84,14 @@ interface AppState {
 
   connect: () => Promise<void>;
   openColdSnapshot: (siteId?: string) => Promise<boolean>;
+
+  // saved sites (the Connect drawer's one-click reconnect cards) -----------
+  sites: Site[];
+  loadSites: () => Promise<void>;
+  connectToSite: (site: Site) => Promise<void>;
+  addSite: (site: Partial<Site>) => Promise<boolean>;
+  renameSite: (id: string, name: string) => Promise<void>;
+  deleteSite: (id: string) => Promise<void>;
 
   // SSE handlers -----------------------------------------------------------
   onJob: (job: JobState) => void;
@@ -330,6 +339,56 @@ export const useStore = create<AppState>((set, get) => ({
     }
   },
 
+  sites: [],
+  async loadSites() {
+    try {
+      const res = await api.sites();
+      if (res.ok) set({ sites: res.sites ?? [] });
+    } catch {
+      /* offline / daemon down: leave the list as-is */
+    }
+  },
+  async connectToSite(site) {
+    const pbx = site.pbx ?? {};
+    set((st) => ({
+      form: {
+        ...st.form,
+        ip: pbx.host ?? "",
+        community: pbx.community || "communityName",
+        port: pbx.port ?? 161,
+        reach: pbx.via === "overlay" ? "remote" : "direct",
+        site: site.name ?? "",
+        site_id: site.id ?? "",
+      },
+    }));
+    await get().connect();
+  },
+  async addSite(site) {
+    try {
+      const res = await api.upsertSite(site);
+      await get().loadSites();
+      return res.ok;
+    } catch {
+      return false;
+    }
+  },
+  async renameSite(id, name) {
+    try {
+      await api.renameSite(id, { name });
+    } catch {
+      /* ignore */
+    }
+    await get().loadSites();
+  },
+  async deleteSite(id) {
+    try {
+      await api.deleteSite(id);
+    } catch {
+      /* ignore */
+    }
+    await get().loadSites();
+  },
+
   onJob(job) {
     const { progress } = get();
     if (progress.jobId && job.id !== progress.jobId) return;
@@ -345,6 +404,9 @@ export const useStore = create<AppState>((set, get) => ({
         },
       });
       void get().refreshSessionIndex();
+      // The successful connect upserted a saved site server-side; pick it up so
+      // it shows as a reconnect card next time the drawer opens.
+      void get().loadSites();
     } else if (job.status === "error") {
       set({
         progress: {

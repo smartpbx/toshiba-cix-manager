@@ -44,6 +44,15 @@ echo "==> copy app"
 cp -r "$ROOT/toshiba_cix" "$APPDIR/usr/share/toshiba-cix-manager/"
 cp "$ROOT/app.py" "$APPDIR/usr/share/toshiba-cix-manager/"
 
+echo "==> bundle certifi (CA bundle for the self-updater's TLS)"
+# python-build-standalone sets its default CA verify paths to the BUILD machine,
+# so ssl.create_default_context() can find no CAs on the user's box and the
+# in-app updater fails with CERTIFICATE_VERIFY_FAILED. update.py falls back to a
+# system bundle and then to certifi.where(); install certifi here so that last
+# resort always resolves, even on a minimal host. (Build-time only; the engine
+# stays pure stdlib — certifi is only a CA data file.)
+"$APPDIR/usr/python/bin/python3" -m pip install --no-warn-script-location certifi
+
 echo "==> icon + desktop"
 python3 "$HERE/make_icon.py"
 cp "$HERE/icon.png" "$APPDIR/toshiba-cix-manager.png"

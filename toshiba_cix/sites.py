@@ -28,6 +28,7 @@ import os
 import re
 import sys
 import tempfile
+from datetime import datetime, timezone
 
 _VIA = ("direct", "overlay", "agent")
 
@@ -156,6 +157,60 @@ class SiteBook:
                 os.unlink(tmp)
 
 
+def record_connection(book: "SiteBook", *, host, community=None, port=None,
+                      name=None, via="direct", identity=None, site_id=None,
+                      when=None) -> dict | None:
+    """Remember a just-connected system in the site book, keyed on PBX host.
+
+    Called on a **successful** connect so a tech's systems reappear as saved
+    sites next launch. Idempotent and host-matched: reconnecting to a host
+    already in the book updates that one record in place (community / port /
+    transport / live identity / ``last_connected``) — it never adds a duplicate —
+    and keeps the record's chosen name, notes and VM leg. A new host is appended,
+    named for the explicit label, else its software id, else the host itself.
+
+    Returns the normalised, persisted record, or ``None`` when no host was
+    supplied (nothing worth remembering). All writes go through
+    :meth:`SiteBook.upsert`, so they stay atomic and ``0600``.
+    """
+    host = str(host).strip() if host else ""
+    if not host:
+        return None
+    when = when or datetime.now(timezone.utc).isoformat(timespec="seconds")
+    identity = {k: v for k, v in dict(identity or {}).items() if v is not None}
+
+    sites = book.load()
+    existing = next(
+        (s for s in sites if (s.get("pbx") or {}).get("host") == host), None)
+
+    if existing is not None:
+        site = dict(existing)
+        pbx = dict(site.get("pbx") or {})
+    else:
+        swid = identity.get("software_id") or identity.get("swid") or ""
+        label = (str(name).strip() if name else "") or str(swid).strip() or host
+        chosen = str(site_id).strip() if site_id else slugify_id(label)
+        # Never collide onto a *different* host already filed under this id.
+        if any(s["id"] == chosen for s in sites):
+            chosen = f"{chosen}-{slugify_id(host)}"
+        site = {"id": chosen, "name": label}
+        pbx = {}
+
+    pbx["host"] = host
+    if port:
+        pbx["port"] = int(port)
+    if community:
+        pbx["community"] = community
+    pbx["via"] = via if via in _VIA else "direct"
+    if identity:
+        merged = dict(pbx.get("identity") or {})
+        merged.update(identity)
+        pbx["identity"] = merged
+    site["pbx"] = pbx
+    site["last_connected"] = when
+    return book.upsert(site)
+
+
 def sitebook_from_root(root) -> SiteBook:
     """A :class:`SiteBook` at ``<root>/sites.json`` (``root`` is a path or AppDirs)."""
     path = root.sites_file if hasattr(root, "sites_file") \
@@ -171,4 +226,5 @@ def _chmod_private_file(path: str) -> None:
         pass
 
 
-__all__ = ["SiteBook", "slugify_id", "new_site", "normalize_site", "sitebook_from_root"]
+__all__ = ["SiteBook", "slugify_id", "new_site", "normalize_site",
+           "record_connection", "sitebook_from_root"]

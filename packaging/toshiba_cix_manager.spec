@@ -44,6 +44,11 @@ a = Analysis(
         "toshiba_cix.server.http", "toshiba_cix.server.jobs",
         "toshiba_cix.server.router", "toshiba_cix.server.schema",
         "toshiba_cix.server.sessions",
+        # certifi ships a CA bundle so the self-updater can verify TLS to
+        # api.github.com even though this frozen CPython's default verify paths
+        # point at the build machine. PyInstaller's bundled hook-certifi.py
+        # collects certifi's cacert.pem as data when certifi is importable.
+        "certifi",
     ],
     hookspath=[],
     runtime_hooks=[],

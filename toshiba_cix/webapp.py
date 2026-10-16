@@ -68,7 +68,7 @@ from .server.app import ServerContext, register_core_routes, run_server
 from .server.auth import generate_token
 from .server.http import build_handler
 from .server.schema import schema_summary
-from .sites import slugify_id
+from .sites import record_connection, slugify_id
 from .snapshot import read_snapshot
 from .snmp import SnmpError, SnmpV1
 from .update import apply_update, check_for_update, finalize_pending_update, plan_update
@@ -202,8 +202,9 @@ def route_update_check(ctx, req):
 # connect / read / backup
 # --------------------------------------------------------------------------
 def route_connect(ctx, req):
+    params = req.body()
     try:
-        reader = _reader(req.body(), keep_raw_walk=False)
+        reader = _reader(params, keep_raw_walk=False)
     except ValueError as exc:
         req.send_json({"ok": False, "error": str(exc)}, 400)
         return
@@ -225,7 +226,29 @@ def route_connect(ctx, req):
     mac = by_oid.get(DISC.CHASSIS_MAC_OID)
     if mac is not None and mac.kind == "octet" and mac.raw:
         out["chassis_mac"] = D.decode_value(mac, as_mac=True)
+    _remember_site(ctx, client, params,
+                   identity={"software_id": out.get("software_id"),
+                             "chassis_mac": out.get("chassis_mac")})
     req.send_json(out)
+
+
+def _remember_site(ctx, client, params, *, identity=None, site_id=None):
+    """Upsert a just-connected CIX into the site book so it reappears as a saved
+    site next launch. Host-matched (never duplicates). Best-effort: remembering a
+    site must never fail or slow the connect it rode in on."""
+    try:
+        record_connection(
+            ctx.sitebook(),
+            host=getattr(client, "host", None),
+            community=getattr(client, "community", None),
+            port=getattr(client, "port", None),
+            name=params.get("site"),
+            site_id=site_id or params.get("site_id"),
+            via="overlay" if params.get("reach") == "remote" else "direct",
+            identity=identity,
+        )
+    except Exception:  # noqa: BLE001
+        log.warning("could not record connected site", exc_info=True)
 
 
 def route_read(ctx, req):
@@ -492,6 +515,11 @@ def route_snapshot_start(ctx, req):
             store.prune(site_id)
         except Exception as exc:  # noqa: BLE001 — a save failure must not fail the read
             log.warning("snapshot save failed: %s", exc)
+        # Remember the system as a saved site (host-matched, best-effort) now
+        # that the connect has genuinely succeeded and the live identity is known.
+        _remember_site(ctx, client, params, site_id=site_id,
+                       identity={"software_id": ident.get("swid"),
+                                 "chassis_mac": ident.get("chassis_mac")})
         return {"session": session.id, "site_id": site_id, "saved": header,
                 "identity": ident, "meta": snap["meta"],
                 "stats": snap["program_views"].get("stats")}

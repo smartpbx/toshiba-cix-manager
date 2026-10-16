@@ -28,7 +28,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install PyInstaller (build-time only)
-        run: python -m pip install --upgrade pip pyinstaller
+        run: python -m pip install --upgrade pip pyinstaller certifi
       - name: Build the .exe
         run: python packaging/build_windows.py
       - name: Upload workflow artifact
@@ -81,7 +81,7 @@ jobs:
           node-version: "22"
       - name: Build the engine sidecar (PyInstaller, build-time only)
         run: |
-          python -m pip install --upgrade pip pyinstaller
+          python -m pip install --upgrade pip pyinstaller certifi
           python packaging/build_sidecar.py
       - name: Build the desktop app (.deb + .AppImage)
         working-directory: desktop
@@ -116,7 +116,7 @@ jobs:
           node-version: "22"
       - name: Build the engine sidecar (PyInstaller, build-time only)
         run: |
-          python -m pip install --upgrade pip pyinstaller
+          python -m pip install --upgrade pip pyinstaller certifi
           python packaging/build_sidecar.py
       - name: Build the desktop app (.msi + NSIS .exe)
         working-directory: desktop
