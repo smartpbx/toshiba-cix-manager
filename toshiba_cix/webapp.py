@@ -44,11 +44,11 @@ from .appdirs import from_args
 from .backup import backup, render_backup_text
 from .catalog import load_catalog
 from .diff import diff_backups, load_volatile_oids, render_diff_text
-from .diff_view import annotate as diff_annotate
-from .diff_view import attribute as diff_attribute
-from .diff_view import to_csv, to_json, to_markdown, to_text
+# Bare names (no import aliases): the single-file build flattens the package and
+# strips intra-package imports, so an `import X as Y` alias would vanish there.
+from .diff_view import annotate, attribute, to_csv, to_json, to_markdown, to_text
 from .enrich import program_views_from_backup
-from .index import build_index, build_index_from_views, search as index_search
+from .index import build_index, build_index_from_views, search
 from .programs import empty_program_view, get_row, list_rows
 from .report import render as render_report
 from .restore import restore
@@ -607,7 +607,7 @@ def route_session_find(ctx, req):
         req.send_json({"ok": True, "query": q, "count": len(occ),
                        "occurrences": occ})
         return
-    res = index_search(idx, q, limit=int(req.query.get("limit") or 200))
+    res = search(idx, q, limit=int(req.query.get("limit") or 200))
     req.send_json({"ok": True, **res})
 
 
@@ -624,7 +624,7 @@ def route_snapshot_find(ctx, req):
         req.send_json({"ok": True, "query": q, "count": len(occ),
                        "occurrences": occ})
         return
-    res = index_search(idx, q, limit=int(req.query.get("limit") or 200))
+    res = search(idx, q, limit=int(req.query.get("limit") or 200))
     req.send_json({"ok": True, **res})
 
 
@@ -855,9 +855,9 @@ def _annotated_diff(ctx, a_doc, b_doc, params, *, site_for_blame=None):
         kw["exclude_fields"] = CROSS_SITE_EXCLUDE_FIELDS
         kw["match_rows_on"] = "key"
     d = diff_backups(a_doc, b_doc, **kw)
-    ann = diff_annotate(d, cat)
+    ann = annotate(d, cat)
     if site_for_blame:
-        diff_attribute(ann, ctx.snapshots().read_activity(site_for_blame))
+        attribute(ann, ctx.snapshots().read_activity(site_for_blame))
     return d, ann, cat
 
 

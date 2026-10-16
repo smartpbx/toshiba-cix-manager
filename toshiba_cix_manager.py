@@ -7965,6 +7965,8 @@ from datetime import datetime, timezone
 # Non-aliased so the single-file build (which flattens the package into one
 # module and strips intra-package imports) resolves these as globals, and so a
 # test can monkeypatch them on this module.
+# Bare names (no import aliases): the single-file build flattens the package and
+# strips intra-package imports, so an `import X as Y` alias would vanish there.
 
 log = logging.getLogger("toshiba_cix.webapp")
 
@@ -8509,7 +8511,7 @@ def route_session_find(ctx, req):
         req.send_json({"ok": True, "query": q, "count": len(occ),
                        "occurrences": occ})
         return
-    res = index_search(idx, q, limit=int(req.query.get("limit") or 200))
+    res = search(idx, q, limit=int(req.query.get("limit") or 200))
     req.send_json({"ok": True, **res})
 
 
@@ -8526,7 +8528,7 @@ def route_snapshot_find(ctx, req):
         req.send_json({"ok": True, "query": q, "count": len(occ),
                        "occurrences": occ})
         return
-    res = index_search(idx, q, limit=int(req.query.get("limit") or 200))
+    res = search(idx, q, limit=int(req.query.get("limit") or 200))
     req.send_json({"ok": True, **res})
 
 
@@ -8756,9 +8758,9 @@ def _annotated_diff(ctx, a_doc, b_doc, params, *, site_for_blame=None):
         kw["exclude_fields"] = CROSS_SITE_EXCLUDE_FIELDS
         kw["match_rows_on"] = "key"
     d = diff_backups(a_doc, b_doc, **kw)
-    ann = diff_annotate(d, cat)
+    ann = annotate(d, cat)
     if site_for_blame:
-        diff_attribute(ann, ctx.snapshots().read_activity(site_for_blame))
+        attribute(ann, ctx.snapshots().read_activity(site_for_blame))
     return d, ann, cat
 
 
