@@ -40,6 +40,7 @@ from . import discover as DISC
 from .backup import backup, render_backup_text
 from .catalog import load_catalog
 from .diff import diff_backups, render_diff_text
+from .enrich import program_views_from_backup
 from .report import render as render_report
 from .restore import restore
 from .scan import CIXReader
@@ -359,7 +360,8 @@ class CIXHandler(BaseHTTPRequestHandler):
                                       "CIX, or UDP 161 blocked"})
             return
         self._send_json({"ok": True, "backup": doc,
-                         "report": render_backup_text(doc, catalog=cat)})
+                         "report": render_backup_text(doc, catalog=cat),
+                         "program_views": program_views_from_backup(doc, cat)})
 
     def _handle_view(self, params):
         doc = params.get("backup")
@@ -376,7 +378,8 @@ class CIXHandler(BaseHTTPRequestHandler):
             return
         self._send_json({"ok": True, "report": report,
                          "meta": doc.get("meta", {}),
-                         "programs": sorted(doc.get("programs", {}).keys())})
+                         "programs": sorted(doc.get("programs", {}).keys()),
+                         "program_views": program_views_from_backup(doc, cat)})
 
     def _handle_diff(self, params):
         a, b = params.get("a"), params.get("b")

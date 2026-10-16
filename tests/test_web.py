@@ -151,6 +151,34 @@ def test_read_returns_doc_and_report():
     assert by_dn["200"]["source_oids"].get("extension")
 
 
+def test_read_includes_named_program_views():
+    status, j = _post("/api/read", {"ip": "192.168.254.253", "scope": "all"})
+    doc = j["doc"]
+    pv = doc["program_views"]
+    # the sample touches real catalog programs (200, 205, 579, FTP middleware)
+    keys = {p["catalog_key"] for p in pv["programs"]}
+    assert "200StationAssign" in keys
+    # nothing cataloged is left as a bare OID
+    assert pv["stats"]["raw_oid_cells"] == 0
+    assert pv["stats"]["named_cells"] == pv["stats"]["cells"] > 0
+    # every cell carries the contract's required keys + a field name
+    for prog in pv["programs"]:
+        for row in prog["rows"]:
+            for cell in row["cells"]:
+                assert {"col", "field_name", "oid", "raw_value",
+                        "display_value"} <= set(cell)
+                assert cell["field_name"]
+
+
+def test_view_endpoint_returns_program_views():
+    doc, _ = make_backup()
+    status, j = _post("/api/view", {"backup": doc})
+    assert j["ok"] is True
+    pv = j["program_views"]
+    assert pv["stats"]["raw_oid_cells"] == 0
+    assert any(p["catalog_key"] == "200StationAssign" for p in pv["programs"])
+
+
 def test_save_preview_does_not_write():
     # first read to get a real station object
     _, j = _post("/api/read", {"ip": "192.168.254.253", "scope": "all"})
