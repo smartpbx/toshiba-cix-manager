@@ -48,16 +48,26 @@ Safety contract (kept strict):
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import Iterable
 
 from .decode import decode_value
 from .snmp import SnmpError, Value, ber_integer, ber_octet, encode_set_message
 
-# Master switch. Writes are implemented and unit-tested offline against a fake
-# agent; a supervised live write (reversible station-name set -> read-back ->
-# re-read) is done with the owner present before trusting it in the field.
-WRITES_ENABLED = True
+# Master switch — defaults OFF. This tool SETs live customer PBXs over SNMP, so
+# a write must be an opt-in: the flag is read from the environment and is False
+# unless ``CIX_WRITES_ENABLED`` is explicitly set truthy. Writes are implemented
+# and unit-tested offline against a fake agent; a supervised live write
+# (reversible station-name set -> read-back -> re-read) is done with the owner
+# present before trusting it in the field.
+#
+# NOTE: never import this value into another module (``from .write import
+# WRITES_ENABLED``) — that freezes a snapshot at import time. Read it live via
+# :func:`writes_enabled` (or ``write.WRITES_ENABLED`` within this module), so a
+# runtime toggle (a test, a future UI switch) is honoured at request time.
+WRITES_ENABLED = os.environ.get("CIX_WRITES_ENABLED", "").strip().lower() in (
+    "1", "true", "yes", "on")
 
 # Optional operation/mode pre-op (frame 334). OFF by default: the data SET at
 # frame 634 succeeded without it. Flip on only if a bare SET is ever refused.

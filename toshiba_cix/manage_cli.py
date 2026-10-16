@@ -27,7 +27,7 @@ from .index import build_index, search as index_search
 from .restore import plan_summary, restore
 from .snmp import SnmpError, SnmpV1
 from .store import SnapshotStore
-from .write import WRITES_ENABLED, WriteError
+from .write import writes_enabled, WriteError
 
 
 def _load_json(path: str) -> dict:
@@ -199,7 +199,7 @@ def _cmd_restore(args) -> int:
           file=sys.stderr)
     if result["mode"] == "preview":
         print(result["message"])
-        print(f"(writes_enabled={WRITES_ENABLED}; re-run with --confirm to apply)")
+        print(f"(writes_enabled={writes_enabled()}; re-run with --confirm to apply)")
         for op in result["planned_ops"]:
             if op["sendable"]:
                 print(f"  SET {op['target_oid']} = {op['new_value']!r}"

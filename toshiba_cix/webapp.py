@@ -72,7 +72,11 @@ from .sites import slugify_id
 from .snapshot import read_snapshot
 from .snmp import SnmpError, SnmpV1
 from .update import apply_update, check_for_update, finalize_pending_update, plan_update
-from .write import WRITES_ENABLED, CIXWriter, WriteError
+# ``writes_enabled`` (a function) is imported, NOT ``WRITES_ENABLED`` (a value):
+# importing the value would freeze a snapshot at import time, so a runtime toggle
+# (a test, a future UI switch) would never be seen. Every call site reads the
+# live master switch via ``writes_enabled()`` at request time.
+from .write import writes_enabled, CIXWriter, WriteError
 # Voicemail leg (DESIGN_PLAN §8). Bare names so the single-file build resolves
 # them as globals after it flattens the package.
 from . import vm_backup, vm_catalog, vm_reports, vm_serial
@@ -146,7 +150,7 @@ def route_index(ctx, req):
 # --------------------------------------------------------------------------
 def route_health(ctx, req):
     req.send_json({"ok": True, "version": __version__,
-                   "writes_enabled": WRITES_ENABLED,
+                   "writes_enabled": writes_enabled(),
                    "schema": schema_summary()})
 
 
@@ -166,7 +170,7 @@ def route_catalog(ctx, req):
     except Exception as exc:  # noqa: BLE001
         req.send_json({"ok": False, "error": str(exc)}, 500)
         return
-    out = {"ok": True, "writes_enabled": WRITES_ENABLED}
+    out = {"ok": True, "writes_enabled": writes_enabled()}
     out.update(cat.summary())
     req.send_json(out)
 
@@ -249,54 +253,46 @@ def route_backup_zip(ctx, req):
 
 
 def route_save(ctx, req):
-    """Plan a station edit and PREVIEW it, or with ``confirm: true`` write + verify.
+    """Plan a station edit and PREVIEW it. This route is **preview-only** and
+    NEVER writes.
 
-    Preview never touches the network. The write path is gated by
-    ``WRITES_ENABLED`` and ``confirm`` and always GET-verifies the read-back.
+    The single gated live-write path is the armed Review & Write session flow
+    (``POST /api/sessions/{id}/apply`` — arm programming mode, confirm, and type
+    the site name). The legacy direct write from this route has been retired: a
+    ``confirm: true`` is refused with 409 and points the caller at that flow.
+    Preview never touches the network.
     """
     params = req.body()
     station = params.get("station") or {}
     changes = params.get("changes") or {}
     confirm = bool(params.get("confirm"))
-    writer = CIXWriter()
+    writer = CIXWriter()           # no client: planning is pure, sends nothing
     try:
         ops = writer.plan_station_update(station, changes)
     except Exception as exc:  # noqa: BLE001
         req.send_json({"ok": False, "error": str(exc)}, 400)
         return
 
-    if not confirm:
+    planned_ops = [op.as_dict() for op in ops]
+    if confirm:
+        # The old direct-write path is gone. Direct the caller to the one gated
+        # write path; return the plan too so nothing useful is lost.
         req.send_json({
-            "ok": True, "mode": "preview", "writes_enabled": WRITES_ENABLED,
-            "message": ("Preview only — nothing was sent. Use "
-                        "“Confirm & write” to apply these SETs."),
-            "planned_ops": [op.as_dict() for op in ops],
-        })
+            "ok": False, "mode": "preview", "writes_enabled": writes_enabled(),
+            "error": ("/api/save is preview-only and no longer writes. Apply "
+                      "changes through the gated Review & Write flow "
+                      "(POST /api/sessions/{id}/apply): arm programming mode, "
+                      "confirm, and type the site name."),
+            "planned_ops": planned_ops,
+        }, 409)
         return
 
-    try:
-        reader = _reader(params, keep_raw_walk=False)   # builds the client
-    except ValueError as exc:
-        req.send_json({"ok": False, "error": str(exc)}, 400)
-        return
-    writer = CIXWriter(reader.client)
-    try:
-        result = writer.commit(ops, confirm=True, verify=True)
-    except (WriteError, SnmpError) as exc:
-        req.send_json({"ok": False, "mode": "write", "error": str(exc),
-                       "planned_ops": [op.as_dict() for op in ops]})
-        return
-    except Exception as exc:  # noqa: BLE001
-        log.exception("write failed")
-        req.send_json({"ok": False, "mode": "write",
-                       "error": f"{type(exc).__name__}: {exc}"})
-        return
     req.send_json({
-        "ok": result["ok"], "mode": "write", "writes_enabled": WRITES_ENABLED,
-        "message": ("Write sent and verified." if result["ok"]
-                    else "Write sent but read-back did not match — check the "
-                         "results below."),
-        "result": result, "planned_ops": [op.as_dict() for op in ops],
+        "ok": True, "mode": "preview", "writes_enabled": writes_enabled(),
+        "message": ("Preview only — nothing was sent. Apply changes through the "
+                    "Review & Write flow: arm programming mode, confirm, and "
+                    "type the site name."),
+        "planned_ops": planned_ops,
     })
 
 
@@ -1242,7 +1238,7 @@ def _build_review(ctx, s, cat, *, simulate, refresh):
                        transport=s.transport, simulate=simulate)
     review["groups"] = groups
     review["validation"] = validate_ops(ops, None)
-    review["writes_enabled"] = WRITES_ENABLED
+    review["writes_enabled"] = writes_enabled()
     review["mode"] = s.mode_state()
     if live_error:
         review["live_error"] = live_error
@@ -1316,7 +1312,7 @@ def route_session_apply(ctx, req):
         return
 
     # --- live: strict gate (DESIGN_PLAN §9 layers 1 & 6) ---
-    if not WRITES_ENABLED:
+    if not writes_enabled():
         req.send_json({"ok": False, "error": "writes are disabled on this build"}, 409)
         return
     if not s.is_armed():
