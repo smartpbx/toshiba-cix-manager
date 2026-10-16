@@ -53,6 +53,12 @@ from .programs import empty_program_view, get_row, list_rows
 from .report import render as render_report
 from .restore import restore
 from .scan import CIXReader
+# P2 write path: staged changeset -> three-way review -> gated apply / Simulate.
+# Bare names so the single-file build resolves them after it flattens the package.
+from .changeset import plan_rows, simulate_oplog
+from .review import three_way
+from .validate import validate_ops
+from .bulk import fill_down, find_replace, pattern_fill, paste, set_for_selection
 from .server.app import ServerContext, register_core_routes, run_server
 from .server.auth import generate_token
 from .server.http import build_handler
@@ -1067,6 +1073,357 @@ def route_vm_diff(ctx, req):
     req.send_json({"ok": True, "diff": vm_backup.diff_backups(a, b)})
 
 
+# ==========================================================================
+# P2 write path: pending tray -> three-way review -> Simulate / gated apply.
+#
+# Every write surface is two-phase (DESIGN_PLAN 10.3): staging and review touch
+# NO network; apply defaults to Simulate (no network, no SET) and a live apply
+# is gated on armed mode + an explicit confirm + the typed site name. The UI
+# calls the apply endpoint ONLY from the review dialog (a test greps for this).
+# ==========================================================================
+def _catalog_or_500(req):
+    try:
+        return load_catalog()
+    except Exception as exc:  # noqa: BLE001
+        req.send_json({"ok": False, "error": f"catalog unavailable: {exc}"}, 500)
+        return None
+
+
+def _staged_working_rows(session, staged) -> list:
+    """The working-copy rows the changeset touches (base for the review)."""
+    rows = []
+    for pkey, by_index in staged.items():
+        pv = session.doc.get(pkey) or {}
+        by_idx = {r.get("index"): r for r in pv.get("rows") or []}
+        for index in by_index:
+            row = by_idx.get(index)
+            if row is not None:
+                rows.append(row)
+    return rows
+
+
+def route_session_pending_get(ctx, req):
+    """GET /api/sessions/{id}/pending — the staged changeset, planned + validated."""
+    s = _session_or_404(ctx, req)
+    if s is None:
+        return
+    cat = _catalog_or_500(req)
+    if cat is None:
+        return
+    ops, groups = plan_rows(s.doc, s.changeset.staged, catalog=cat)
+    validation = validate_ops(ops, None)
+    req.send_json({"ok": True, "groups": groups,
+                   "field_count": s.changeset.field_count(),
+                   "row_count": s.changeset.row_count(),
+                   "validation": validation})
+
+
+def route_session_pending_stage(ctx, req):
+    """POST /api/sessions/{id}/pending — stage {field: new_value} for one row.
+
+    Pure: nothing is sent. Body: ``{program, index, changes, originals?}``. The
+    response re-plans + L1/L2-validates the whole tray so the UI shows the write
+    gate state immediately."""
+    s = _session_or_404(ctx, req)
+    if s is None:
+        return
+    body = req.body() or {}
+    pkey = body.get("program")
+    index = body.get("index")
+    changes = body.get("changes") or {}
+    if not pkey or index is None or not isinstance(changes, dict):
+        req.send_json({"ok": False,
+                       "error": "program, index and changes are required"}, 400)
+        return
+    s.changeset.stage(str(pkey), str(index), changes, body.get("originals") or {})
+    cat = _catalog_or_500(req)
+    if cat is None:
+        return
+    ops, groups = plan_rows(s.doc, s.changeset.staged, catalog=cat)
+    req.send_json({"ok": True, "groups": groups,
+                   "field_count": s.changeset.field_count(),
+                   "row_count": s.changeset.row_count(),
+                   "validation": validate_ops(ops, None)})
+
+
+def route_session_pending_clear(ctx, req):
+    """DELETE /api/sessions/{id}/pending — clear all, or ?program=&index=[&field=]."""
+    s = _session_or_404(ctx, req)
+    if s is None:
+        return
+    pkey = req.query.get("program")
+    index = req.query.get("index")
+    field = req.query.get("field")
+    if pkey and index and field:
+        s.changeset.drop_field(pkey, index, field)
+    elif pkey and index:
+        s.changeset.drop_row(pkey, index)
+    else:
+        s.changeset.clear()
+    req.send_json({"ok": True, "field_count": s.changeset.field_count(),
+                   "row_count": s.changeset.row_count()})
+
+
+def route_session_bulk(ctx, req):
+    """POST /api/sessions/{id}/bulk — a bulk planner stages into the tray.
+
+    Body: ``{op, program, selection, field?, value?, pattern?, start?, find?,
+    replace?, regex?, columns?, grid?}``. No network — bulk edits are planned
+    and staged exactly like single edits (DESIGN_PLAN 5.5)."""
+    s = _session_or_404(ctx, req)
+    if s is None:
+        return
+    body = req.body() or {}
+    pkey = body.get("program")
+    op = body.get("op")
+    selection = body.get("selection") or []
+    view = s.program_view(pkey) if pkey else None
+    if not pkey or view is None:
+        req.send_json({"ok": False, "error": "unknown or unread program"}, 400)
+        return
+    try:
+        if op == "set":
+            cmap = set_for_selection(view, selection, body["field"], body.get("value"))
+        elif op == "fill_down":
+            cmap = fill_down(view, selection, body["field"])
+        elif op == "pattern":
+            cmap = pattern_fill(view, selection, body["field"], body["pattern"],
+                                int(body.get("start") or 1), int(body.get("step") or 1))
+        elif op == "find_replace":
+            cmap = find_replace(view, selection, body["field"], body.get("find", ""),
+                                body.get("replace", ""), regex=bool(body.get("regex")))
+        elif op == "paste":
+            cmap = paste(view, selection, body.get("columns") or [], body.get("grid") or [])
+        else:
+            req.send_json({"ok": False, "error": f"unknown bulk op {op!r}"}, 400)
+            return
+    except KeyError as exc:
+        req.send_json({"ok": False, "error": f"missing argument {exc}"}, 400)
+        return
+    for index, changes in cmap.items():
+        s.changeset.stage(str(pkey), str(index), changes)
+    req.send_json({"ok": True, "staged_rows": len(cmap),
+                   "field_count": s.changeset.field_count()})
+
+
+def _build_review(ctx, s, cat, *, simulate, refresh):
+    """Plan the changeset and build the three-way review. Only does a live
+    re-read (read-only GET) when ``refresh`` and a client are present; otherwise
+    base == live == working copy, so no socket is opened."""
+    ops, groups = plan_rows(s.doc, s.changeset.staged, catalog=cat)
+    base_rows = _staged_working_rows(s, s.changeset.staged)
+    live_rows = base_rows
+    live_error = None
+    if refresh and not simulate and s.client is not None:
+        fresh = []
+        for pkey, by_index in s.changeset.staged.items():
+            prog = cat.program(pkey)
+            for index in by_index:
+                try:
+                    row, err = get_row(s.client, cat, prog, index)
+                except Exception as exc:  # noqa: BLE001
+                    live_error = str(exc)
+                    row = None
+                if row is not None:
+                    fresh.append(row)
+        live_rows = fresh or base_rows
+    index = None
+    try:
+        if s.doc:
+            index = build_index_from_views({"programs": list(s.doc.values())})
+    except Exception:  # noqa: BLE001
+        index = None
+    review = three_way(ops, base_rows, live_rows, index=index,
+                       transport=s.transport, simulate=simulate)
+    review["groups"] = groups
+    review["validation"] = validate_ops(ops, None)
+    review["writes_enabled"] = WRITES_ENABLED
+    review["mode"] = s.mode_state()
+    if live_error:
+        review["live_error"] = live_error
+    return ops, review
+
+
+def route_session_review(ctx, req):
+    """POST /api/sessions/{id}/review — the three-way review of the tray.
+
+    Body: ``{simulate?, refresh?}``. Never writes. With ``simulate`` the live
+    re-read is skipped entirely (base == proposed base)."""
+    s = _session_or_404(ctx, req)
+    if s is None:
+        return
+    cat = _catalog_or_500(req)
+    if cat is None:
+        return
+    body = req.body() or {}
+    simulate = bool(body.get("simulate"))
+    _, review = _build_review(ctx, s, cat, simulate=simulate,
+                              refresh=bool(body.get("refresh")))
+    req.send_json({"ok": True, "review": review})
+
+
+def route_session_apply(ctx, req):
+    """POST /api/sessions/{id}/apply — Simulate (default) or a gated live write.
+
+    Body: ``{mode: 'simulate'|'live', confirm?, site_name_typed?}``.
+
+    * ``simulate`` (the default): plans the tray, returns the op-log of the exact
+      SET bytes that *would* go out, journals a ``simulate`` entry, and touches
+      NO network. This is the only mode exercised without hardware.
+    * ``live``: refused (409) unless the session is **armed**, ``confirm`` is
+      true, the typed site name matches, and writes are enabled. Only then is a
+      client required and ``CIXWriter.commit`` called. A conflict (layer 3)
+      aborts before any SET."""
+    s = _session_or_404(ctx, req)
+    if s is None:
+        return
+    cat = _catalog_or_500(req)
+    if cat is None:
+        return
+    body = req.body() or {}
+    mode = (body.get("mode") or "simulate").lower()
+    ops, review = _build_review(ctx, s, cat, simulate=(mode != "live"),
+                                refresh=(mode == "live"))
+
+    if s.changeset.is_empty():
+        req.send_json({"ok": False, "error": "nothing staged"}, 400)
+        return
+    if validate_ops(ops, None)["errors"]:
+        req.send_json({"ok": False, "error": "validation errors — fix them first",
+                       "review": review}, 400)
+        return
+
+    if mode != "live":
+        oplog = simulate_oplog(ops)
+        try:
+            j = ctx.journal()
+            cid = j.start_commit(site=s.site or "cix", mode="simulate",
+                                 transport=s.transport)
+            j.add_ops(cid, [{"program": o.program, "index": None,
+                             "field": o.field, "old_value": o.old_value,
+                             "new_value": o.new_value}
+                            for o in ops if o.sendable])
+            j.finish_commit(cid, ok=True, summary="simulate (no network)")
+        except Exception:  # noqa: BLE001 — journal is best-effort
+            pass
+        req.send_json({"ok": True, "mode": "simulate", "review": review,
+                       "oplog": oplog})
+        return
+
+    # --- live: strict gate (DESIGN_PLAN §9 layers 1 & 6) ---
+    if not WRITES_ENABLED:
+        req.send_json({"ok": False, "error": "writes are disabled on this build"}, 409)
+        return
+    if not s.is_armed():
+        req.send_json({"ok": False, "error": "session is not armed — arm "
+                       "programming mode first", "review": review}, 409)
+        return
+    if not bool(body.get("confirm")):
+        req.send_json({"ok": False, "error": "refusing to write without confirm"},
+                      409)
+        return
+    typed = (body.get("site_name_typed") or "").strip()
+    if review["needs_typed_name"] and typed != (s.site or ""):
+        req.send_json({"ok": False, "error": "type the site name to confirm this "
+                       "change", "review": review}, 409)
+        return
+    if s.client is None:
+        req.send_json({"ok": False, "error": "no live connection to write to"}, 409)
+        return
+    sendable = [o for o in ops if o.sendable and not review_excluded(review, o)]
+    if not sendable:
+        req.send_json({"ok": False, "error": "no sendable ops after review"}, 409)
+        return
+    writer = CIXWriter(s.client)
+    conflicts = writer.conflict_guard(sendable)
+    if conflicts:
+        req.send_json({"ok": False, "error": "device changed since the read",
+                       "conflicts": conflicts, "review": review}, 409)
+        return
+    try:
+        result = writer.commit(sendable, confirm=True, verify=True)
+    except (WriteError, SnmpError) as exc:
+        req.send_json({"ok": False, "mode": "live", "error": str(exc)}, 200)
+        return
+    # Record the applied ops with their (program_key, index) so Undo can
+    # re-stage the exact rows (the flat op list loses that; the groups keep it).
+    oid_to_loc = {}
+    for g in review.get("groups", []):
+        for od in g["ops"]:
+            if od.get("target_oid"):
+                oid_to_loc[od["target_oid"]] = (g["program_key"], g["index"])
+    s.last_applied = []
+    for o in sendable:
+        pkey, idx = oid_to_loc.get(o.target_oid, (o.program, None))
+        s.last_applied.append({"program_key": pkey, "program": o.program,
+                               "index": idx, "field": o.field,
+                               "old_value": o.old_value, "new_value": o.new_value,
+                               "oid": o.target_oid})
+    try:
+        j = ctx.journal()
+        cid = j.start_commit(site=s.site or "cix", mode="write",
+                             transport=s.transport)
+        j.add_ops(cid, s.last_applied)
+        j.finish_commit(cid, ok=result["ok"],
+                        summary=f"wrote {result['wrote']} fields")
+    except Exception:  # noqa: BLE001
+        pass
+    if result["ok"]:
+        s.changeset.clear()
+    req.send_json({"ok": result["ok"], "mode": "live", "result": result})
+
+
+def review_excluded(review: dict, op) -> bool:
+    """True if the review default-excluded this op (conflict / unproven)."""
+    for r in review.get("rows", []):
+        if r.get("field") == op.field and r.get("proposed") == op.new_value:
+            return bool(r.get("excluded"))
+    return False
+
+
+def route_session_undo(ctx, req):
+    """POST /api/sessions/{id}/undo — stage the inverse of the last applied
+    changeset so the revert goes through the same review (DESIGN_PLAN §9 layer
+    9). Returns the review of the inverse."""
+    s = _session_or_404(ctx, req)
+    if s is None:
+        return
+    cat = _catalog_or_500(req)
+    if cat is None:
+        return
+    applied = s.last_applied or []
+    if not applied:
+        req.send_json({"ok": False, "error": "nothing to undo"}, 400)
+        return
+    # Re-stage each field back to its pre-write value.
+    for entry in applied:
+        pkey = entry.get("program_key")
+        index = entry.get("index")
+        if pkey is None:  # fall back to mapping the program number to a key
+            for key, pv in s.doc.items():
+                if str(pv.get("program_number")) == str(entry.get("program")):
+                    pkey = key
+                    break
+        if pkey is None or index is None:
+            continue
+        s.changeset.stage(str(pkey), str(index),
+                          {entry["field"]: entry.get("old_value")})
+    _, review = _build_review(ctx, s, cat, simulate=True, refresh=False)
+    req.send_json({"ok": True, "review": review})
+
+
+def register_write_routes(ctx: ServerContext) -> None:
+    """P2 write path (two-phase, gated): staging, review, Simulate / apply."""
+    r = ctx.router
+    r.get("/api/sessions/{id}/pending", route_session_pending_get)
+    r.post("/api/sessions/{id}/pending", route_session_pending_stage)
+    r.delete("/api/sessions/{id}/pending", route_session_pending_clear)
+    r.post("/api/sessions/{id}/bulk", route_session_bulk)
+    r.post("/api/sessions/{id}/review", route_session_review)
+    r.post("/api/sessions/{id}/apply", route_session_apply)
+    r.post("/api/sessions/{id}/undo", route_session_undo)
+
+
 def register_vm_routes(ctx: ServerContext) -> None:
     """Voice Mail leg — read-only screens + plan-only save (DESIGN_PLAN §8)."""
     r = ctx.router
@@ -1135,6 +1492,7 @@ def make_context(*, token=None, appdirs=None) -> ServerContext:
     ctx = ServerContext(token=token, appdirs=appdirs)
     register_core_routes(ctx)
     register_browse_routes(ctx)
+    register_write_routes(ctx)
     register_vm_routes(ctx)
     register_legacy_routes(ctx)
     return ctx

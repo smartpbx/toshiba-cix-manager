@@ -375,6 +375,133 @@ export interface VmPlan {
   reason: string;
 }
 
+// ---- P2 write path (pending tray · three-way review · Simulate) -----------
+export interface PendingOp {
+  field: string;
+  label: string;
+  new_value: string;
+  old_value: string | null;
+  target_oid: string | null;
+  program: string | null;
+  column: number | null;
+  ber_type: string;
+  sendable: boolean;
+  note: string;
+  native_wire: string | null;
+  wire_proven: boolean;
+  op_class: string;
+  row_create: boolean;
+}
+
+export interface PendingGroup {
+  program_key: string;
+  program_number: string | null;
+  menu_path: string | null;
+  label: string;
+  index: string;
+  row_key: string;
+  ops: PendingOp[];
+}
+
+export interface Finding {
+  level: string;
+  severity: "error" | "warn";
+  field: string;
+  oid: string | null;
+  message: string;
+}
+
+export interface Validation {
+  findings: Finding[];
+  errors: Finding[];
+  warnings: Finding[];
+  error_count: number;
+  warn_count: number;
+  by_field: Record<string, Finding[]>;
+}
+
+export interface PendingResult {
+  ok: boolean;
+  groups: PendingGroup[];
+  field_count: number;
+  row_count: number;
+  validation: Validation;
+}
+
+export interface ModeState {
+  session?: string;
+  mode: "disarmed" | "armed" | "simulate";
+  expires: number | null;
+  writable: boolean;
+}
+
+export interface ReviewRow {
+  field: string;
+  label: string;
+  display_no: string | null;
+  program: string | null;
+  op_class: string;
+  base: string | null;
+  live: string | null;
+  proposed: string;
+  wire: string;
+  native_wire: string | null;
+  wire_proven: boolean;
+  proof: string;
+  sendable: boolean;
+  note: string;
+  conflict: { base: string | null; live: string | null; proposed: string } | null;
+  blast: { affects: number | null; note: string };
+  excluded: boolean;
+  exclude_reason: string;
+}
+
+export interface ReviewResult {
+  rows: ReviewRow[];
+  summary: {
+    will_send: number;
+    skip_conflict: number;
+    skip_unproven_wire: number;
+    read_only: number;
+    total: number;
+    programs: string[];
+    affects_line: string;
+  };
+  conflicts: Array<{ field: string; oid: string; base: string | null; live: string | null; proposed: string }>;
+  exclusions: Array<{ field: string; reason: string }>;
+  tier: number;
+  tier_reasons: string[];
+  needs_typed_name: boolean;
+  simulate: boolean;
+  groups: PendingGroup[];
+  validation: Validation;
+  writes_enabled: boolean;
+  mode: ModeState;
+  live_error?: string;
+}
+
+export interface OpLogEntry {
+  field: string;
+  oid: string | null;
+  wire: string;
+  wire_proven: boolean;
+  old_value: string | null;
+  new_value: string;
+  value_tlv_hex: string;
+  note: string;
+}
+
+export interface OpLog {
+  mode: string;
+  would_send: number;
+  entries: OpLogEntry[];
+  commit: PendingOp | null;
+  commit_value_tlv_hex: string | null;
+  batch_set_pdu_hex: string | null;
+  network: boolean;
+  note: string;
+}
+
 export type Reach = "direct" | "remote";
 
 export interface ConnectionForm {

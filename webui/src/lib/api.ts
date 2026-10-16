@@ -9,7 +9,11 @@ import type {
   FullSnapshot,
   Health,
   JobState,
+  ModeState,
+  OpLog,
+  PendingResult,
   ProgramResult,
+  ReviewResult,
   SessionSnapshot,
   SnapshotHeader,
   SnapshotStart,
@@ -68,6 +72,57 @@ export const api = {
     jget<ProgramResult>(
       `/api/sessions/${sessionId}/program/${encodeURIComponent(key)}` +
         (refresh ? "?refresh=1" : ""),
+    ),
+
+  // -- P2 write path (two-phase; staging/review touch no network) ---------
+  // Stage {field: new_value} for one row into the session changeset.
+  stagePending: (
+    sessionId: string,
+    body: { program: string; index: string; changes: Record<string, string>; originals?: Record<string, string> },
+  ) => jpost<PendingResult>(`/api/sessions/${s(sessionId)}/pending`, body),
+
+  getPending: (sessionId: string) =>
+    jget<PendingResult>(`/api/sessions/${s(sessionId)}/pending`),
+
+  clearPending: (sessionId: string, loc?: { program: string; index: string }) =>
+    jbody<{ ok: boolean; field_count: number; row_count: number }>(
+      "DELETE",
+      `/api/sessions/${s(sessionId)}/pending` +
+        (loc ? `?program=${s(loc.program)}&index=${s(loc.index)}` : ""),
+    ),
+
+  bulkEdit: (sessionId: string, body: Record<string, unknown>) =>
+    jpost<{ ok: boolean; staged_rows?: number; field_count?: number; error?: string }>(
+      `/api/sessions/${s(sessionId)}/bulk`,
+      body,
+    ),
+
+  reviewChangeset: (sessionId: string, body: { simulate?: boolean; refresh?: boolean }) =>
+    jpost<{ ok: boolean; review: ReviewResult }>(
+      `/api/sessions/${s(sessionId)}/review`,
+      body,
+    ),
+
+  // The ONE write call — invoked only from ReviewWriteDialog (a backend test
+  // greps the UI to enforce that). Simulate opens no socket; live is gated.
+  applyChangeset: (
+    sessionId: string,
+    body: { mode: "simulate" | "live"; confirm?: boolean; site_name_typed?: string },
+  ) => jpost<{ ok: boolean; mode?: string; review?: ReviewResult; oplog?: OpLog; result?: unknown; error?: string }>(
+    `/api/sessions/${s(sessionId)}/apply`,
+    body,
+  ),
+
+  undoChangeset: (sessionId: string) =>
+    jpost<{ ok: boolean; review?: ReviewResult; error?: string }>(
+      `/api/sessions/${s(sessionId)}/undo`,
+      {},
+    ),
+
+  setMode: (sessionId: string, mode: "disarmed" | "armed" | "simulate") =>
+    jpost<{ ok: boolean; mode?: ModeState; error?: string }>(
+      `/api/sessions/${s(sessionId)}/mode`,
+      { mode },
     ),
 
   // value index: palette value search + where-used over the working copy

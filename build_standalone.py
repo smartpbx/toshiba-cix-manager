@@ -208,6 +208,10 @@ def main() -> None:
          # generic single-program read + snapshot engine (depend on backup /
          # enrich / catalog above), the snapshot store and the value index.
          "programs.py", "snapshot.py", "store.py", "index.py",
+         # P2 write path (pure): field/row validation, the three-way review,
+         # bulk-edit planners, and the staged changeset. Listed after programs/
+         # write/snmp because they reference those as flattened globals.
+         "validate.py", "review.py", "bulk.py", "changeset.py",
          # voicemail leg (DESIGN_PLAN §8): byte pipe -> framing/link -> decoders
          # -> sysparams/pbxdb/catalog -> reports/backup -> the exclusive session.
          # Listed before webapp.py, which registers their routes.

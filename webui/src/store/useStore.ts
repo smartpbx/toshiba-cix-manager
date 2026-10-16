@@ -5,9 +5,12 @@ import type {
   ConnectionForm,
   Identity,
   JobState,
+  ModeState,
+  PendingGroup,
   ProgramView,
   SnapshotHeader,
   SnapshotMeta,
+  Validation,
   VmStatus,
 } from "@/lib/types";
 
@@ -89,6 +92,27 @@ interface AppState {
   loadingKeys: Set<string>;
   ensureProgram: (key: string) => void;
   refreshProgram: (key: string) => Promise<void>;
+
+  // write path: pending tray + arming mode (P2) ---------------------------
+  pending: PendingGroup[];
+  pendingFieldCount: number;
+  pendingValidation: Validation | null;
+  mode: ModeState;
+  railOpen: boolean;
+  reviewOpen: boolean;
+  refreshPending: () => Promise<void>;
+  stageRowChanges: (
+    programKey: string,
+    index: string,
+    changes: Record<string, string>,
+    originals: Record<string, string>,
+  ) => Promise<void>;
+  clearPending: (loc?: { program: string; index: string }) => Promise<void>;
+  bulkEdit: (body: Record<string, unknown>) => Promise<void>;
+  setMode: (mode: "disarmed" | "armed" | "simulate") => Promise<void>;
+  setRailOpen: (open: boolean) => void;
+  openReview: () => void;
+  closeReview: () => void;
 
   // voicemail (Stratagy LVMU leg) ------------------------------------------
   vmStatus: VmStatus | null;
@@ -209,6 +233,10 @@ export const useStore = create<AppState>((set, get) => ({
         programViews: {},
         readKeys: new Set(),
         rowCounts: {},
+        pending: [],
+        pendingFieldCount: 0,
+        pendingValidation: null,
+        mode: { mode: "disarmed", expires: null, writable: false },
         connectDrawerOpen: false,
         form: { ...form, site_id: res.site_id ?? form.site_id },
         progress: {
@@ -382,6 +410,87 @@ export const useStore = create<AppState>((set, get) => ({
       set({ loadingKeys: after });
     }
   },
+
+  pending: [],
+  pendingFieldCount: 0,
+  pendingValidation: null,
+  mode: { mode: "disarmed", expires: null, writable: false },
+  railOpen: true,
+  reviewOpen: false,
+  async refreshPending() {
+    const { sessionId } = get();
+    if (!sessionId) {
+      set({ pending: [], pendingFieldCount: 0, pendingValidation: null });
+      return;
+    }
+    try {
+      const res = await api.getPending(sessionId);
+      if (res.ok) {
+        set({
+          pending: res.groups,
+          pendingFieldCount: res.field_count,
+          pendingValidation: res.validation,
+        });
+      }
+    } catch {
+      /* transient */
+    }
+  },
+  async stageRowChanges(programKey, index, changes, originals) {
+    const { sessionId } = get();
+    if (!sessionId || Object.keys(changes).length === 0) return;
+    try {
+      const res = await api.stagePending(sessionId, {
+        program: programKey,
+        index,
+        changes,
+        originals,
+      });
+      if (res.ok) {
+        set({
+          pending: res.groups,
+          pendingFieldCount: res.field_count,
+          pendingValidation: res.validation,
+          railOpen: true,
+        });
+      }
+    } catch {
+      /* transient */
+    }
+  },
+  async clearPending(loc) {
+    const { sessionId } = get();
+    if (!sessionId) return;
+    try {
+      await api.clearPending(sessionId, loc);
+    } catch {
+      /* ignore */
+    }
+    await get().refreshPending();
+  },
+  async bulkEdit(body) {
+    const { sessionId } = get();
+    if (!sessionId) return;
+    try {
+      await api.bulkEdit(sessionId, body);
+    } catch {
+      /* ignore */
+    }
+    await get().refreshPending();
+  },
+  async setMode(mode) {
+    const { sessionId } = get();
+    if (!sessionId) return;
+    try {
+      const res = await api.setMode(sessionId, mode);
+      if (res.ok && res.mode) set({ mode: res.mode });
+    } catch {
+      /* transient */
+    }
+  },
+  setRailOpen: (railOpen) => set({ railOpen }),
+  openReview: () => set({ reviewOpen: true }),
+  closeReview: () => set({ reviewOpen: false }),
 
   vmStatus: null,
   vmBusy: false,

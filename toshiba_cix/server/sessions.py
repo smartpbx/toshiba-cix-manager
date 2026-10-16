@@ -18,6 +18,8 @@ import threading
 import time
 import uuid
 
+from ..changeset import Changeset
+
 # Arming modes. "armed" permits writes; it expires after an idle window
 # (DESIGN_PLAN decision #6: 15 min local default, 10 remote, configurable).
 MODE_DISARMED = "disarmed"
@@ -40,7 +42,8 @@ class Session:
         self.doc = {}                 # working copy: catalog_key -> program_view
         self.freshness = {}           # catalog_key -> read timestamp
         self.snapshot_meta = {}       # meta of the last read (scope, walk_error…)
-        self.pending = []             # staged ops (a Changeset mirror)
+        self.changeset = Changeset()  # staged edits (layer 2 — nothing on wire)
+        self.last_applied = None      # ops of the last applied changeset (Undo)
         self.mode = MODE_DISARMED
         self.mode_expires = None
         self.jobs = []
@@ -131,7 +134,8 @@ class Session:
         return {"id": self.id, "site": self.site, "transport": self.transport,
                 "identity": self.identity, "mode": self.mode_state()["mode"],
                 "mode_expires": self.mode_expires,
-                "pending": len(self.pending),
+                "pending": self.changeset.field_count(),
+                "pending_rows": self.changeset.row_count(),
                 "snapshot_meta": self.snapshot_meta,
                 "programs_read": self.read_keys(),
                 "programs_read_count": len(self.doc),

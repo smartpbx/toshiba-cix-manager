@@ -11,6 +11,8 @@ import { ProgramPage } from "@/views/ProgramPage";
 import { BackupsView } from "@/views/BackupsView";
 import { VoiceMailView } from "@/views/VoiceMailView";
 import { FileModeBanner } from "@/components/backup/FileModeBanner";
+import { PendingRail } from "@/components/write/PendingRail";
+import { ReviewWriteDialog } from "@/components/write/ReviewWriteDialog";
 import { useEventStream } from "@/lib/sse";
 import { useStore } from "@/store/useStore";
 import { useShallow } from "zustand/react/shallow";
@@ -69,10 +71,12 @@ export default function App() {
             <Workspace />
           </div>
         </main>
+        <PendingRail />
       </div>
       <StatusBar />
       <CommandPalette />
       <ConnectDrawer />
+      <ReviewWriteDialog />
     </div>
   );
 }
