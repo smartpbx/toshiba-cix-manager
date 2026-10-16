@@ -52,6 +52,7 @@ import copy
 import hashlib
 import json
 import re
+import time
 from datetime import datetime, timezone
 
 from . import __version__
@@ -150,6 +151,81 @@ def collect(client, catalog: Catalog, *, programs=None,
             seen.add(oid)
             out.append((oid, val))
     return out, error
+
+
+# The outcomes a single program's read can end in. ``ok``/``empty`` are a
+# clean finish (data / no data); ``timeout``/``capped`` are a bounded partial
+# read of a slow or oversized subtree; ``error`` is a transport fault. The UI
+# renders each distinctly instead of the old ambiguous "no rows".
+PROGRAM_READ_OUTCOMES = ("ok", "empty", "timeout", "capped", "error")
+
+
+def collect_program(client, catalog: Catalog, prog_key, *, width: int = 10,
+                    max_oids: int = 20000, max_seconds: float | None = None
+                    ) -> tuple[list[tuple[str, Value]], dict]:
+    """Walk ONE program's field subtrees, read-only, bounded and self-reporting.
+
+    This is the per-program unit the snapshot's full read iterates so that a
+    single slow, huge, or non-terminating program subtree cannot stall the
+    whole read (the bug this fixes): each program gets its own OID cap
+    (``max_oids``) and optional wall-clock budget (``max_seconds``), and a
+    transport fault is caught — never raised — so the caller always moves on to
+    the next program.
+
+    Returns ``(pairs, status)``. ``status`` is a plain dict describing how the
+    walk ended::
+
+        {"key", "number", "name", "oids", "rounds", "elapsed",
+         "outcome": "ok"|"empty"|"timeout"|"capped"|"error", "error": str|None}
+
+    so the progress stream and the UI can distinguish not-read / read-empty /
+    read-FAILED (with the reason) rather than collapsing them.
+    """
+    prog = catalog.program(prog_key)
+    key = prog.key if prog is not None else str(prog_key)
+    roots = walk_roots(catalog, [key]) if prog is not None else []
+    started = time.monotonic()
+    deadline = (started + max_seconds) if max_seconds else None
+    walk_status: dict = {}
+    pairs: list[tuple[str, Value]] = []
+    outcome = "ok"
+    error: str | None = None
+    if roots:
+        try:
+            pairs = client.bulk_walk(roots, width=width, max_total=max_oids,
+                                     deadline=deadline, status=walk_status)
+        except SnmpError as exc:
+            outcome = "error"
+            error = str(exc)
+    # de-dup (bulk_walk can revisit an overlap)
+    seen: set[str] = set()
+    out: list[tuple[str, Value]] = []
+    for oid, val in pairs:
+        if oid not in seen:
+            seen.add(oid)
+            out.append((oid, val))
+    stopped = walk_status.get("stopped")
+    if outcome == "ok" and stopped == "deadline":
+        outcome = "timeout"
+        error = (f"timed out after {max_seconds:.0f}s — read {len(out)} value(s) "
+                 "before the per-program budget (partial; Refresh to finish)")
+    elif outcome == "ok" and stopped == "cap":
+        outcome = "capped"
+        error = (f"stopped at the {max_oids}-value cap — an unusually large or "
+                 "non-terminating table (partial; Refresh to finish)")
+    elif outcome == "ok" and not out:
+        outcome = "empty"
+    status = {
+        "key": key,
+        "number": prog.number if prog is not None else None,
+        "name": prog.name if prog is not None else key,
+        "oids": len(out),
+        "rounds": walk_status.get("rounds", 0),
+        "elapsed": round(time.monotonic() - started, 2),
+        "outcome": outcome,
+        "error": error,
+    }
+    return out, status
 
 
 def read_identity(client) -> dict:
@@ -569,7 +645,8 @@ __all__ = [
     "FORMAT", "FORMAT_VERSION", "FORMAT_TEMPLATE", "FORMAT_CHANGESET",
     "FORMAT_DIFF", "REDACTED_KEY", "IDENTITY_PROGRAM_KEYS",
     "SOFTWARE_ID_OID", "CHASSIS_MAC_OID",
-    "walk_roots", "collect", "read_identity", "build_backup", "backup",
+    "walk_roots", "collect", "collect_program", "PROGRAM_READ_OUTCOMES",
+    "read_identity", "build_backup", "backup",
     "render_backup_text",
     "canonical_json", "content_hash", "program_hashes",
     "identity_program_keys", "is_sensitive_field", "sensitive_field_refs",

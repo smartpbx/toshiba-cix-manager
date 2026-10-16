@@ -55,6 +55,37 @@ export interface SnapshotMeta {
   oids_read?: number;
   walk_error?: string | null;
   site?: string | null;
+  program_problems?: ProgramStatus[];
+}
+
+// backup.collect_program status: how one program's read ended. "ok"/"empty"
+// are a clean finish; "timeout"/"capped" are a bounded partial read of a slow
+// or oversized subtree; "error" is a transport fault. The UI renders each
+// distinctly instead of the old ambiguous "no rows for this program".
+export type ProgramOutcome = "ok" | "empty" | "timeout" | "capped" | "error";
+
+export interface ProgramStatus {
+  key: string;
+  number: string | null;
+  name: string;
+  oids: number | null;
+  rounds?: number | null;
+  elapsed?: number | null;
+  outcome: ProgramOutcome;
+  error?: string | null;
+}
+
+// job.progress `detail`: the granular, per-program progress the snapshot read
+// streams (current program, its index, cumulative OIDs) — not just "28/186".
+export interface ProgressDetail {
+  phase?: string;
+  program?: string | null;
+  program_key?: string;
+  program_name?: string;
+  index?: number;
+  rest_total?: number;
+  oids?: number;
+  problems?: number;
 }
 
 export interface SnapshotStart {
@@ -72,6 +103,7 @@ export interface JobState {
   done: number;
   total: number;
   message: string;
+  detail?: ProgressDetail | null;
   error?: string | null;
   result?: unknown;
 }
@@ -87,12 +119,15 @@ export interface SessionSnapshot {
     menu_area: string;
     row_count: number;
   }>;
+  program_status?: Record<string, ProgramStatus>;
+  program_problems?: ProgramStatus[];
 }
 
 export interface ProgramResult {
   ok: boolean;
   program?: ProgramView;
   source?: "snapshot" | "live" | "unread";
+  status?: ProgramStatus | null;
   error?: string;
 }
 

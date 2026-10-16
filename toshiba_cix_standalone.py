@@ -10,7 +10,7 @@ import argparse, json, logging, socket, sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Iterable
-__version__ = "2.0.0"
+__version__ = "2.0.1"
 
 # ===== snmp.py =====================================================
 """Pure-stdlib SNMPv1 client (BER GET / GETNEXT), no external dependencies.
@@ -43,6 +43,7 @@ callers can fall back to per-OID reads.
 
 
 import socket
+import time
 from dataclasses import dataclass
 from typing import Iterable
 
@@ -469,7 +470,8 @@ class SnmpV1:
         return children
 
     def bulk_walk(self, roots: list[str], *, width: int = 10,
-                  max_total: int = 500000):
+                  max_total: int = 500000, deadline: float | None = None,
+                  status: dict | None = None):
         """Walk many disjoint subtrees concurrently, batching cursors per PDU.
 
         Each cursor is bounded to its own root, so one GETNEXT PDU advances up
@@ -484,6 +486,14 @@ class SnmpV1:
         bug that silently truncated early reads). A single OID is retired only
         on a genuine end-of-MIB or ``noSuchName``.
 
+        ``max_total`` caps how many OIDs this walk collects and ``deadline``
+        (a :func:`time.monotonic` instant) caps how long it runs; either one
+        stops the walk early and returns whatever was collected so far. They
+        bound a huge or non-terminating subtree so one bad branch cannot stall
+        the walk forever. When ``status`` is a dict it is filled with
+        ``{"stopped": "end"|"cap"|"deadline", "oids": N, "rounds": N}`` so a
+        per-program caller can tell a clean finish from a truncation.
+
         Returns ``(oid, Value)`` pairs in no particular global order (the
         caller decodes by OID, not position). Deduplication is the caller's
         job.
@@ -495,12 +505,22 @@ class SnmpV1:
                             "done": False})
         results: list[tuple[str, Value]] = []
         total = 0
+        rounds = 0
         cap = max(1, width)
-        while total < max_total:
+        stopped = "end"
+        while True:
+            if total >= max_total:
+                stopped = "cap"
+                break
+            if deadline is not None and time.monotonic() >= deadline:
+                stopped = "deadline"
+                break
             active = [c for c in cursors if not c["done"]]
             if not active:
+                stopped = "end"
                 break
             batch = active[:cap]
+            rounds += 1
             resp = self.getnext([c["cur"] for c in batch])
 
             if resp.error_status == 1:          # tooBig
@@ -545,20 +565,28 @@ class SnmpV1:
             # cursors are retried, never dropped.
             if len(vbs) < len(batch):
                 cap = max(1, len(vbs) or 1)
+        if status is not None:
+            status["stopped"] = stopped
+            status["oids"] = total
+            status["rounds"] = rounds
         return results
 
-    def walk(self, root: str, *, max_oids: int = 20000):
+    def walk(self, root: str, *, max_oids: int = 20000,
+             deadline: float | None = None):
         """Yield (oid, Value) for every instance lexically under ``root``.
 
         Single-varbind GETNEXT loop — the simple, complete, order-preserving
-        walk. Stops at end-of-MIB, on the first OID that leaves ``root``, or
-        after ``max_oids`` (a guard against a misbehaving agent that loops).
+        walk. Stops at end-of-MIB, on the first OID that leaves ``root``, after
+        ``max_oids`` (a guard against a misbehaving agent that loops), or once
+        the optional ``deadline`` (a :func:`time.monotonic` instant) passes.
         """
         root = root.strip(".")
         prefix = root + "."
         current = root
         seen = 0
         while seen < max_oids:
+            if deadline is not None and time.monotonic() >= deadline:
+                return
             resp = self.getnext([current])
             # Strict-v1 end-of-MIB.
             if resp.error_status == 2:
@@ -862,6 +890,7 @@ The result is a plain ``dict`` ready for ``json.dumps`` and for
 
 
 import logging
+import time
 from datetime import datetime, timezone
 
 
@@ -887,9 +916,13 @@ class CIXReader:
                  max_oids: int = 200000, strategy: str = "bulk",
                  width: int = 10, scope: str = "all",
                  keep_raw_walk: bool = False, enrich: bool = True,
-                 catalog=None):
+                 catalog=None, max_seconds: float | None = None):
         self.client = client
         self.log = logger or logging.getLogger(__name__)
+        # Optional wall-clock budget for the whole walk: a guard so a huge or
+        # non-terminating subtree (``--scope all`` against a big CIX) cannot run
+        # forever. ``None`` = unbounded (the default; behaviour unchanged).
+        self.max_seconds = max_seconds
         # "all" (whole tree), "core" (fast), or a catalog-driven scope such as a
         # feature group (trunks/groups/voicemail/licensing/stations/phantom) or
         # a menu-area name — resolved against the catalog, falling back to a
@@ -956,21 +989,26 @@ class CIXReader:
                           "uncataloged": 0}}
 
     # -- collection --------------------------------------------------------
+    def _deadline(self) -> float | None:
+        """A :func:`time.monotonic` instant to stop the walk, or ``None``."""
+        return (time.monotonic() + self.max_seconds) if self.max_seconds else None
+
     def _collect(self) -> tuple[list[tuple[str, Value]], str | None]:
+        deadline = self._deadline()
         preset = self._preset_roots()
         if preset is not None:
-            return self._collect_roots(preset)
+            return self._collect_roots(preset, deadline)
         if self.strategy == "serial":
-            return self._collect_serial()
+            return self._collect_serial(deadline)
         try:
-            return self._collect_bulk()
+            return self._collect_bulk(deadline)
         except SnmpError as exc:
             # The batched path needs several round trips to enumerate before
             # it reads anything; if the device is flaky, fall back to the
             # dead-simple serial walk rather than returning nothing.
             self.log.warning("bulk collect failed (%s); falling back to serial",
                              exc)
-            return self._collect_serial()
+            return self._collect_serial(deadline)
 
     def _dedup(self, pairs) -> list[tuple[str, Value]]:
         seen: set[str] = set()
@@ -1004,7 +1042,7 @@ class CIXReader:
             self.log.debug("scope %r not catalog-resolvable: %r", self.scope, exc)
             return None
 
-    def _collect_roots(self, roots: list[str]
+    def _collect_roots(self, roots: list[str], deadline: float | None = None
                        ) -> tuple[list[tuple[str, Value]], str | None]:
         """Walk an explicit list of subtree roots (catalog-driven scopes).
 
@@ -1013,7 +1051,8 @@ class CIXReader:
         if self.strategy != "serial":
             try:
                 pairs = self.client.bulk_walk(roots, width=self.width,
-                                              max_total=self.max_oids)
+                                              max_total=self.max_oids,
+                                              deadline=deadline)
                 return self._dedup(pairs), None
             except SnmpError as exc:
                 self.log.warning("bulk scope walk failed (%s); serial fallback",
@@ -1022,13 +1061,15 @@ class CIXReader:
         error: str | None = None
         for root in roots:
             try:
-                out.extend(self.client.walk(root, max_oids=self.max_oids))
+                out.extend(self.client.walk(root, max_oids=self.max_oids,
+                                            deadline=deadline))
             except SnmpError as exc:
                 self.log.warning("root %s interrupted: %s", root, exc)
                 error = str(exc)
         return self._dedup(out), error
 
-    def _collect_serial(self) -> tuple[list[tuple[str, Value]], str | None]:
+    def _collect_serial(self, deadline: float | None = None
+                        ) -> tuple[list[tuple[str, Value]], str | None]:
         """Per-branch single-varbind GETNEXT walk — the simplest, most robust
         strategy. In ALL scope it walks every top-level branch (so the small
         ``.7`` identity branch is captured even if ``.3`` is huge); in CORE
@@ -1042,13 +1083,15 @@ class CIXReader:
             roots = [f"{D.ENTERPRISE_ROOT}.{c}" for c in range(1, 11)]
         for root in roots:
             try:
-                out.extend(self.client.walk(root, max_oids=self.max_oids))
+                out.extend(self.client.walk(root, max_oids=self.max_oids,
+                                            deadline=deadline))
             except SnmpError as exc:
                 self.log.warning("branch %s interrupted: %s", root, exc)
                 error = str(exc)
         return self._dedup(out), error
 
-    def _collect_bulk(self) -> tuple[list[tuple[str, Value]], str | None]:
+    def _collect_bulk(self, deadline: float | None = None
+                      ) -> tuple[list[tuple[str, Value]], str | None]:
         """Enumerate program/column roots, then walk them all in parallel.
 
         Splitting each big table by column gives the batched walk many
@@ -1056,7 +1099,8 @@ class CIXReader:
         discovered node)."""
         roots = self._discover_roots()
         pairs = self.client.bulk_walk(roots, width=self.width,
-                                      max_total=self.max_oids)
+                                      max_total=self.max_oids,
+                                      deadline=deadline)
         return self._dedup(pairs), None
 
     def _discover_roots(self) -> list[str]:

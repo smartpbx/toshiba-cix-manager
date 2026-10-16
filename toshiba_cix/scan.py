@@ -23,6 +23,7 @@ The result is a plain ``dict`` ready for ``json.dumps`` and for
 from __future__ import annotations
 
 import logging
+import time
 from datetime import datetime, timezone
 
 from . import decode as D
@@ -50,9 +51,13 @@ class CIXReader:
                  max_oids: int = 200000, strategy: str = "bulk",
                  width: int = 10, scope: str = "all",
                  keep_raw_walk: bool = False, enrich: bool = True,
-                 catalog=None):
+                 catalog=None, max_seconds: float | None = None):
         self.client = client
         self.log = logger or logging.getLogger(__name__)
+        # Optional wall-clock budget for the whole walk: a guard so a huge or
+        # non-terminating subtree (``--scope all`` against a big CIX) cannot run
+        # forever. ``None`` = unbounded (the default; behaviour unchanged).
+        self.max_seconds = max_seconds
         # "all" (whole tree), "core" (fast), or a catalog-driven scope such as a
         # feature group (trunks/groups/voicemail/licensing/stations/phantom) or
         # a menu-area name — resolved against the catalog, falling back to a
@@ -121,21 +126,26 @@ class CIXReader:
                           "uncataloged": 0}}
 
     # -- collection --------------------------------------------------------
+    def _deadline(self) -> float | None:
+        """A :func:`time.monotonic` instant to stop the walk, or ``None``."""
+        return (time.monotonic() + self.max_seconds) if self.max_seconds else None
+
     def _collect(self) -> tuple[list[tuple[str, Value]], str | None]:
+        deadline = self._deadline()
         preset = self._preset_roots()
         if preset is not None:
-            return self._collect_roots(preset)
+            return self._collect_roots(preset, deadline)
         if self.strategy == "serial":
-            return self._collect_serial()
+            return self._collect_serial(deadline)
         try:
-            return self._collect_bulk()
+            return self._collect_bulk(deadline)
         except SnmpError as exc:
             # The batched path needs several round trips to enumerate before
             # it reads anything; if the device is flaky, fall back to the
             # dead-simple serial walk rather than returning nothing.
             self.log.warning("bulk collect failed (%s); falling back to serial",
                              exc)
-            return self._collect_serial()
+            return self._collect_serial(deadline)
 
     def _dedup(self, pairs) -> list[tuple[str, Value]]:
         seen: set[str] = set()
@@ -171,7 +181,7 @@ class CIXReader:
             self.log.debug("scope %r not catalog-resolvable: %r", self.scope, exc)
             return None
 
-    def _collect_roots(self, roots: list[str]
+    def _collect_roots(self, roots: list[str], deadline: float | None = None
                        ) -> tuple[list[tuple[str, Value]], str | None]:
         """Walk an explicit list of subtree roots (catalog-driven scopes).
 
@@ -180,7 +190,8 @@ class CIXReader:
         if self.strategy != "serial":
             try:
                 pairs = self.client.bulk_walk(roots, width=self.width,
-                                              max_total=self.max_oids)
+                                              max_total=self.max_oids,
+                                              deadline=deadline)
                 return self._dedup(pairs), None
             except SnmpError as exc:
                 self.log.warning("bulk scope walk failed (%s); serial fallback",
@@ -189,13 +200,15 @@ class CIXReader:
         error: str | None = None
         for root in roots:
             try:
-                out.extend(self.client.walk(root, max_oids=self.max_oids))
+                out.extend(self.client.walk(root, max_oids=self.max_oids,
+                                            deadline=deadline))
             except SnmpError as exc:
                 self.log.warning("root %s interrupted: %s", root, exc)
                 error = str(exc)
         return self._dedup(out), error
 
-    def _collect_serial(self) -> tuple[list[tuple[str, Value]], str | None]:
+    def _collect_serial(self, deadline: float | None = None
+                        ) -> tuple[list[tuple[str, Value]], str | None]:
         """Per-branch single-varbind GETNEXT walk — the simplest, most robust
         strategy. In ALL scope it walks every top-level branch (so the small
         ``.7`` identity branch is captured even if ``.3`` is huge); in CORE
@@ -209,13 +222,15 @@ class CIXReader:
             roots = [f"{D.ENTERPRISE_ROOT}.{c}" for c in range(1, 11)]
         for root in roots:
             try:
-                out.extend(self.client.walk(root, max_oids=self.max_oids))
+                out.extend(self.client.walk(root, max_oids=self.max_oids,
+                                            deadline=deadline))
             except SnmpError as exc:
                 self.log.warning("branch %s interrupted: %s", root, exc)
                 error = str(exc)
         return self._dedup(out), error
 
-    def _collect_bulk(self) -> tuple[list[tuple[str, Value]], str | None]:
+    def _collect_bulk(self, deadline: float | None = None
+                      ) -> tuple[list[tuple[str, Value]], str | None]:
         """Enumerate program/column roots, then walk them all in parallel.
 
         Splitting each big table by column gives the batched walk many
@@ -223,7 +238,8 @@ class CIXReader:
         discovered node)."""
         roots = self._discover_roots()
         pairs = self.client.bulk_walk(roots, width=self.width,
-                                      max_total=self.max_oids)
+                                      max_total=self.max_oids,
+                                      deadline=deadline)
         return self._dedup(pairs), None
 
     def _discover_roots(self) -> list[str]:
