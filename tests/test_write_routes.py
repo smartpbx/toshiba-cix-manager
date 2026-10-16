@@ -14,15 +14,30 @@ Run:  python3 tests/test_write_routes.py
 
 from __future__ import annotations
 
+import contextlib
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from toshiba_cix import webapp  # noqa: E402
+from toshiba_cix import write as cixwrite  # noqa: E402
 
 ROOT = "1.3.6.1.4.1.186.1.22"
 PKEY = "200StationAssign"
+
+
+@contextlib.contextmanager
+def _writes_on():
+    """Enable the live-write master switch. Writes default OFF, so reaching the
+    armed/confirm/typed-name gate (to prove it refuses) requires opting in — the
+    gate checks ``writes_enabled()`` first. Simulate never needs this."""
+    saved = cixwrite.WRITES_ENABLED
+    cixwrite.WRITES_ENABLED = True
+    try:
+        yield
+    finally:
+        cixwrite.WRITES_ENABLED = saved
 
 
 class LoudClient:
@@ -154,7 +169,8 @@ def test_apply_live_refused_when_disarmed():
     ctx, s = _ctx_session(with_client=True)    # armed? no.
     _stage(ctx, s, {"name": "Reception"})
     req = FakeReq(body={"mode": "live", "confirm": True}, params={"id": s.id})
-    webapp.route_session_apply(ctx, req)       # must 409 BEFORE any SET
+    with _writes_on():                         # past the master switch, so the
+        webapp.route_session_apply(ctx, req)   # armed gate is what refuses here
     assert req.status == 409 and "armed" in req.json["error"]
 
 
@@ -163,8 +179,27 @@ def test_apply_live_refused_without_confirm():
     _stage(ctx, s, {"name": "Reception"})
     s.set_mode("armed")
     req = FakeReq(body={"mode": "live", "confirm": False}, params={"id": s.id})
-    webapp.route_session_apply(ctx, req)
+    with _writes_on():
+        webapp.route_session_apply(ctx, req)
     assert req.status == 409 and "confirm" in req.json["error"]
+
+
+def test_apply_live_refused_when_writes_disabled():
+    # With writes OFF (the default), the master switch refuses the live apply
+    # before the armed/confirm/typed-name gate is even consulted — even a fully
+    # armed + confirmed + typed-name request cannot write.
+    ctx, s = _ctx_session(with_client=True)
+    _stage(ctx, s, {"name": "Reception"})
+    s.set_mode("armed")
+    req = FakeReq(body={"mode": "live", "confirm": True,
+                        "site_name_typed": "Kellys Lumber"}, params={"id": s.id})
+    saved = cixwrite.WRITES_ENABLED
+    cixwrite.WRITES_ENABLED = False            # the default; made explicit
+    try:
+        webapp.route_session_apply(ctx, req)   # LoudClient.set must never fire
+    finally:
+        cixwrite.WRITES_ENABLED = saved
+    assert req.status == 409 and "disabled" in req.json["error"]
 
 
 # -- bulk stages into the same tray -----------------------------------------

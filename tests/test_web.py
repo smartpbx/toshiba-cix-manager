@@ -10,6 +10,7 @@ Run:  python3 tests/test_web.py   (or: python3 -m pytest tests/)
 
 from __future__ import annotations
 
+import contextlib
 import io
 import json
 import os
@@ -25,9 +26,23 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 from toshiba_cix import webapp  # noqa: E402
+from toshiba_cix import write as cixwrite  # noqa: E402
 from toshiba_cix.snmp import SnmpV1, Value, VarBind  # noqa: E402
 from test_decode import FakeClient, _sample_capture  # noqa: E402
 from test_backup import make_backup  # noqa: E402
+
+
+@contextlib.contextmanager
+def _writes_on():
+    """Enable the live-write master switch for a single test. Writes default OFF,
+    so a test that exercises a real (gated) write must opt in explicitly. The
+    routes read ``writes_enabled()`` live, so toggling the module flag is seen."""
+    saved = cixwrite.WRITES_ENABLED
+    cixwrite.WRITES_ENABLED = True
+    try:
+        yield
+    finally:
+        cixwrite.WRITES_ENABLED = saved
 
 
 class WebFakeClient(FakeClient):
@@ -120,7 +135,9 @@ def test_index_serves_html():
 def test_health():
     status, j = _get("/api/health")
     assert status == 200 and j["ok"] is True
-    assert j["writes_enabled"] is True
+    # Writes default OFF (no CIX_WRITES_ENABLED in the test environment), and the
+    # health endpoint reports the live flag.
+    assert j["writes_enabled"] is False
     assert j["version"]
 
 
@@ -197,18 +214,27 @@ def test_save_preview_does_not_write():
     assert op["target_oid"] and "3.1200.1.1.2." in op["target_oid"]
 
 
-def test_save_confirm_writes_and_verifies():
+def test_save_confirm_is_preview_only_and_points_to_gated_flow():
+    # /api/save no longer writes. Its legacy confirm:true direct-write path is
+    # retired: the route is preview-only and refuses confirm with a 409 that
+    # directs the caller to the one gated write path (the armed Review & Write
+    # session flow). Even with writes ENABLED it must not write from here.
     _, j = _post("/api/read", {"ip": "192.168.254.253", "scope": "all"})
     st = next(s for s in j["doc"]["stations"] if s["dn"] == "200")
-    status, res = _post("/api/save",
-                        {"ip": "192.168.254.253", "community": "communityName",
-                         "port": 161, "station": st,
-                         "changes": {"extension": "250"}, "confirm": True})
-    assert res["ok"] is True and res["mode"] == "write"
-    r = res["result"]
-    assert r["wrote"] == 1 and r["verified_all"] is True
-    assert r["results"][0]["read_back"] == "250"
-    assert r["results"][0]["match"] is True
+    with _writes_on():
+        status, res = _post("/api/save",
+                            {"ip": "192.168.254.253", "community": "communityName",
+                             "port": 161, "station": st,
+                             "changes": {"extension": "250"}, "confirm": True})
+    # refused, not written
+    assert status == 409 and res["ok"] is False
+    assert res["mode"] == "preview"
+    assert "result" not in res            # no write result — nothing was sent
+    msg = res["error"].lower()
+    assert "preview-only" in msg and "/api/sessions/" in res["error"]
+    # the plan is still returned so the caller can carry it to the gated flow
+    op = res["planned_ops"][0]
+    assert op["field"] == "extension" and op["new_value"] == "250"
 
 
 def test_backup_zip():
@@ -306,9 +332,12 @@ def test_restore_preview_endpoint():
 
 def test_restore_confirm_endpoint_writes_and_verifies():
     doc, _ = make_backup()
-    status, j = _post("/api/restore",
-                      {"ip": "192.168.254.253", "community": "communityName",
-                       "backup": doc, "confirm": True})
+    # The restore path is gated by the master switch + confirm; writes default
+    # OFF, so this write test opts in explicitly.
+    with _writes_on():
+        status, j = _post("/api/restore",
+                          {"ip": "192.168.254.253", "community": "communityName",
+                           "backup": doc, "confirm": True})
     assert j["ok"] is True and j["mode"] == "write"
     assert j["verified_all"] is True
     assert j["results"] and all(r["match"] for r in j["results"])

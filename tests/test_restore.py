@@ -27,6 +27,20 @@ from toshiba_cix.diff import diff_backups  # noqa: E402
 from toshiba_cix.snmp import Value  # noqa: E402
 
 
+# Writes default OFF. The gated commit tests below opt in; ``restore`` checks
+# the master switch before the "nothing sendable" guard, so even that test needs
+# writes enabled to reach the check it means to assert.
+_DEFAULT_WRITES_ENABLED = W.WRITES_ENABLED
+
+
+def setup_module(module=None):
+    W.WRITES_ENABLED = True
+
+
+def teardown_module(module=None):
+    W.WRITES_ENABLED = _DEFAULT_WRITES_ENABLED
+
+
 def _backup(cat=None):
     cat = cat or load_catalog()
     data, info = sample_capture(cat)
@@ -184,21 +198,25 @@ def test_detects_failed_write():
 
 
 def _run_all():
-    fns = [v for k, v in sorted(globals().items())
-           if k.startswith("test_") and callable(v)]
-    failed = 0
-    for fn in fns:
-        try:
-            fn()
-            print(f"PASS {fn.__name__}")
-        except AssertionError as exc:
-            failed += 1
-            print(f"FAIL {fn.__name__}: {exc}")
-        except Exception as exc:  # noqa: BLE001
-            failed += 1
-            print(f"ERROR {fn.__name__}: {exc!r}")
-    print(f"\n{len(fns) - failed}/{len(fns)} passed")
-    return 1 if failed else 0
+    setup_module()          # enable writes for the gated commit round-trips
+    try:
+        fns = [v for k, v in sorted(globals().items())
+               if k.startswith("test_") and callable(v)]
+        failed = 0
+        for fn in fns:
+            try:
+                fn()
+                print(f"PASS {fn.__name__}")
+            except AssertionError as exc:
+                failed += 1
+                print(f"FAIL {fn.__name__}: {exc}")
+            except Exception as exc:  # noqa: BLE001
+                failed += 1
+                print(f"ERROR {fn.__name__}: {exc!r}")
+        print(f"\n{len(fns) - failed}/{len(fns)} passed")
+        return 1 if failed else 0
+    finally:
+        teardown_module()
 
 
 if __name__ == "__main__":

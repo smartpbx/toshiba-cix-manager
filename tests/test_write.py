@@ -21,6 +21,22 @@ from toshiba_cix.snmp import (Response, Value, VarBind, _decode_value,  # noqa: 
 
 ROOT = "1.3.6.1.4.1.186.1.22"
 
+# Captured at import — before this suite forces the switch on below — so it
+# reflects the env-derived default (OFF unless CIX_WRITES_ENABLED is set).
+_DEFAULT_WRITES_ENABLED = W.WRITES_ENABLED
+
+
+def setup_module(module=None):
+    # The gated commit round-trips below need the master switch ON; writes
+    # default OFF. ``commit`` checks the flag before confirm/sendable, so a test
+    # that expects "refusing to write without confirm" or "nothing sendable"
+    # also needs writes enabled to reach that check.
+    W.WRITES_ENABLED = True
+
+
+def teardown_module(module=None):
+    W.WRITES_ENABLED = _DEFAULT_WRITES_ENABLED
+
 # Exact bytes of frame 634 (SetRequest v2c, community communityName, rid 6, the
 # three FTP-table varbinds). Verified by hand against the BER structure; this is
 # the ground truth the CIX accepted (frame 635 confirmed).
@@ -73,8 +89,11 @@ def _station():
 
 
 # -- encoder ----------------------------------------------------------------
-def test_writes_enabled():
-    assert W.WRITES_ENABLED is True
+def test_writes_default_off():
+    # Writes default OFF: with no CIX_WRITES_ENABLED in the environment, the
+    # master switch is False at import. (This suite force-enables it for the
+    # gated commit round-trips; the captured default is the honest value.)
+    assert _DEFAULT_WRITES_ENABLED is False
 
 
 def test_golden_set_bytes_frame_634():
@@ -222,21 +241,25 @@ def test_commit_nothing_sendable_raises():
 
 
 def _run_all():
-    fns = [v for k, v in sorted(globals().items())
-           if k.startswith("test_") and callable(v)]
-    failed = 0
-    for fn in fns:
-        try:
-            fn()
-            print(f"PASS {fn.__name__}")
-        except AssertionError as exc:
-            failed += 1
-            print(f"FAIL {fn.__name__}: {exc}")
-        except Exception as exc:  # noqa: BLE001
-            failed += 1
-            print(f"ERROR {fn.__name__}: {exc!r}")
-    print(f"\n{len(fns) - failed}/{len(fns)} passed")
-    return 1 if failed else 0
+    setup_module()          # enable writes for the gated commit round-trips
+    try:
+        fns = [v for k, v in sorted(globals().items())
+               if k.startswith("test_") and callable(v)]
+        failed = 0
+        for fn in fns:
+            try:
+                fn()
+                print(f"PASS {fn.__name__}")
+            except AssertionError as exc:
+                failed += 1
+                print(f"FAIL {fn.__name__}: {exc}")
+            except Exception as exc:  # noqa: BLE001
+                failed += 1
+                print(f"ERROR {fn.__name__}: {exc!r}")
+        print(f"\n{len(fns) - failed}/{len(fns)} passed")
+        return 1 if failed else 0
+    finally:
+        teardown_module()
 
 
 if __name__ == "__main__":
