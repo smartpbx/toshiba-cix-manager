@@ -55,6 +55,15 @@ python3 app.py        # then open the printed http://127.0.0.1:... URL
 
 Run any command with `--help` for options.
 
+### Native desktop window (Switchroom)
+
+An optional **Tauri v2** shell runs the same app in a self-contained native
+window (WebView2 on Windows, WebKitGTK on Linux — no bundled Chromium) instead
+of launching your system browser in app-mode. The Python engine runs as a
+bundled sidecar. The `--serve` / app-mode web path above is unchanged and stays
+the right choice for the Pi and headless use. Build instructions and the
+architecture are in **[`desktop/README.md`](./desktop/README.md)**.
+
 ## Roadmap
 
 - Voicemail (Stratagy) management from the same app.
