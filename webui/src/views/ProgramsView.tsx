@@ -14,13 +14,25 @@ import {
 import { useStore } from "@/store/useStore";
 
 export function ProgramsView() {
-  const { backupA, setBackupA, form } = useStore((s) => ({
-    backupA: s.backupA,
-    setBackupA: s.setBackupA,
-    form: s.form,
-  }));
+  const { backupA, setBackupA, programViews, setProgramViews, form } = useStore(
+    (s) => ({
+      backupA: s.backupA,
+      setBackupA: s.setBackupA,
+      programViews: s.programViews,
+      setProgramViews: s.setProgramViews,
+      form: s.form,
+    }),
+  );
 
-  const groups = React.useMemo(() => programsByMenuArea(backupA), [backupA]);
+  // Prefer the enriched program_views (named columns, enum display values,
+  // catalog menu areas, feature views); fall back to the raw backup doc only
+  // when enrichment is absent (lean reader build / catalog unavailable).
+  const source =
+    programViews && programViews.programs.length ? programViews : backupA;
+  const featureViews = (programViews?.feature_views ?? []).filter(
+    (f) => f.present,
+  );
+  const groups = React.useMemo(() => programsByMenuArea(source), [source]);
   const [openAreas, setOpenAreas] = React.useState<Record<string, boolean>>({});
   const [selectedKey, setSelectedKey] = React.useState<string | null>(null);
   const [filter, setFilter] = React.useState("");
@@ -56,8 +68,10 @@ export function ProgramsView() {
         community: form.community.trim() || "communityName",
         port: form.port || 161,
       });
-      if (res.ok && res.backup) setBackupA(res.backup);
-      else setErr(res.error || "Catalog read failed.");
+      if (res.ok && res.backup) {
+        setBackupA(res.backup);
+        setProgramViews(res.program_views ?? null);
+      } else setErr(res.error || "Catalog read failed.");
     } catch (e) {
       setErr(`Request failed: ${(e as Error).message}`);
     } finally {
@@ -95,7 +109,7 @@ export function ProgramsView() {
     );
   }, [selected, filter]);
 
-  if (!backupA) {
+  if (!source) {
     return (
       <div className="flex h-full flex-col">
         <PageHeader title="Programs" subtitle="Browse by eManager menu area" />
@@ -130,6 +144,33 @@ export function ProgramsView() {
       <div className="flex min-h-0 flex-1">
         {/* menu-area tree */}
         <div className="w-64 shrink-0 overflow-auto border-r border-border p-2">
+          {featureViews.length > 0 && (
+            <div className="mb-2 border-b border-border pb-2">
+              <div className="px-1.5 py-1 text-2xs font-semibold uppercase tracking-wide text-fg-3">
+                Feature views
+              </div>
+              <div className="flex flex-wrap gap-1 px-1">
+                {featureViews.map((f) => (
+                  <button
+                    key={f.key}
+                    title={f.title}
+                    onClick={() => {
+                      const firstKey = f.programs[0];
+                      if (!firstKey) return;
+                      const area = groups.find((g) =>
+                        g.programs.some((p) => p.catalogKey === firstKey),
+                      )?.area;
+                      if (area) setOpenAreas((s) => ({ ...s, [area]: true }));
+                      setSelectedKey(firstKey);
+                    }}
+                    className="rounded-full border border-border px-2 py-0.5 text-2xs text-fg-2 hover:bg-surface-2 hover:text-primary"
+                  >
+                    {f.title}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           {groups.map((g) => {
             const open = openAreas[g.area];
             return (

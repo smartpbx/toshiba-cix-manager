@@ -15,13 +15,15 @@ function label(b: BackupDoc | null): string {
 }
 
 export function BackupDiffView() {
-  const { backupA, backupB, setBackupA, setBackupB, form } = useStore((s) => ({
-    backupA: s.backupA,
-    backupB: s.backupB,
-    setBackupA: s.setBackupA,
-    setBackupB: s.setBackupB,
-    form: s.form,
-  }));
+  const { backupA, backupB, setBackupA, setBackupB, setProgramViews, form } =
+    useStore((s) => ({
+      backupA: s.backupA,
+      backupB: s.backupB,
+      setBackupA: s.setBackupA,
+      setBackupB: s.setBackupB,
+      setProgramViews: s.setProgramViews,
+      form: s.form,
+    }));
   const [busy, setBusy] = React.useState("");
   const [out, setOut] = React.useState("");
   const [err, setErr] = React.useState<string | null>(null);
@@ -42,8 +44,10 @@ export function BackupDiffView() {
     try {
       const res = await api.catalogBackup(body());
       if (res.ok && res.backup) {
-        if (slot === "A") setBackupA(res.backup);
-        else setBackupB(res.backup);
+        if (slot === "A") {
+          setBackupA(res.backup);
+          setProgramViews(res.program_views ?? null);
+        } else setBackupB(res.backup);
         setOut(res.report || "");
       } else {
         setErr(res.error || "Catalog read failed.");

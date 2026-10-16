@@ -3,6 +3,7 @@ import type {
   BackupDoc,
   CatalogInfo,
   ConnectionForm,
+  ProgramViews,
   ReadDoc,
 } from "@/lib/types";
 
@@ -45,6 +46,10 @@ interface AppState {
   backupB: BackupDoc | null;
   setBackupA: (b: BackupDoc | null) => void;
   setBackupB: (b: BackupDoc | null) => void;
+
+  // enriched program views (enrich.py) — what the Programs browser renders
+  programViews: ProgramViews | null;
+  setProgramViews: (p: ProgramViews | null) => void;
 
   // catalog slice
   catalog: CatalogInfo | null;
@@ -96,6 +101,9 @@ export const useStore = create<AppState>((set) => ({
   backupB: null,
   setBackupA: (backupA) => set({ backupA }),
   setBackupB: (backupB) => set({ backupB }),
+
+  programViews: null,
+  setProgramViews: (programViews) => set({ programViews }),
 
   catalog: null,
   setCatalog: (catalog) => set({ catalog }),

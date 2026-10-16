@@ -88,6 +88,7 @@ export interface ReadDoc {
   };
   security_findings?: SecurityFinding[];
   raw_oid_walk?: Array<{ oid: string; value: unknown }>;
+  program_views?: ProgramViews;
 }
 
 export interface ReadResult {
@@ -134,9 +135,35 @@ export interface BackupProgram {
   group_oid?: string;
   rows: BackupRow[];
   // enriched, optional:
+  catalog_key?: string;
   program_number?: string;
   program_name?: string;
   menu_area?: string;
+}
+
+// ---- Enriched program views (enrich.py: build_program_views) --------------
+// The catalog-driven contract the engine emits on /api/read (inside doc),
+// /api/catalog-backup and /api/view. `programs` is an ARRAY keyed by
+// catalog_key; each program carries named, enum-resolved per-cell rows. This is
+// what the Programs browser renders so nothing shows as a bare OID.
+export interface MenuAreaSummary {
+  area: string;
+  programs: string[];
+  row_count: number;
+  cell_count: number;
+}
+export interface FeatureView {
+  key: string;
+  title: string;
+  programs: string[];
+  present: boolean;
+}
+export interface ProgramViews {
+  programs: BackupProgram[];
+  menu_areas: MenuAreaSummary[];
+  feature_views: FeatureView[];
+  uncataloged: Array<{ oid: string; raw_value?: unknown; value?: unknown }>;
+  stats: Record<string, number>;
 }
 
 export interface BackupDoc {
@@ -161,6 +188,7 @@ export interface BackupDoc {
 export interface BackupResult {
   ok: boolean;
   backup?: BackupDoc;
+  program_views?: ProgramViews;
   report?: string;
   error?: string;
 }

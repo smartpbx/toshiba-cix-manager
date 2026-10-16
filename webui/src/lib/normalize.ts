@@ -1,18 +1,30 @@
-import type { BackupDoc, BackupProgram, BackupRow, RawCell } from "./types";
+import type { BackupDoc, BackupProgram, BackupRow, ProgramViews, RawCell } from "./types";
 
-// eManager menu areas, verbatim and in eManager's order (DESIGN_PLAN §3.2).
-export const MENU_AREAS = [
+// A menu area is whatever the enriched catalog assigns (enrich.py →
+// catalog.menu_area), so the type is an open string, not a closed union.
+export type MenuArea = string;
+
+// The catalog's canonical area order (toshiba_cix/catalog.py MENU_AREA_ORDER),
+// used to order the Programs tree when the enriched API does not drive the
+// order itself. The last two are fallback-map-only areas; "Other" sorts last.
+export const MENU_AREAS: MenuArea[] = [
   "System",
   "Station",
   "Trunk",
   "IP-Telephony",
+  "Networking",
   "LCR/DR",
-  "Strata Net",
+  "External Devices",
+  "Attendant",
+  "Utilities",
+  "Miscellaneous",
+  "Licensing",
   "Maintenance",
+  "Advanced",
+  "Strata Net",
   "Alarm/Traffic",
   "Other",
-] as const;
-export type MenuArea = (typeof MENU_AREAS)[number];
+];
 
 // Fallback program-number -> menu-area map, built from the eManager tree in
 // DESIGN_PLAN §3.2. Used ONLY when the (concurrent) enriched API does not
@@ -53,8 +65,11 @@ assign("Maintenance", [
 assign("Alarm/Traffic", ["919", "920", "921", "922"]);
 
 export function menuAreaFor(prog: BackupProgram): MenuArea {
-  const enriched = prog.menu_area as MenuArea | undefined;
-  if (enriched && (MENU_AREAS as readonly string[]).includes(enriched)) return enriched;
+  // The enriched API's menu_area is authoritative — use it verbatim, even when
+  // it is an area the static fallback list does not know about. The number map
+  // is only a fallback for a raw backup / lean build that carries no menu_area.
+  const enriched = prog.menu_area;
+  if (enriched) return enriched;
   const num = prog.program_number ?? prog.number ?? undefined;
   if (num && MENU_BY_NUMBER[num]) return MENU_BY_NUMBER[num];
   return "Other";
@@ -160,17 +175,44 @@ export interface MenuGroup {
 }
 
 // Group every program in a backup by menu area, in eManager's order.
-export function programsByMenuArea(backup: BackupDoc | null): MenuGroup[] {
+export function programsByMenuArea(
+  source: BackupDoc | ProgramViews | null,
+): MenuGroup[] {
   const groups = new Map<MenuArea, NormalizedProgram[]>();
-  const progs = backup?.programs ?? {};
-  for (const [key, bucket] of Object.entries(progs)) {
+  const progs = source?.programs;
+  // Enriched program_views carry `programs` as an ARRAY keyed by catalog_key; a
+  // raw backup doc carries it as a {catalog_key: bucket} map. Accept both so the
+  // browser binds to the enriched, enum-resolved cells when they are present.
+  const entries: Array<[string, BackupProgram]> = Array.isArray(progs)
+    ? progs.map((p) => [
+        p.catalog_key ?? p.program_number ?? p.program_name ?? "",
+        p,
+      ])
+    : Object.entries(progs ?? {});
+  for (const [key, bucket] of entries) {
     const np = normalizeProgram(key, bucket);
     const list = groups.get(np.menuArea) ?? [];
     list.push(np);
     groups.set(np.menuArea, list);
   }
+  // Order the areas: the enriched API's own menu_areas order first (it mirrors
+  // the catalog's canonical order), then the static fallback order, then any
+  // other present area, with "Other" always last. This never drops a group.
+  const order: MenuArea[] = [];
+  const addArea = (a: MenuArea) => {
+    if (a && a !== "Other" && !order.includes(a)) order.push(a);
+  };
+  const enrichedAreas =
+    source && "menu_areas" in source && Array.isArray((source as ProgramViews).menu_areas)
+      ? (source as ProgramViews).menu_areas.map((a) => a.area)
+      : [];
+  for (const a of enrichedAreas) addArea(a);
+  for (const a of MENU_AREAS) addArea(a);
+  for (const a of groups.keys()) addArea(a);
+  order.push("Other");
+
   const ordered: MenuGroup[] = [];
-  for (const area of MENU_AREAS) {
+  for (const area of order) {
     const list = groups.get(area);
     if (list && list.length) {
       list.sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }));
