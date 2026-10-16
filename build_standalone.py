@@ -83,6 +83,11 @@ def _embedded_volatile_fields() -> str:
                           "curated volatile-field list (diff hiding)")
 
 
+def _embedded_references() -> str:
+    return _embedded_data("references.json", "EMBEDDED_REFERENCES_JSON",
+                          "field -> referenced entity kind (where-used)")
+
+
 def _embedded_enum_labels() -> str:
     return _embedded_data("enum_labels.json", "EMBEDDED_ENUM_LABELS_JSON",
                           "bundled enum value labels")
@@ -115,7 +120,8 @@ def build(order, out_name, *, title, with_web, tail):
         # first, before any bundled-file lookup).
         aliases["catalog.py"] = [_embedded_catalog(), _embedded_enum_labels(),
                                  _embedded_program_menus(),
-                                 _embedded_volatile_fields()]
+                                 _embedded_volatile_fields(),
+                                 _embedded_references()]
         # The generated UI schema rides with the schema module (same embed →
         # _MEIPASS → packaged-data resolution as the catalog).
         aliases["server/schema.py"] = [_embedded_ui_schema()]
@@ -177,8 +183,8 @@ def main() -> None:
          "backup.py", "enrich.py", "diff.py", "diff_view.py", "restore.py",
          "discover.py", "report.py", "cli.py", "update.py",
          # generic single-program read + snapshot engine (depend on backup /
-         # enrich / catalog above) and the snapshot store (stdlib only).
-         "programs.py", "snapshot.py", "store.py",
+         # enrich / catalog above), the snapshot store and the value index.
+         "programs.py", "snapshot.py", "store.py", "index.py",
          # disk-state layer, then the server package (dependency order: a
          # module is listed after everything it references, because the
          # amalgam flattens them into one namespace and strips the imports).

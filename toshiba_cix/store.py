@@ -39,8 +39,7 @@ import zipfile
 from datetime import datetime, timezone
 
 from . import __version__
-from .backup import (FORMAT, canonical_json, content_hash, ensure_v2, redact,
-                     render_backup_text)
+from .backup import FORMAT, canonical_json, content_hash, ensure_v2, redact, render_backup_text
 
 _SAFE = re.compile(r"[^A-Za-z0-9._-]+")
 _UNSET = object()

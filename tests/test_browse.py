@@ -267,6 +267,11 @@ def test_http_snapshot_connect_browse_and_coldstart():
         keys = {p["catalog_key"]
                 for p in latest["snapshot"]["program_views"]["programs"]}
         assert "200StationAssign" in keys
+
+        # value index: the palette finds a station name in the working copy
+        _, found = h.get(f"/api/sessions/{sid}/find?q=Front%20Desk")
+        assert found["ok"] and found["count"] >= 1
+        assert any(g["program"] == "200StationAssign" for g in found["groups"])
     finally:
         h.close()
 

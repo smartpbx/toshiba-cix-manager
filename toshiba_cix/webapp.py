@@ -45,6 +45,7 @@ from .backup import backup, render_backup_text
 from .catalog import load_catalog
 from .diff import diff_backups, render_diff_text
 from .enrich import program_views_from_backup
+from .index import build_index, build_index_from_views, search as index_search
 from .programs import empty_program_view, get_row, list_rows
 from .report import render as render_report
 from .restore import restore
@@ -580,6 +581,51 @@ def route_session_program_row(ctx, req):
 
 
 # --------------------------------------------------------------------------
+# value index: palette value search + where-used, over the working copy
+# --------------------------------------------------------------------------
+def route_session_find(ctx, req):
+    """GET /api/sessions/{id}/find?q=… — value search over the working copy.
+
+    Resolves the palette query grammar (improvements.md §2.1): a DN, name, digit
+    string, or ``prg:``/``field:``/``cos:``/``dn:``/``vm:`` prefix → every
+    program/row/field that holds it, grouped by program. The where-used chips
+    are this search with a fixed query (``?refs=1`` restricts to reference
+    fields)."""
+    s = _session_or_404(ctx, req)
+    if s is None:
+        return
+    q = req.query.get("q") or ""
+    if not q:
+        req.send_json({"ok": True, "query": "", "count": 0, "groups": []})
+        return
+    idx = build_index_from_views({"programs": list(s.doc.values())})
+    if req.query.get("refs"):
+        occ = idx.references_to(q, kind=req.query.get("kind"))
+        req.send_json({"ok": True, "query": q, "count": len(occ),
+                       "occurrences": occ})
+        return
+    res = index_search(idx, q, limit=int(req.query.get("limit") or 200))
+    req.send_json({"ok": True, **res})
+
+
+def route_snapshot_find(ctx, req):
+    """GET /api/sites/{id}/snapshots/{sid}/find?q=… — value search in file mode."""
+    doc = ctx.snapshots().get(req.params["id"], req.params["sid"])
+    if doc is None:
+        req.send_json({"ok": False, "error": "no such snapshot"}, 404)
+        return
+    q = req.query.get("q") or ""
+    idx = build_index(doc, load_catalog())
+    if req.query.get("refs"):
+        occ = idx.references_to(q, kind=req.query.get("kind"))
+        req.send_json({"ok": True, "query": q, "count": len(occ),
+                       "occurrences": occ})
+        return
+    res = index_search(idx, q, limit=int(req.query.get("limit") or 200))
+    req.send_json({"ok": True, **res})
+
+
+# --------------------------------------------------------------------------
 # cold start: snapshots on disk (browse with the device off)
 # --------------------------------------------------------------------------
 def _snapshot_header(entry: dict) -> dict:
@@ -660,8 +706,10 @@ def register_browse_routes(ctx: ServerContext) -> None:
     r.get("/api/sessions/{id}/snapshot", route_session_snapshot)
     r.get("/api/sessions/{id}/program/{key}", route_session_program)
     r.get("/api/sessions/{id}/program/{key}/{index}", route_session_program_row)
+    r.get("/api/sessions/{id}/find", route_session_find)
     r.get("/api/sites/{id}/snapshots", route_site_snapshots)
     r.get("/api/sites/{id}/snapshots/latest", route_site_snapshot_latest)
+    r.get("/api/sites/{id}/snapshots/{sid}/find", route_snapshot_find)
     r.get("/api/sites/{id}/snapshots/{sid}", route_site_snapshot_get)
 
 
