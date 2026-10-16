@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Toshiba CIX Manager — Linux launcher (stock python3, no installs).
+# Resolves the repo next to this script and runs the local web app, which
+# picks a free port, opens the browser and prints the URL.
+set -euo pipefail
+
+SELF="$(readlink -f "$0" 2>/dev/null || echo "$0")"
+SCRIPT_DIR="$(cd "$(dirname "$SELF")" && pwd)"
+REPO="$(dirname "$SCRIPT_DIR")"     # parent of packaging/
+
+PY="$(command -v python3 || true)"
+if [ -z "$PY" ]; then
+  echo "python3 was not found on this machine." >&2
+  echo "Install Python 3, or use the self-contained AppImage instead." >&2
+  exit 1
+fi
+
+exec "$PY" "$REPO/app.py" "$@"

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Toshiba CIX Manager
+GenericName=PBX Management Tool
+Comment=Read and manage a Toshiba Strata CIX over SNMP (opens in your browser)
+Exec=toshiba-cix-manager
+Icon=toshiba-cix-manager
+Terminal=false
+Categories=Utility;Network;System;
+Keywords=Toshiba;CIX;Strata;PBX;SNMP;eManager;
+StartupNotify=false

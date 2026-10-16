@@ -1,0 +1,762 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toshiba CIX Manager</title>
+<style>
+  :root{
+    --bg:#0f1720; --panel:#17212e; --panel2:#1e2a3a; --line:#2b3a4e;
+    --fg:#e7eef6; --muted:#9fb0c3; --accent:#4aa3ff; --accent2:#2b78d4;
+    --ok:#36c08a; --warn:#ffb648; --bad:#ff6b6b; --chip:#24344a;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#f3f6fa; --panel:#ffffff; --panel2:#eef3f9; --line:#d5dfea;
+      --fg:#13202e; --muted:#5b6b7d; --accent:#1769c9; --accent2:#0f4f9e;
+      --ok:#117a55; --warn:#9a6400; --bad:#c0392b; --chip:#e5edf6;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+       background:var(--bg);color:var(--fg)}
+  a{color:var(--accent)}
+  header{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--panel);
+         border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10;flex-wrap:wrap}
+  header h1{font-size:16px;margin:0;font-weight:650;letter-spacing:.2px}
+  .ro-badge{font-size:11px;font-weight:700;color:#0b2033;background:var(--warn);
+            padding:3px 8px;border-radius:20px}
+  .status{margin-left:auto;color:var(--muted);font-size:12px;text-align:right}
+  .status b{color:var(--fg)}
+  main{padding:16px;max-width:1180px;margin:0 auto}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+        padding:16px;margin-bottom:16px}
+  .card h2{font-size:14px;margin:0 0 12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  label{display:block;font-size:12px;color:var(--muted);margin:0 0 4px}
+  input,select{width:100%;padding:8px 10px;background:var(--panel2);border:1px solid var(--line);
+         border-radius:8px;color:var(--fg);font:inherit}
+  input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  .btn{appearance:none;border:1px solid var(--accent2);background:var(--accent);color:#fff;
+       font:inherit;font-weight:600;padding:8px 14px;border-radius:8px;cursor:pointer}
+  .btn:hover{background:var(--accent2)}
+  .btn.ghost{background:transparent;color:var(--accent);border-color:var(--line)}
+  .btn.ghost:hover{background:var(--panel2)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.small{padding:5px 10px;font-size:12px}
+  .msg{padding:10px 12px;border-radius:8px;margin-top:12px;font-size:13px;display:none}
+  .msg.show{display:block}
+  .msg.ok{background:rgba(54,192,138,.14);border:1px solid var(--ok);color:var(--ok)}
+  .msg.err{background:rgba(255,107,107,.14);border:1px solid var(--bad);color:var(--bad)}
+  .msg.info{background:rgba(74,163,255,.12);border:1px solid var(--accent);color:var(--fg)}
+  .tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px;border-bottom:1px solid var(--line)}
+  .tab{padding:8px 14px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;
+       font-weight:600;font-size:13px}
+  .tab.active{color:var(--fg);border-bottom-color:var(--accent)}
+  .tab .count{font-size:11px;color:var(--muted);font-weight:500}
+  .view{display:none}
+  .view.active{display:block}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;
+     position:sticky;top:54px;background:var(--panel);cursor:pointer;user-select:none}
+  tbody tr:hover{background:var(--panel2)}
+  tr.clickable{cursor:pointer}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+  .chip{display:inline-block;background:var(--chip);border:1px solid var(--line);border-radius:20px;
+        padding:2px 9px;font-size:11px;color:var(--muted);margin:0 4px 4px 0}
+  .finding{padding:10px 12px;border-radius:8px;margin-bottom:8px;font-size:13px}
+  .finding.high{background:rgba(255,107,107,.12);border:1px solid var(--bad)}
+  .finding.medium{background:rgba(255,182,72,.12);border:1px solid var(--warn)}
+  .sev{font-weight:700;margin-right:6px}
+  .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+  .toolbar input[type=search]{max-width:320px}
+  .muted{color:var(--muted)}
+  .kv{display:grid;grid-template-columns:200px 1fr;gap:4px 14px;font-size:13px}
+  .kv div.k{color:var(--muted)}
+  /* drawer */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:40}
+  .overlay.show{display:block}
+  .drawer{position:fixed;top:0;right:0;height:100%;width:min(560px,100%);background:var(--panel);
+          border-left:1px solid var(--line);transform:translateX(100%);transition:transform .2s;
+          z-index:50;overflow-y:auto;padding:18px}
+  .drawer.show{transform:translateX(0)}
+  .drawer h3{margin:0 0 4px}
+  .drawer .close{position:absolute;top:14px;right:16px;cursor:pointer;color:var(--muted);
+                 font-size:22px;line-height:1;background:none;border:none}
+  .field-edit{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center;margin-bottom:8px}
+  .field-edit label{margin:0}
+  details{border:1px solid var(--line);border-radius:8px;margin-bottom:8px;padding:6px 10px}
+  summary{cursor:pointer;font-weight:600;color:var(--muted)}
+  .hide{display:none!important}
+  .center{text-align:center;padding:40px 0;color:var(--muted)}
+  .spinner{display:inline-block;width:18px;height:18px;border:3px solid var(--line);
+           border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;
+           vertical-align:-4px;margin-right:8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .exp-btns{display:flex;gap:10px;flex-wrap:wrap}
+  footer{color:var(--muted);font-size:11px;text-align:center;padding:16px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Toshiba CIX Manager</h1>
+  <span class="ro-badge" id="modeBadge" title="Reads are plain SNMP GETs. Writes require an explicit Confirm &amp; write and are read-back verified.">READ-ONLY</span>
+  <div class="status" id="status">Not connected</div>
+</header>
+
+<main>
+  <!-- CONNECT -->
+  <section id="connect" class="card">
+    <h2>Connect to a Strata CIX</h2>
+    <p class="muted" style="margin-top:-6px">
+      Plug straight into the PBX voice-LAN port (direct), or reach it over an RSM/ZeroTier
+      (remote) &mdash; either way it is just SNMP to an IP. No internet required.
+    </p>
+    <div class="grid">
+      <div><label>CIX IP address</label><input id="ip" placeholder="192.168.254.253" autocomplete="off"></div>
+      <div><label>SNMP community</label><input id="community" value="communityName" autocomplete="off"></div>
+      <div><label>Port</label><input id="port" value="161"></div>
+      <div><label>Scope</label>
+        <select id="scope">
+          <option value="core">core &mdash; fast (stations, system, network)</option>
+          <option value="all">all &mdash; full backup (slow, whole MIB)</option>
+        </select>
+      </div>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="btnRead">Read system</button>
+      <button class="btn ghost" id="btnTest">Test connection</button>
+      <button class="btn ghost" id="btnDiscover">Auto-discover</button>
+      <button class="btn ghost" id="btnOpen">Open backup file&hellip;</button>
+      <input type="file" id="fileInput" accept=".json,application/json" class="hide">
+    </div>
+    <div class="msg" id="connectMsg"></div>
+    <div id="discoverBox" class="hide" style="margin-top:14px">
+      <h2>Discovered candidates</h2>
+      <table><thead><tr><th>IP</th><th>MAC</th><th>Found via</th><th>Verified</th><th></th></tr></thead>
+        <tbody id="discoverRows"></tbody></table>
+    </div>
+  </section>
+
+  <!-- CATALOG BACKUP / VIEW / DIFF / RESTORE -->
+  <section id="catalog" class="card">
+    <h2>Catalog backup &middot; view &middot; diff &middot; restore</h2>
+    <p class="muted" style="margin-top:-6px">
+      A complete, catalog-driven backup of every program the eManager model knows
+      (<span id="catInfo">loading catalog&hellip;</span>). Uses the IP / community / port above.
+      Restore is gated and read-back verified &mdash; read-only fields are never written.
+    </p>
+    <div class="row">
+      <button class="btn" id="btnCatBackup">Full catalog backup (live read)</button>
+      <button class="btn ghost" id="btnOpenA">Open backup &rarr; A&hellip;</button>
+      <button class="btn ghost" id="btnOpenB">Open backup &rarr; B&hellip;</button>
+      <input type="file" id="catFileA" accept=".json,application/json" class="hide">
+      <input type="file" id="catFileB" accept=".json,application/json" class="hide">
+    </div>
+    <div class="row" style="margin-top:10px;align-items:center">
+      <span class="chip" id="slotA">A: (empty)</span>
+      <span class="chip" id="slotB">B: (empty)</span>
+      <button class="btn ghost small" id="btnCatView" disabled>View A</button>
+      <button class="btn ghost small" id="btnCatDiff" disabled>Diff A &rarr; B</button>
+      <button class="btn ghost small" id="btnCatDownload" disabled>Download A (.json)</button>
+      <button class="btn ghost small" id="btnCatRestorePrev" disabled>Preview restore of A</button>
+      <button class="btn small" id="btnCatRestoreGo" disabled>Confirm &amp; restore A</button>
+    </div>
+    <div class="msg" id="catMsg"></div>
+    <pre id="catOut" class="mono" style="white-space:pre-wrap;max-height:460px;overflow:auto;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:12px;margin-top:12px;display:none"></pre>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results" class="hide">
+    <div class="tabs" id="tabs">
+      <div class="tab active" data-view="overview">Overview</div>
+      <div class="tab" data-view="stations">Stations <span class="count" id="cStations"></span></div>
+      <div class="tab" data-view="equipment">Equipment <span class="count" id="cEquip"></span></div>
+      <div class="tab" data-view="system">System</div>
+      <div class="tab" data-view="network">Network / FTP</div>
+      <div class="tab" data-view="raw">Raw programs <span class="count" id="cRaw"></span></div>
+      <div class="tab" data-view="export">Export</div>
+    </div>
+
+    <div class="view active" id="view-overview"></div>
+    <div class="view" id="view-stations">
+      <div class="toolbar">
+        <input type="search" id="stationSearch" placeholder="Search DN, extension, port, type, name&hellip;">
+        <span class="muted" id="stationCount"></span>
+      </div>
+      <div class="card" style="padding:0;overflow:auto">
+        <table id="stationTable">
+          <thead><tr>
+            <th data-sort="dn">DN</th><th data-sort="extension">Extension</th>
+            <th data-sort="equipment_port">Port</th><th data-sort="type">Type</th>
+            <th data-sort="name">Name</th><th data-sort="keycount">Keys</th>
+          </tr></thead>
+          <tbody id="stationRows"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="view" id="view-equipment"></div>
+    <div class="view" id="view-system"></div>
+    <div class="view" id="view-network"></div>
+    <div class="view" id="view-raw"></div>
+    <div class="view" id="view-export"></div>
+  </section>
+</main>
+
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer"></aside>
+
+<footer>Toshiba CIX Manager &mdash; local tool over SNMP. Writes require an explicit Confirm &amp; write and are read-back verified.</footer>
+
+<script>
+"use strict";
+const $ = (s, r=document)=>r.querySelector(s);
+const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const MISSING = "<MISSING>";
+let DOC = null;            // the current read document
+let REPORT = "";           // server-rendered text report
+let STATION_SORT = {key:"dn", dir:1};
+
+function setStatus(html){ $("#status").innerHTML = html; }
+function showMsg(el, kind, html){ el.className = "msg show "+kind; el.innerHTML = html; }
+function hideMsg(el){ el.className = "msg"; }
+
+function fmtPort(p){
+  if(typeof p==="string" && /^\d{6}$/.test(p)) return p.slice(0,2)+"-"+p.slice(2,4)+"-"+p.slice(4,6);
+  return p==null||p===MISSING ? "" : p;
+}
+function val(v){ return (v==null||v===MISSING) ? "" : v; }
+
+async function api(path, body){
+  const opt = body ? {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)} : {};
+  const r = await fetch(path, opt);
+  const ct = r.headers.get("content-type")||"";
+  if(ct.includes("application/json")) return r.json();
+  return r;
+}
+
+function readForm(){
+  return {
+    ip: $("#ip").value.trim(),
+    community: $("#community").value.trim() || "communityName",
+    port: parseInt($("#port").value,10) || 161,
+    scope: $("#scope").value,
+  };
+}
+
+/* ---------- Test connection ---------- */
+$("#btnTest").onclick = async ()=>{
+  const f = readForm();
+  if(!f.ip){ showMsg($("#connectMsg"),"err","Enter the CIX IP address first."); return; }
+  showMsg($("#connectMsg"),"info",'<span class="spinner"></span>Testing SNMP to '+esc(f.ip)+'&hellip;');
+  try{
+    const res = await api("/api/connect", f);
+    if(res.ok) showMsg($("#connectMsg"),"ok","Connected. Software id: <b>"+esc(res.software_id)+"</b>"+
+        (res.chassis_mac?(" &nbsp; MAC: <span class='mono'>"+esc(res.chassis_mac)+"</span>"):""));
+    else showMsg($("#connectMsg"),"err","No CIX answered: "+esc(res.error||"unknown error"));
+  }catch(e){ showMsg($("#connectMsg"),"err","Request failed: "+esc(e.message)); }
+};
+
+/* ---------- Read ---------- */
+$("#btnRead").onclick = async ()=>{
+  const f = readForm();
+  if(!f.ip){ showMsg($("#connectMsg"),"err","Enter the CIX IP address first."); return; }
+  const slow = f.scope==="all" ? " (full MIB &mdash; this can take a few minutes)" : "";
+  showMsg($("#connectMsg"),"info",'<span class="spinner"></span>Reading '+esc(f.ip)+slow+'&hellip;');
+  $("#btnRead").disabled = true;
+  try{
+    const res = await api("/api/read", f);
+    if(!res.ok){ showMsg($("#connectMsg"),"err","Read failed: "+esc(res.error||"unknown")); return; }
+    DOC = res.doc; REPORT = res.report || "";
+    hideMsg($("#connectMsg"));
+    renderAll();
+  }catch(e){ showMsg($("#connectMsg"),"err","Request failed: "+esc(e.message)); }
+  finally{ $("#btnRead").disabled = false; }
+};
+
+/* ---------- Discover ---------- */
+$("#btnDiscover").onclick = async ()=>{
+  showMsg($("#connectMsg"),"info",'<span class="spinner"></span>Scanning the local network (ARP + ping sweep)&hellip;');
+  try{
+    const res = await api("/api/discover");
+    const cands = (res.candidates||[]);
+    const box = $("#discoverBox"), rows = $("#discoverRows");
+    rows.innerHTML = "";
+    if(!cands.length){ showMsg($("#connectMsg"),"info","No candidates found. Enter the IP manually, or try the .253 convention."); box.classList.add("hide"); return; }
+    cands.forEach(c=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = "<td class='mono'>"+esc(c.ip)+"</td><td class='mono'>"+esc(c.mac||"")+"</td>"+
+        "<td>"+esc(c.via||"")+"</td>"+
+        "<td>"+(c.verified?("<span style='color:var(--ok)'>&#10003; "+esc(c.software_id||"CIX")+"</span>"):"<span class='muted'>unverified</span>")+"</td>"+
+        "<td><button class='btn small'>Use</button></td>";
+      tr.querySelector("button").onclick = ()=>{ $("#ip").value = c.ip; hideMsg($("#connectMsg")); };
+      rows.appendChild(tr);
+    });
+    box.classList.remove("hide");
+    const nverified = cands.filter(c=>c.verified).length;
+    showMsg($("#connectMsg"), nverified?"ok":"info",
+      "Found "+cands.length+" candidate(s)"+(nverified?(", "+nverified+" verified as a CIX"):"")+". Pick one below.");
+  }catch(e){ showMsg($("#connectMsg"),"err","Discover failed: "+esc(e.message)); }
+};
+
+/* ---------- Open backup file (offline viewer) ---------- */
+$("#btnOpen").onclick = ()=> $("#fileInput").click();
+$("#fileInput").onchange = (ev)=>{
+  const file = ev.target.files[0]; if(!file) return;
+  const fr = new FileReader();
+  fr.onload = ()=>{
+    try{
+      const doc = JSON.parse(fr.result);
+      if(!doc.stations && !doc.system){ throw new Error("not a CIX backup JSON"); }
+      DOC = doc; REPORT = "";
+      hideMsg($("#connectMsg"));
+      renderAll(true);
+    }catch(e){ showMsg($("#connectMsg"),"err","Could not load backup: "+esc(e.message)); }
+  };
+  fr.readAsText(file);
+  ev.target.value = "";
+};
+
+/* ---------- Tabs ---------- */
+$$(".tab").forEach(t=> t.onclick = ()=>{
+  $$(".tab").forEach(x=>x.classList.remove("active"));
+  $$(".view").forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");
+  $("#view-"+t.dataset.view).classList.add("active");
+});
+
+/* ---------- Render ---------- */
+function renderAll(fromFile){
+  $("#connect").classList.add("hide");
+  $("#results").classList.remove("hide");
+  const d = DOC.device||{}, s = DOC.system||{};
+  setStatus("<b>"+esc(d.ip||"backup")+"</b> &middot; "+esc(val(s.software_id)||"?")+
+            " &middot; "+esc(val(s.chassis_mac)||"") +
+            (fromFile?" &middot; <span class='muted'>from file</span>":""));
+  $("#cStations").textContent = (DOC.stations||[]).length;
+  $("#cEquip").textContent = (DOC.equipment||[]).length;
+  $("#cRaw").textContent = Object.keys(DOC.raw_programs||{}).length;
+  renderOverview(); renderStations(); renderEquipment(); renderSystem();
+  renderNetwork(); renderRaw(); renderExport(fromFile);
+  window.scrollTo(0,0);
+}
+
+function renderOverview(){
+  const d = DOC.device||{}, s = DOC.system||{};
+  const findings = DOC.security_findings||[];
+  let html = "<div class='card'><h2>Device</h2><div class='kv'>"+
+    kv("IP / port", (val(d.ip)||"—")+":"+(d.port||161))+
+    kv("Community", val(d.community))+
+    kv("Software id", val(s.software_id))+
+    kv("Chassis MAC", val(s.chassis_mac))+
+    kv("Read at", val(d.read_at))+
+    kv("Scope", val(d.scope))+
+    kv("OIDs read", val(d.oids_read))+
+    (d.walk_error?kv("Walk error", "<span style='color:var(--warn)'>"+esc(d.walk_error)+"</span>"):"")+
+    "</div></div>";
+  if(findings.length){
+    html += "<div class='card'><h2>Security findings</h2>";
+    findings.forEach(f=> html += "<div class='finding "+esc(f.severity)+"'><span class='sev'>"+
+      esc((f.severity||"").toUpperCase())+"</span>"+esc(f.detail)+"</div>");
+    html += "</div>";
+  }
+  const st = DOC.stats||{};
+  html += "<div class='card'><h2>Totals</h2><div class='kv'>"+
+    Object.keys(st).sort().map(k=>kv(k, st[k])).join("")+"</div></div>";
+  $("#view-overview").innerHTML = html;
+}
+function kv(k,v){ return "<div class='k'>"+esc(k)+"</div><div>"+ (v==null?"":(""+v).startsWith("<")?v:esc(v)) +"</div>"; }
+
+function stationKeycount(st){ return (st.keys||[]).length; }
+function renderStations(){
+  const q = $("#stationSearch").value.toLowerCase();
+  let rows = (DOC.stations||[]).slice();
+  if(q){
+    rows = rows.filter(st=>[st.dn,st.extension,st.equipment_port,st.type,st.name]
+      .some(v=> String(val(v)).toLowerCase().includes(q)));
+  }
+  const k = STATION_SORT.key, dir = STATION_SORT.dir;
+  rows.sort((a,b)=>{
+    let va = k==="keycount"?stationKeycount(a):val(a[k]), vb = k==="keycount"?stationKeycount(b):val(b[k]);
+    if(k==="dn"||k==="extension"){ const na=parseInt(va,10), nb=parseInt(vb,10);
+      if(!isNaN(na)&&!isNaN(nb)) return (na-nb)*dir; }
+    return String(va).localeCompare(String(vb))*dir;
+  });
+  $("#stationCount").textContent = rows.length+" of "+(DOC.stations||[]).length+" shown";
+  const tb = $("#stationRows"); tb.innerHTML = "";
+  rows.forEach(st=>{
+    const tr = document.createElement("tr"); tr.className="clickable";
+    tr.innerHTML = "<td class='mono'>"+esc(val(st.dn))+"</td>"+
+      "<td class='mono'>"+esc(val(st.extension))+"</td>"+
+      "<td class='mono'>"+esc(fmtPort(st.equipment_port))+"</td>"+
+      "<td>"+esc(val(st.type))+"</td>"+
+      "<td>"+esc(val(st.name))+"</td>"+
+      "<td>"+stationKeycount(st)+"</td>";
+    tr.onclick = ()=> openStation(st);
+    tb.appendChild(tr);
+  });
+}
+$("#stationSearch").oninput = renderStations;
+$$("#stationTable th").forEach(th=> th.onclick = ()=>{
+  const key = th.dataset.sort;
+  if(STATION_SORT.key===key) STATION_SORT.dir*=-1; else STATION_SORT={key, dir:1};
+  renderStations();
+});
+
+function renderEquipment(){
+  const eq = DOC.equipment||[];
+  let html = "<div class='card'><h2>Equipment / cabinet rows ("+eq.length+")</h2>";
+  if(!eq.length){ html += "<p class='muted'>None returned.</p></div>"; $("#view-equipment").innerHTML=html; return; }
+  const cols = new Set(); eq.forEach(r=>Object.keys(r).forEach(k=>{ if(k!=="index") cols.add(k); }));
+  const colList = Array.from(cols);
+  html += "<div style='overflow:auto'><table><thead><tr><th>Index</th>"+
+    colList.map(c=>"<th>"+esc(c)+"</th>").join("")+"</tr></thead><tbody>";
+  eq.forEach(r=>{
+    html += "<tr><td class='mono'>"+esc(JSON.stringify(r.index))+"</td>"+
+      colList.map(c=>"<td class='mono'>"+esc(val(r[c]))+"</td>").join("")+"</tr>";
+  });
+  html += "</tbody></table></div></div>";
+  $("#view-equipment").innerHTML = html;
+}
+
+function renderSystem(){
+  const s = DOC.system||{};
+  const numbering = s.numbering_config||{}, status = s.status||{};
+  let html = "<div class='card'><h2>System numbering / feature config (Program 579)</h2>";
+  const nk = Object.keys(numbering).sort();
+  html += nk.length ? "<div class='kv'>"+nk.map(k=>kv(k, val(numbering[k]))).join("")+"</div>"
+                    : "<p class='muted'>None returned.</p>";
+  html += "</div>";
+  const sk = Object.keys(status).sort();
+  if(sk.length){
+    html += "<div class='card'><h2>System status scalars (.7.*)</h2><div class='kv'>"+
+      sk.map(k=>kv(k, val(status[k]))).join("")+"</div></div>";
+  }
+  $("#view-system").innerHTML = html;
+}
+
+function renderNetwork(){
+  const net = DOC.network_access||[];
+  let html = "<div class='card'><h2>Network / FTP access (.2.3.1.1)</h2>";
+  if(!net.length){ html += "<p class='muted'>None returned.</p></div>"; $("#view-network").innerHTML=html; return; }
+  html += "<table><thead><tr><th>Row</th><th>Username</th><th>Password</th><th>Path</th></tr></thead><tbody>";
+  net.forEach(r=> html += "<tr><td>"+esc(val(r.index))+"</td><td class='mono'>"+esc(val(r.username))+
+    "</td><td class='mono'>"+esc(val(r.password))+"</td><td class='mono'>"+esc(val(r.path))+"</td></tr>");
+  html += "</tbody></table><p class='muted' style='margin-bottom:0'>These are live credentials read from the PBX.</p></div>";
+  $("#view-network").innerHTML = html;
+}
+
+function renderRaw(){
+  const raw = DOC.raw_programs||{};
+  const keys = Object.keys(raw).sort((a,b)=>(parseInt(a,10)||0)-(parseInt(b,10)||0));
+  let html = "<div class='card'><h2>Undocumented programs (raw passthrough)</h2>";
+  if(!keys.length){ html += "<p class='muted'>None.</p></div>"; $("#view-raw").innerHTML=html; return; }
+  html += "<p class='muted'>Programs whose column legend the capture did not prove. Every cell keeps its raw OID so a later decode can be added.</p>";
+  keys.forEach(p=>{
+    const b = raw[p], rowKeys = Object.keys(b.rows||{});
+    html += "<details><summary>Program "+esc(p)+" &mdash; "+esc(val(b.name))+" ("+rowKeys.length+" row(s))</summary>";
+    html += "<table><thead><tr><th>Row</th><th>Column</th><th>Value</th><th>OID</th></tr></thead><tbody>";
+    rowKeys.forEach(rk=>{
+      const row = b.rows[rk];
+      Object.keys(row).forEach(col=>{
+        html += "<tr><td class='mono'>"+esc(rk)+"</td><td class='mono'>"+esc(col)+"</td>"+
+          "<td class='mono'>"+esc(val(row[col].value))+"</td><td class='mono muted'>"+esc(row[col].oid)+"</td></tr>";
+      });
+    });
+    html += "</tbody></table></details>";
+  });
+  html += "</div>";
+  $("#view-raw").innerHTML = html;
+}
+
+function renderExport(fromFile){
+  let html = "<div class='card'><h2>Backup export</h2>"+
+    "<p class='muted'>Save a full backup of this read. You choose where the files land via your browser's save dialog.</p>"+
+    "<div class='exp-btns'>"+
+    "<button class='btn' id='expZip'>Download full backup (.zip)</button>"+
+    "<button class='btn ghost' id='expJson'>JSON only</button>"+
+    "<button class='btn ghost' id='expReport'"+(REPORT?"":" disabled title='Open a live read to get the text report'")+">Report (.txt)</button>"+
+    "<button class='btn ghost' id='expRaw'"+((DOC.raw_oid_walk)?"":" disabled title='Raw OID walk present only on a live read'")+">Raw OID walk (.txt)</button>"+
+    "</div></div>";
+  $("#view-export").innerHTML = html;
+  $("#expJson").onclick = ()=> download(baseName()+".json", JSON.stringify(DOC,null,2), "application/json");
+  $("#expReport").onclick = ()=> REPORT && download(baseName()+".txt", REPORT, "text/plain");
+  $("#expRaw").onclick = ()=>{
+    if(!DOC.raw_oid_walk) return;
+    const txt = DOC.raw_oid_walk.map(e=> e.oid+" = "+e.value).join("\n")+"\n";
+    download(baseName()+"-oidwalk.txt", txt, "text/plain");
+  };
+  $("#expZip").onclick = async ()=>{
+    const btn = $("#expZip"); btn.disabled=true; const old=btn.textContent; btn.textContent="Building…";
+    try{
+      const r = await fetch("/api/backup", {method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({doc:DOC})});
+      if(!r.ok){ const j = await r.json().catch(()=>({})); throw new Error(j.error||("HTTP "+r.status)); }
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href=url; a.download=baseName()+"-backup.zip";
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    }catch(e){ alert("Backup failed: "+e.message); }
+    finally{ btn.disabled=false; btn.textContent=old; }
+  };
+}
+function baseName(){
+  const ip = (DOC.device&&DOC.device.ip)||"cix";
+  const when = ((DOC.device&&DOC.device.read_at)||"").replace(/[:T]/g,"-").slice(0,19);
+  return "toshiba-cix-"+String(ip).replace(/[^\w.]/g,"_")+(when?"-"+when:"");
+}
+function download(name, text, type){
+  const blob = new Blob([text], {type}); const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href=url; a.download=name;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+
+/* ---------- Station drawer + edit ---------- */
+function closeDrawer(){ $("#drawer").classList.remove("show"); $("#overlay").classList.remove("show"); }
+$("#overlay").onclick = closeDrawer;
+
+function openStation(st){
+  const dr = $("#drawer");
+  const editable = {extension:"Extension", type:"Type", name:"Station name"};
+  let html = "<button class='close' title='Close'>&times;</button>";
+  html += "<h3>DN "+esc(val(st.dn))+"</h3><p class='muted'>Port "+esc(fmtPort(st.equipment_port))+"</p>";
+
+  html += "<div class='card'><h2>Edit station</h2>";
+  Object.keys(editable).forEach(f=>{
+    html += "<div class='field-edit'><label>"+esc(editable[f])+"</label>"+
+      "<input data-field='"+f+"' value='"+esc(val(st[f]))+"'></div>";
+  });
+  html += "<div class='field-edit'><label>Port</label><input value='"+esc(fmtPort(st.equipment_port))+
+          "' disabled title='physical assignment — read-only'></div>";
+  html += "<div class='row' style='margin-top:4px'>"+
+          "<button class='btn ghost' id='previewStation'>Preview changes</button>"+
+          "<button class='btn' id='writeStation'>Confirm &amp; write</button></div>";
+  html += "<p class='muted' style='margin:8px 0 0'>Preview shows the exact SETs without sending. "+
+          "Confirm &amp; write sends them over SNMP and reads the values back to verify.</p>";
+  html += "<div class='msg' id='saveMsg'></div></div>";
+
+  if((st.keys||[]).length){
+    html += "<div class='card'><h2>Keys / buttons ("+st.keys.length+")</h2><div style='overflow:auto'><table><thead><tr><th>Key</th>";
+    const kcols = new Set(); st.keys.forEach(k=>Object.keys(k).forEach(c=>{ if(c!=="key") kcols.add(c); }));
+    const kc = Array.from(kcols);
+    html += kc.map(c=>"<th>"+esc(c)+"</th>").join("")+"</tr></thead><tbody>";
+    st.keys.forEach(k=>{ html += "<tr><td>"+esc(k.key)+"</td>"+kc.map(c=>"<td class='mono'>"+esc(val(k[c]))+"</td>").join("")+"</tr>"; });
+    html += "</tbody></table></div></div>";
+  }
+
+  const progs = st.programs||{};
+  const pk = Object.keys(progs);
+  if(pk.length){
+    html += "<div class='card'><h2>Per-station program detail</h2>";
+    pk.sort().forEach(p=>{
+      const rows = progs[p].rows||{};
+      html += "<details><summary>Program "+esc(p)+" &mdash; "+esc(val(progs[p].name))+"</summary>";
+      html += "<table><thead><tr><th>Row</th><th>Col</th><th>Value</th><th>OID</th></tr></thead><tbody>";
+      Object.keys(rows).forEach(rk=>{ const row=rows[rk];
+        Object.keys(row).forEach(c=>{ html += "<tr><td class='mono'>"+esc(rk)+"</td><td class='mono'>"+esc(c)+
+          "</td><td class='mono'>"+esc(val(row[c].value))+"</td><td class='mono muted'>"+esc(row[c].oid)+"</td></tr>"; }); });
+      html += "</tbody></table></details>";
+    });
+    html += "</div>";
+  }
+
+  const so = st.source_oids||{};
+  if(Object.keys(so).length){
+    html += "<div class='card'><h2>Source OIDs</h2><div class='kv'>"+
+      Object.keys(so).map(k=>kv(k, "<span class='mono muted'>"+esc(so[k])+"</span>")).join("")+"</div></div>";
+  }
+
+  dr.innerHTML = html;
+  dr.querySelector(".close").onclick = closeDrawer;
+  dr.classList.add("show"); $("#overlay").classList.add("show");
+  $("#previewStation").onclick = ()=> doSave(st, dr, false);
+  $("#writeStation").onclick = ()=> doSave(st, dr, true);
+}
+
+function collectChanges(st, dr){
+  const changes = {};
+  $$("input[data-field]", dr).forEach(inp=>{
+    const f = inp.dataset.field, nv = inp.value;
+    if(String(val(st[f])) !== nv) changes[f] = nv;
+  });
+  return changes;
+}
+
+function opsTable(ops){
+  return "<table style='margin-top:6px'><thead><tr><th>Field</th><th>Old</th><th>New</th><th>Target OID</th></tr></thead><tbody>"+
+    ops.map(o=>"<tr><td>"+esc(o.field)+"</td><td class='mono'>"+esc(val(o.old_value))+
+      "</td><td class='mono'>"+esc(o.new_value)+"</td><td class='mono muted'>"+esc(o.target_oid||(o.note||"—"))+"</td></tr>").join("")+
+    "</tbody></table>";
+}
+
+async function doSave(st, dr, confirm){
+  const changes = collectChanges(st, dr);
+  const msg = $("#saveMsg", dr);
+  if(!Object.keys(changes).length){ showMsg(msg,"info","No fields changed."); return; }
+
+  if(confirm){
+    const summary = Object.keys(changes).map(f=>f+" → \""+changes[f]+"\"").join("\n");
+    if(!window.confirm("Write these changes to DN "+val(st.dn)+" over SNMP?\n\n"+summary+
+        "\n\nThe values will be read back to verify.")) return;
+  }
+  const body = {ip:(DOC.device||{}).ip || $("#ip").value.trim(),
+                community: $("#community").value.trim() || "communityName",
+                port: parseInt($("#port").value,10)||161,
+                station: st, changes, confirm};
+  showMsg(msg,"info",'<span class="spinner"></span>'+(confirm?"Writing and verifying…":"Building preview…"));
+  try{
+    const res = await api("/api/save", body);
+    if(!confirm){
+      let html = esc(res.message||"Preview");
+      if(res.planned_ops && res.planned_ops.length)
+        html += "<div style='margin-top:8px'>Planned SET operations (<b>not sent</b>):"+opsTable(res.planned_ops)+"</div>";
+      showMsg(msg,"info",html);
+      return;
+    }
+    // write path
+    if(!res.ok && res.error){
+      let html = "Write failed: "+esc(res.error);
+      if(res.planned_ops) html += "<div style='margin-top:8px'>"+opsTable(res.planned_ops)+"</div>";
+      showMsg(msg,"err",html);
+      return;
+    }
+    let html = esc(res.message||"");
+    const r = res.result||{};
+    if(r.results && r.results.length){
+      html += "<div style='margin-top:8px'>Read-back verification:<table style='margin-top:6px'>"+
+        "<thead><tr><th>Field</th><th>Requested</th><th>Read back</th><th>Match</th></tr></thead><tbody>"+
+        r.results.map(x=>"<tr><td>"+esc(x.field)+"</td><td class='mono'>"+esc(x.requested)+
+          "</td><td class='mono'>"+esc(val(x.read_back))+"</td><td>"+
+          (x.match?"<span style='color:var(--ok)'>&#10003;</span>":"<span style='color:var(--bad)'>&#10007;</span>")+
+          "</td></tr>").join("")+"</tbody></table></div>";
+    }
+    showMsg(msg, res.ok?"ok":"err", html);
+    // reflect the verified values in the in-memory doc + table
+    if(res.ok){
+      Object.keys(changes).forEach(f=>{ st[f] = changes[f]; });
+      renderStations();
+    }
+  }catch(e){ showMsg(msg,"err","Save request failed: "+esc(e.message)); }
+}
+
+/* ---------- Catalog backup / view / diff / restore ---------- */
+const BK = {A:null, B:null};
+function catShow(text){ const el=$("#catOut"); el.textContent=text; el.style.display="block"; el.scrollTop=0; }
+function backupLabel(b){ const m=b.meta||{};
+  return (m.site||m.source_ip||"backup")+" · "+(m.rows_count||0)+" rows · "+String(m.read_at||"").slice(0,19); }
+function catBaseName(b){ const m=b.meta||{};
+  const who = String(m.site||m.source_ip||"cix").replace(/[^\w.-]/g,"_");
+  const when = String(m.read_at||"").replace(/[:T]/g,"-").slice(0,19);
+  return "toshiba-cix-"+who+(when?"-"+when:"")+"-catalog"; }
+function refreshSlots(){
+  $("#slotA").textContent = "A: "+(BK.A?backupLabel(BK.A):"(empty)");
+  $("#slotB").textContent = "B: "+(BK.B?backupLabel(BK.B):"(empty)");
+  $("#btnCatView").disabled = !BK.A;
+  $("#btnCatDownload").disabled = !BK.A;
+  $("#btnCatRestorePrev").disabled = !BK.A;
+  $("#btnCatRestoreGo").disabled = !BK.A;
+  $("#btnCatDiff").disabled = !(BK.A && BK.B);
+}
+function loadBackupInto(slot, file){
+  const fr = new FileReader();
+  fr.onload = ()=>{
+    try{
+      const doc = JSON.parse(fr.result);
+      if(doc.format !== "toshiba-cix-backup") throw new Error("not a catalog backup (format != toshiba-cix-backup)");
+      BK[slot] = doc; refreshSlots();
+      showMsg($("#catMsg"),"ok","Loaded slot "+slot+": "+esc(backupLabel(doc)));
+    }catch(e){ showMsg($("#catMsg"),"err","Could not load backup: "+esc(e.message)); }
+  };
+  fr.readAsText(file);
+}
+$("#btnOpenA").onclick = ()=> $("#catFileA").click();
+$("#btnOpenB").onclick = ()=> $("#catFileB").click();
+$("#catFileA").onchange = (ev)=>{ const f=ev.target.files[0]; if(f) loadBackupInto("A",f); ev.target.value=""; };
+$("#catFileB").onchange = (ev)=>{ const f=ev.target.files[0]; if(f) loadBackupInto("B",f); ev.target.value=""; };
+
+$("#btnCatBackup").onclick = async ()=>{
+  const f = readForm();
+  if(!f.ip){ showMsg($("#catMsg"),"err","Enter the CIX IP address above first."); return; }
+  const btn=$("#btnCatBackup"); btn.disabled=true; const old=btn.textContent; btn.textContent="Reading…";
+  showMsg($("#catMsg"),"info",'<span class="spinner"></span>Full catalog read of '+esc(f.ip)+' (every program — this can take a while)&hellip;');
+  try{
+    const res = await api("/api/catalog-backup", {ip:f.ip, community:f.community, port:f.port});
+    if(!res.ok){ showMsg($("#catMsg"),"err","Backup failed: "+esc(res.error||"unknown")); return; }
+    BK.A = res.backup; refreshSlots();
+    showMsg($("#catMsg"),"ok","Backup read into slot A: "+esc(backupLabel(res.backup))+". Download it to keep it.");
+    catShow(res.report||"");
+  }catch(e){ showMsg($("#catMsg"),"err","Request failed: "+esc(e.message)); }
+  finally{ btn.disabled=false; btn.textContent=old; }
+};
+$("#btnCatView").onclick = async ()=>{
+  if(!BK.A) return;
+  try{ const res = await api("/api/view", {backup:BK.A});
+    if(res.ok) catShow(res.report); else showMsg($("#catMsg"),"err",esc(res.error||"view failed"));
+  }catch(e){ showMsg($("#catMsg"),"err","Request failed: "+esc(e.message)); }
+};
+$("#btnCatDiff").onclick = async ()=>{
+  if(!BK.A || !BK.B) return;
+  try{ const res = await api("/api/diff", {a:BK.A, b:BK.B});
+    if(res.ok) catShow(res.report); else showMsg($("#catMsg"),"err",esc(res.error||"diff failed"));
+  }catch(e){ showMsg($("#catMsg"),"err","Request failed: "+esc(e.message)); }
+};
+$("#btnCatDownload").onclick = ()=> BK.A && download(catBaseName(BK.A)+".json", JSON.stringify(BK.A,null,2), "application/json");
+
+function renderRestore(res){
+  const s = res.summary||{};
+  let html = esc(res.message||"")+"<br><br>"+
+    "<b>Plan:</b> "+(s.sendable||0)+" sendable, "+(s.skipped||0)+" skipped ("+(s.read_only||0)+
+    " read-only), "+(s.unproven_wire_type||0)+" unproven wire-type.";
+  if(res.mode==="write" && res.results){
+    const bad = res.results.filter(r=>!r.match).length;
+    html += "<br>Wrote "+(res.wrote||0)+", verified "+(res.results.length-bad)+"/"+res.results.length+".";
+  }
+  showMsg($("#catMsg"), res.ok?"ok":(res.mode==="write"?"err":"info"), html);
+  const lines = [res.message, ""];
+  (res.planned_ops||[]).forEach(o=>{
+    lines.push((o.sendable?"SET ":"skip ")+(o.target_oid||"(no oid)")+" = "+JSON.stringify(o.new_value)+
+      "  ["+o.ber_type+"] "+o.field_name+(o.note?("  — "+o.note):""));
+  });
+  if(res.results && res.results.length){
+    lines.push(""); lines.push("Read-back verification:");
+    res.results.forEach(r=> lines.push("  ["+(r.match?"ok":"MISMATCH")+"] "+r.field+" = "+JSON.stringify(r.read_back)+" (wanted "+JSON.stringify(r.requested)+")"));
+  }
+  catShow(lines.join("\n"));
+}
+$("#btnCatRestorePrev").onclick = async ()=>{
+  if(!BK.A) return;
+  try{ const res = await api("/api/restore", {backup:BK.A, confirm:false});
+    renderRestore(res);
+  }catch(e){ showMsg($("#catMsg"),"err","Request failed: "+esc(e.message)); }
+};
+$("#btnCatRestoreGo").onclick = async ()=>{
+  if(!BK.A) return;
+  const f = readForm();
+  if(!f.ip){ showMsg($("#catMsg"),"err","Enter the target CIX IP address above first."); return; }
+  if(!window.confirm("Restore backup A to "+f.ip+" over SNMP?\n\nThis writes every writable field back to the live CIX (applied to RAM; "+
+    "persistence across reboot is unproven) and reads each one back to verify. Read-only fields are not touched.")) return;
+  const btn=$("#btnCatRestoreGo"); btn.disabled=true; const old=btn.textContent; btn.textContent="Restoring…";
+  showMsg($("#catMsg"),"info",'<span class="spinner"></span>Restoring to '+esc(f.ip)+' and verifying&hellip;');
+  try{ const res = await api("/api/restore", {ip:f.ip, community:f.community, port:f.port, backup:BK.A, confirm:true});
+    if(!res.ok && res.error){ showMsg($("#catMsg"),"err","Restore failed: "+esc(res.error)); return; }
+    renderRestore(res);
+  }catch(e){ showMsg($("#catMsg"),"err","Request failed: "+esc(e.message)); }
+  finally{ btn.disabled=false; btn.textContent=old; refreshSlots(); }
+};
+
+/* boot */
+(async ()=>{ try{ const c = await api("/api/catalog");
+  if(c&&c.ok) $("#catInfo").textContent = c.programs+" programs, "+c.fields+" fields, "+c.writable+" writable · catalog "+c.catalog_version;
+}catch(e){} })();
+(async ()=>{ try{ const h = await api("/api/health");
+  if(h&&h.version) document.title = "Toshiba CIX Manager "+h.version;
+  const b = $("#modeBadge");
+  if(h && h.writes_enabled){ b.textContent = "WRITES: CONFIRM-GATED"; }
+  else { b.textContent = "READ-ONLY"; }
+}catch(e){} })();
+</script>
+</body>
+</html>

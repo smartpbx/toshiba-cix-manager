@@ -1,0 +1,23 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.buildvenv/
+# customer PBX data stays out of git
+samples/*.json
+samples/*-live.*
+captures/
+*.pcap
+scratch/
+# build artifacts — shipped via GitHub Releases, never committed
+build/
+dist/
+*.spec.bak
+*.exe
+*.AppImage
+AppDir/
+# generated raster icons (icon.svg is the committed source of record)
+packaging/icon.png
+packaging/icon.ico
+appimagetool*
+python-build-standalone*
