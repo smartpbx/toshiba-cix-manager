@@ -1,0 +1,39 @@
+name: Web UI
+
+# Proves the committed single-file UI (toshiba_cix/webui.html) is byte-identical
+# to a fresh build of the React 19 + TS + Vite source in webui/ (DESIGN_PLAN
+# §2.1, §13). Node is a DEV-ONLY dependency — it never ships in the AppImage/exe.
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "webui/**"
+      - "toshiba_cix/webui.html"
+      - ".github/workflows/webui.yml"
+  pull_request:
+    paths:
+      - "webui/**"
+      - "toshiba_cix/webui.html"
+      - ".github/workflows/webui.yml"
+
+jobs:
+  freshness:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: webui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Pinned so the build output is reproducible for the byte-identical check.
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: webui/package-lock.json
+      - name: Install (exact, from lockfile)
+        run: npm ci
+      - name: Type-check
+        run: npm run typecheck
+      - name: Committed webui.html matches a fresh build
+        run: npm run check:webui
