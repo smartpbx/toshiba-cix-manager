@@ -144,7 +144,7 @@ def main() -> None:
     build(
         ["snmp.py", "decode.py", "scan.py", "catalog.py", "write.py",
          "backup.py", "diff.py", "restore.py", "discover.py",
-         "report.py", "cli.py", "webapp.py"],
+         "report.py", "cli.py", "update.py", "webapp.py"],
         "toshiba_cix_manager.py",
         title="Toshiba CIX Manager — standalone web app (generated).",
         with_web=True,

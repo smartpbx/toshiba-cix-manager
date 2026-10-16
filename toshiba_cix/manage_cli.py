@@ -92,6 +92,15 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--confirm", action="store_true",
                    help="actually SEND the writes (default is preview only)")
     r.add_argument("--batch-size", type=int, default=20)
+
+    u = sub.add_parser("update",
+                       help="check for / install the latest release")
+    u.add_argument("--check", action="store_true",
+                   help="report only; never download or install")
+    u.add_argument("--confirm", action="store_true",
+                   help="download and install the update (in-place; "
+                        "AppImage / .exe builds only)")
+    u.add_argument("--timeout", type=float, default=15.0)
     return p
 
 
@@ -180,11 +189,48 @@ def _cmd_restore(args) -> int:
     return 0 if result["ok"] else 1
 
 
+def _cmd_update(args) -> int:
+    from .update import apply_update, check_for_update, plan_update
+
+    check = check_for_update(timeout=args.timeout)
+    if not check["ok"]:
+        print(f"ERROR: update check failed: {check['error']}", file=sys.stderr)
+        return 2
+    print(f"current : {check['current']}")
+    print(f"latest  : {check['latest']}")
+    if not check["newer"]:
+        print("You are on the latest version.")
+        return 0
+
+    print(f"A newer version is available: v{check['latest']}")
+    plan = plan_update(check)
+    if not plan["replaceable"]:
+        # Running from a git/pip checkout — we never self-replace those.
+        print(plan["reason"])
+        print(f"  release notes: {check['html_url']}")
+        return 0
+    if not plan["can_apply"]:
+        print(f"Cannot apply automatically: {plan['reason']}")
+        print(f"  download it from: {check['html_url']}")
+        return 1
+    if args.check or not args.confirm:
+        print(f"Would replace : {plan['target_path']}")
+        print(f"  with asset  : {plan['asset_name']}")
+        print("Re-run with --confirm to download and install.")
+        return 0
+
+    print("Downloading and installing the update...", file=sys.stderr)
+    result = apply_update(check, confirm=True, timeout=max(args.timeout, 120.0))
+    print(result["message"])
+    return 0 if result["ok"] else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     return {
         "backup": _cmd_backup, "view": _cmd_view,
         "diff": _cmd_diff, "restore": _cmd_restore,
+        "update": _cmd_update,
     }[args.cmd](args)
 
 

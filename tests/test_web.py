@@ -286,6 +286,43 @@ def test_restore_confirm_endpoint_writes_and_verifies():
     assert j["results"] and all(r["match"] for r in j["results"])
 
 
+def test_update_check_endpoint():
+    canned = {"ok": True, "current": "1.1.0", "latest": "1.2.0", "newer": True,
+              "asset_url": "https://example.test/a.AppImage",
+              "asset_name": "a.AppImage", "replaceable": True,
+              "packaging": "appimage", "html_url": "https://example.test",
+              "error": None}
+    orig = webapp.check_for_update
+    webapp.check_for_update = lambda **k: dict(canned)
+    try:
+        status, j = _get("/api/update")
+    finally:
+        webapp.check_for_update = orig
+    assert status == 200 and j["ok"] is True
+    assert j["newer"] is True and j["latest"] == "1.2.0"
+
+
+def test_update_apply_requires_confirm():
+    orig = webapp.plan_update
+    webapp.plan_update = lambda *a, **k: {"can_apply": False, "reason": "src"}
+    try:
+        status, j = _post("/api/update", {})
+    finally:
+        webapp.plan_update = orig
+    assert status == 400 and j["ok"] is False
+
+
+def test_update_apply_confirm_calls_apply():
+    orig = webapp.apply_update
+    webapp.apply_update = lambda **k: {"ok": True, "action": "replaced",
+                                       "message": "Updated."}
+    try:
+        status, j = _post("/api/update", {"confirm": True})
+    finally:
+        webapp.apply_update = orig
+    assert j["ok"] is True and j["action"] == "replaced"
+
+
 def test_404():
     status, j = _get("/api/nope")
     assert status == 404 and j["ok"] is False
