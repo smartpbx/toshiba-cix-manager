@@ -1,0 +1,962 @@
+[
+ {
+  "program": "100",
+  "program_label": "100 Card Slot",
+  "page_id": "Javascript:launchLegacy('Card_Assignment')",
+  "menu_path": "System - Card Assignment (100)"
+ },
+ {
+  "program": "102",
+  "program_label": "102 Flexible Numbering Plan",
+  "page_id": "Javascript:launchLegacy('Flexible_Access_Code')",
+  "menu_path": "System - Flexible Access Code (102)"
+ },
+ {
+  "program": "103",
+  "program_label": "103 Class Of Service",
+  "page_id": "Javascript:launchLegacy('Class_Of_Service')",
+  "menu_path": "System - Class of Service (103)"
+ },
+ {
+  "program": "104",
+  "program_label": "104 System Timer",
+  "page_id": "Javascript:launchLegacy('System_Timer')",
+  "menu_path": "System - System Timer (104)"
+ },
+ {
+  "program": "105",
+  "program_label": "105 System Data",
+  "page_id": "Javascript:launchLegacy('System_Data')",
+  "menu_path": "System - System Data (105)"
+ },
+ {
+  "program": "106",
+  "program_label": "106 DayNight Mode Private Day of Week Mapping",
+  "page_id": "Javascript:launchLegacy('Day_Night_Service')",
+  "menu_path": "System - Day Night Service (106,112,113)"
+ },
+ {
+  "program": "107",
+  "program_label": "107 Pad Table",
+  "page_id": "Javascript:launchLegacy('PAD_Table')",
+  "menu_path": "System - PAD Table (107,108,114)"
+ },
+ {
+  "program": "108",
+  "program_label": "108 Pad Group",
+  "page_id": "Javascript:launchLegacy('PAD_Table')",
+  "menu_path": "System - PAD Table (107,108,114)"
+ },
+ {
+  "program": "109",
+  "program_label": "109 External Music On Hold Source",
+  "page_id": "Javascript:launchLegacy('Music_on_Hold')",
+  "menu_path": "System - Music On Hold (109)"
+ },
+ {
+  "program": "110",
+  "program_label": "110 Password",
+  "page_id": "Javascript:launchLegacy('Password')",
+  "menu_path": "System - Password (110)"
+ },
+ {
+  "program": "111",
+  "program_label": "111 Destination Restriction Level",
+  "page_id": "Javascript:launchLegacy('Destination_Restriction')",
+  "menu_path": "LCR/DR - Destination Restriction (532,533,534,111)"
+ },
+ {
+  "program": "112",
+  "program_label": "112 DayNight Mode Private Calendar",
+  "page_id": "Javascript:launchLegacy('Day_Night_Service')",
+  "menu_path": "System - Day Night Service (106,112,113)"
+ },
+ {
+  "program": "113",
+  "program_label": "113 DayNight Mode Schedule",
+  "page_id": "Javascript:launchLegacy('Day_Night_Service')",
+  "menu_path": "System - Day Night Service (106,112,113)"
+ },
+ {
+  "program": "114",
+  "program_label": "114 Pad Conference Table",
+  "page_id": "Javascript:launchLegacy('PAD_Table')",
+  "menu_path": "System - PAD Table (107,108,114)"
+ },
+ {
+  "program": "115",
+  "program_label": "115 Advisory Message",
+  "page_id": "Javascript:launchLegacy('Advisory_Message')",
+  "menu_path": "System - Advisory Message (115)"
+ },
+ {
+  "program": "116",
+  "program_label": "116 DataInitialize",
+  "page_id": "Javascript:launchLegacy('Data_Initialize')",
+  "menu_path": "System - Data Initialize (116)"
+ },
+ {
+  "program": "117",
+  "program_label": "117 Public Numbering Plan Analyzed Digits",
+  "page_id": "Javascript:launchLegacy('Public_Numbering_Plan')",
+  "menu_path": "System - Public Numbering Plan (117)"
+ },
+ {
+  "program": "118",
+  "program_label": "118 Lock Password",
+  "page_id": "Javascript:launchLegacy('Lock_Password')",
+  "menu_path": "System - Lock Password (118)"
+ },
+ {
+  "program": "119",
+  "program_label": "119 Initialize Lock Password",
+  "page_id": "Javascript:launchLegacy('Initialize_Lock_Password')",
+  "menu_path": "System - Initialize Lock Password (119)"
+ },
+ {
+  "program": "120",
+  "program_label": "120 Tenant Data",
+  "page_id": "Javascript:launchLegacy('Tenant_Data')",
+  "menu_path": "System - Tenant Data (120)"
+ },
+ {
+  "program": "121",
+  "program_label": "121 Automatic Daylight Saving Change",
+  "page_id": "Javascript:launchLegacy('Daylight_Saving')",
+  "menu_path": "System - Automatic Daylight Saving Change (121)"
+ },
+ {
+  "program": "150",
+  "program_label": "150 System IP Data Assignment",
+  "page_id": "Javascript:launchLegacy('System_IP_Data')",
+  "menu_path": "IP-Telephony - System IP Data (150)"
+ },
+ {
+  "program": "151",
+  "program_label": "151 BIPU Configuration",
+  "page_id": "Javascript:launchLegacy('BIPU_Configuration')",
+  "menu_path": "IP-Telephony - BIPU Configuration (151)"
+ },
+ {
+  "program": "152",
+  "program_label": "152 Voice Packet Configuration",
+  "page_id": "Javascript:launchLegacy('Voice_Packet_Configuration')",
+  "menu_path": "IP-Telephony - Voice Packet Configuration (152)"
+ },
+ {
+  "program": "153",
+  "program_label": "153 Voice Processor Control",
+  "page_id": "Javascript:launchLegacy('Voice_Processor_Control')",
+  "menu_path": "IP-Telephony - BIPU DSP Control (153)"
+ },
+ {
+  "program": "161",
+  "program_label": "161 LIPU Configuration",
+  "page_id": "Javascript:launchLegacy('LIPU/GIPH_Configuration')",
+  "menu_path": "IP-Telephony - IPU/IPH Configuration (161)"
+ },
+ {
+  "program": "163",
+  "program_label": "163 LIPU voice Processor Control",
+  "page_id": "Javascript:launchLegacy('LIPU_Voice_Processor_Control')",
+  "menu_path": "IP-Telephony - LIPU/GIPH DSP Control (163)"
+ },
+ {
+  "program": "164",
+  "program_label": "164 Full IP Qsig DTMF Detection",
+  "page_id": "Javascript:launchLegacy('IP_QSIG_DTMF')",
+  "menu_path": "Trunk - Full IP Qsig DTMF Detection (164)"
+ },
+ {
+  "program": "165",
+  "program_label": "165 Fax Over IP System Data Assignment",
+  "page_id": "Javascript:launchLegacy('1.2.6.13')",
+  "menu_path": "IP-Telephony - Fax Over IP System Data Assignment (165)"
+ },
+ {
+  "program": "166",
+  "program_label": "166 Fax Over IP Parameter Table Assignment",
+  "page_id": "Javascript:launchLegacy('1.2.6.14')",
+  "menu_path": "IP-Telephony - Fax Parameter (166)"
+ },
+ {
+  "program": "200",
+  "program_label": "200 Station Assignment",
+  "page_id": "Javascript:launchLegacy('Station_Assignments')",
+  "menu_path": "Station - Assignment - Basic (200,201*,203*,260*)"
+ },
+ {
+  "program": "201",
+  "program_label": "201 Station Delete",
+  "page_id": "Javascript:launchLegacy('Station_Assignments')",
+  "menu_path": "Station - Assignment - Basic (200,201*,203*,260*)"
+ },
+ {
+  "program": "202",
+  "program_label": "202 ISDN Station Assignment",
+  "page_id": "Javascript:launchLegacy('Basic_ISDN')",
+  "menu_path": "Station - Basic ISDN (202)"
+ },
+ {
+  "program": "203",
+  "program_label": "203 DN Change",
+  "page_id": "Javascript:launchLegacy('Station_Assignments')",
+  "menu_path": "Station - Assignment - Basic (200,201*,203*,260*)"
+ },
+ {
+  "program": "204",
+  "program_label": "204 DKT Data",
+  "page_id": "Javascript:launchLegacy('Station_Assignments')",
+  "menu_path": "Station - Assignment - DKT (204)"
+ },
+ {
+  "program": "205",
+  "program_label": "205 Station Feature Key",
+  "page_id": "Javascript:launchLegacy('Station_Assignments')",
+  "menu_path": "Station - Assignment - Key (205,213,215)"
+ },
+ {
+  "program": "206",
+  "program_label": "206 PhDN parameter",
+  "page_id": "Javascript:launchLegacy('Phantom_DN')",
+  "menu_path": "Station - Phantom DN (206)"
+ },
+ {
+  "program": "208",
+  "program_label": "208 Station Timer",
+  "page_id": "Javascript:launchLegacy('Station_Assignments')",
+  "menu_path": "Station - Assignment - Timer (208)"
+ },
+ {
+  "program": "209",
+  "program_label": "209 Station Hunting Group",
+  "page_id": "Javascript:launchLegacy('Hunt_Group')",
+  "menu_path": "Station - Hunt Group - Group (209, 218)"
+ },
+ {
+  "program": "210",
+  "program_label": "210 Call PickUp Group",
+  "page_id": "Javascript:launchLegacy('Pickup_Group')",
+  "menu_path": "Station - Pickup Group (210)"
+ },
+ {
+  "program": "213",
+  "program_label": "213 Add On Module Key",
+  "page_id": "Javascript:launchLegacy('Station_Assignments')",
+  "menu_path": "Station - Assignment - Key(205,213,215)"
+ },
+ {
+  "program": "214",
+  "program_label": "214 DSS Console",
+  "page_id": "Javascript:launchLegacy('Station_Assignments')",
+  "menu_path": "Station - Assignment - DSS (214)"
+ },
+ {
+  "program": "215",
+  "program_label": "215 DSS key",
+  "page_id": "Javascript:launchLegacy('Station_Assignments')",
+  "menu_path": "Station - Assignment - Key (205,213,215)"
+ },
+ {
+  "program": "216",
+  "program_label": "216 Emergency Ring Down",
+  "page_id": "Javascript:launchLegacy('Station_Assignments')",
+  "menu_path": "Station - Assignment - Ring Down (216)"
+ },
+ {
+  "program": "217",
+  "program_label": "217 ISDN Individual Station Data",
+  "page_id": "Javascript:launchLegacy('ISDN_Station_Data')",
+  "menu_path": "Station - ISDN Station Data (217)"
+ },
+ {
+  "program": "218",
+  "program_label": "218 Station Hunting Group Member",
+  "page_id": "Javascript:launchLegacy('Hunt_Group')",
+  "menu_path": "Station - Hunt Group - Member (209, 218)"
+ },
+ {
+  "program": "219",
+  "program_label": "219 Network DSS Key Notify Data Delete",
+  "page_id": "Javascript:launchLegacy('Network_DSS_Notify_Data_Delete')",
+  "menu_path": "Networking - Network DSS Notify Data Delete (219)"
+ },
+ {
+  "program": "250",
+  "program_label": "250 Station IP Data Assignment",
+  "page_id": "Javascript:launchLegacy('IPT_Data')",
+  "menu_path": "IP-Telephony - Station IP Data (250)"
+ },
+ {
+  "program": "260",
+  "program_label": "260 Station IP Assignment",
+  "page_id": "Javascript:launchLegacy('Station_Assignments')",
+  "menu_path": "IP-Telephony - Station Assignment - Basic (200,201*,203*,260*)"
+ },
+ {
+  "program": "300",
+  "program_label": "300 Trunk Assign",
+  "page_id": "Javascript:launchLegacy('Trunk_Assignments')",
+  "menu_path": "Trunk - Trunk Assignment - Basic (300,301*)"
+ },
+ {
+  "program": "301",
+  "program_label": "301 Trunk Delete",
+  "page_id": "Javascript:launchLegacy('Trunk_Assignments')",
+  "menu_path": "Trunk - Trunk Assignment - Basic (300,301*)"
+ },
+ {
+  "program": "302",
+  "program_label": "302 ISDN Primary Trunk",
+  "page_id": "Javascript:launchLegacy('ISDN_PRI')",
+  "menu_path": "Trunk - ISDN PRI (302,303*)"
+ },
+ {
+  "program": "303",
+  "program_label": "303 ISDN Trunk Delete",
+  "page_id": "Javascript:launchLegacy('ISDN_PRI')",
+  "menu_path": "Trunk - ISDN PRI (302,303*)"
+ },
+ {
+  "program": "303",
+  "program_label": "303 ISDN Trunk Delete",
+  "page_id": "Javascript:launchLegacy('ISDN_BRI')",
+  "menu_path": "Trunk - ISDN BRI (317,303*)"
+ },
+ {
+  "program": "304",
+  "program_label": "304 Incoming Line Group",
+  "page_id": "Javascript:launchLegacy('ILG')",
+  "menu_path": "Trunk - ILG (304,305)"
+ },
+ {
+  "program": "305",
+  "program_label": "305 ILG Delete",
+  "page_id": "Javascript:launchLegacy('ILG')",
+  "menu_path": "Trunk - ILG (304,305)"
+ },
+ {
+  "program": "306",
+  "program_label": "306 Outgoing Line Group",
+  "page_id": "Javascript:launchLegacy('OLG')",
+  "menu_path": "Trunk - OLG (306,307*)"
+ },
+ {
+  "program": "307",
+  "program_label": "307 OLG Delete",
+  "page_id": "Javascript:launchLegacy('OLG')",
+  "menu_path": "Trunk - OLG (306,307*)"
+ },
+ {
+  "program": "308",
+  "program_label": "308 Trunk Timer",
+  "page_id": "Javascript:launchLegacy('Trunk_Assignments')",
+  "menu_path": "Trunk - Trunk Assignment - Timer (308)"
+ },
+ {
+  "program": "309",
+  "program_label": "309 Direct Inward Dialing",
+  "page_id": "Javascript:launchLegacy('DID')",
+  "menu_path": "Trunk - DID (309,312*)"
+ },
+ {
+  "program": "310",
+  "program_label": "310 Direct Inward Termination",
+  "page_id": "Javascript:launchLegacy('Trunk_Assignments')",
+  "menu_path": "Trunk - Trunk Assignment - DIT (310)"
+ },
+ {
+  "program": "311",
+  "program_label": "311 DISA",
+  "page_id": "Javascript:launchLegacy('Service')",
+  "menu_path": "Trunk - Service (311,319)"
+ },
+ {
+  "program": "312",
+  "program_label": "312 DID Number Delete",
+  "page_id": "Javascript:launchLegacy('DID')",
+  "menu_path": "Trunk - DID (309,312*)"
+ },
+ {
+  "program": "313",
+  "program_label": "313 Caller ID",
+  "page_id": "Javascript:launchLegacy('Trunk_Assignments')",
+  "menu_path": "Trunk - Trunk Assignment - Caller ID (313)"
+ },
+ {
+  "program": "315",
+  "program_label": "315 T1 Trunk Card Data",
+  "page_id": "Javascript:launchLegacy('T1')",
+  "menu_path": "Trunk - T1 (315)"
+ },
+ {
+  "program": "316",
+  "program_label": "316 DCH Shared ISDN Primary Trunk",
+  "page_id": "Javascript:launchLegacy('D_Channel')",
+  "menu_path": "Trunk - D Channel (316)"
+ },
+ {
+  "program": "317",
+  "program_label": "317 ISDN Basic Trunk",
+  "page_id": "Javascript:launchLegacy('ISDN_BRI')",
+  "menu_path": "Trunk - ISDN BRI (317)"
+ },
+ {
+  "program": "318",
+  "program_label": "318 No Cpn or Out Of Search DID",
+  "page_id": "Javascript:launchLegacy('DID_Intercept')",
+  "menu_path": "Trunk - DID Intercept (318)"
+ },
+ {
+  "program": "319",
+  "program_label": "319 Intercept Position",
+  "page_id": "Javascript:launchLegacy('Service')",
+  "menu_path": "Trunk - Service (311,319)"
+ },
+ {
+  "program": "320",
+  "program_label": "320 B Channel Position ISDN Primary Trunk",
+  "page_id": "Javascript:launchLegacy('PRI_B_Channels')",
+  "menu_path": "Trunk - B Channel (320)"
+ },
+ {
+  "program": "321",
+  "program_label": "321 ISDN Calling Number Identification",
+  "page_id": "Javascript:launchLegacy('Calling_Number')",
+  "menu_path": "Trunk - Calling Number (321,322)"
+ },
+ {
+  "program": "322",
+  "program_label": "322 ISDN Calling Number Table",
+  "page_id": "Javascript:launchLegacy('Calling_Number')",
+  "menu_path": "Trunk - Calling Number (321,322)"
+ },
+ {
+  "program": "323",
+  "program_label": "323 Call By Call Service",
+  "page_id": "Javascript:launchLegacy('ISDN_Call_By_Call')",
+  "menu_path": "Trunk - ISDN Call By Call (323,324)"
+ },
+ {
+  "program": "324",
+  "program_label": "324 Call By Call Time Zone",
+  "page_id": "Javascript:launchLegacy('ISDN_Call_By_Call')",
+  "menu_path": "Trunk - ISDN Call By Call (323,324)"
+ },
+ {
+  "program": "325",
+  "program_label": "325 Full IP Qsig",
+  "page_id": "Javascript:launchLegacy('Full_IP_QSIG')",
+  "menu_path": "Trunk - Full IP Qsig (325)"
+ },
+ {
+  "program": "326",
+  "program_label": "326 SIP Trunk",
+  "page_id": "Javascript:launchLegacy('SIP_Trunking')",
+  "menu_path": "IP-Telephony - SIP Trunking - Channel Group Setting (326,327,328,329)"
+ },
+ {
+  "program": "327",
+  "program_label": "327 SIP Trunk Service Kind Assign",
+  "page_id": "Javascript:launchLegacy('SIP_Trunking')",
+  "menu_path": "IP-Telephony - SIP Trunking - Channel Group Setting (326,327,328,329)"
+ },
+ {
+  "program": "328",
+  "program_label": "328 SIP Trunk Service Assign",
+  "page_id": "Javascript:launchLegacy('SIP_Trunking')",
+  "menu_path": "IP-Telephony - SIP Trunking - Service Definition (326,327,328,329)"
+ },
+ {
+  "program": "329",
+  "program_label": "329 SIP URI Assign",
+  "page_id": "Javascript:launchLegacy('SIP_Trunking')",
+  "menu_path": "IP-Telephony - SIP Trunking - URI(326,327,328,329)"
+ },
+ {
+  "program": "400",
+  "program_label": "400 Emergency Call Destination",
+  "page_id": "Javascript:launchLegacy('Emergency_Call')",
+  "menu_path": "Attendant - Emergency Call (400)"
+ },
+ {
+  "program": "404",
+  "program_label": "404 Attendant Group",
+  "page_id": "Javascript:launchLegacy('Attendant_Group_Assignment')",
+  "menu_path": "Attendant - Group Assignment (404)"
+ },
+ {
+  "program": "500",
+  "program_label": "500 System Call Forward",
+  "page_id": "Javascript:launchLegacy('System_Call_Forward')",
+  "menu_path": "System - System Call Forward (500,504)"
+ },
+ {
+  "program": "501",
+  "program_label": "501 System Speed Dial",
+  "page_id": "Javascript:launchLegacy('System_Speed_Dial')",
+  "menu_path": "System - System Speed Dial (501)"
+ },
+ {
+  "program": "502",
+  "program_label": "502 Terminal Paging Group",
+  "page_id": "Javascript:launchLegacy('Paging_Group')",
+  "menu_path": "Station - Paging Group (502)"
+ },
+ {
+  "program": "503",
+  "program_label": "503 Paging Device Paging Group",
+  "page_id": "Javascript:launchLegacy('Paging_Devices')",
+  "menu_path": "External Devices - Paging Devices (503)"
+ },
+ {
+  "program": "504",
+  "program_label": "504 System Call Forward Type",
+  "page_id": "Javascript:launchLegacy('System_Call_Forward')",
+  "menu_path": "System - System Call Forward (500,504)"
+ },
+ {
+  "program": "506",
+  "program_label": "506 Verified Account Code",
+  "page_id": "Javascript:launchLegacy('Account_Codes')",
+  "menu_path": "LCR/DR - Set Account Codes (506,570,571)"
+ },
+ {
+  "program": "507",
+  "program_label": "507 Door Phone",
+  "page_id": "Javascript:launchLegacy('Door_Phones')",
+  "menu_path": "External Devices - Door Phones (507,508,573*,576)"
+ },
+ {
+  "program": "508",
+  "program_label": "508 Door Lock Control",
+  "page_id": "Javascript:launchLegacy('Door_Phones')",
+  "menu_path": "External Devices - Door Phones (507,508,573*,576)"
+ },
+ {
+  "program": "509",
+  "program_label": "509 Toll Restriction Override by Speed Dial",
+  "page_id": "Javascript:launchLegacy('DR_Override_by_System_Speed_Dial')",
+  "menu_path": "LCR/DR - DR Override by System Speed Dial (509)"
+ },
+ {
+  "program": "510",
+  "program_label": "510 Class Of Service Override",
+  "page_id": "Javascript:launchLegacy('COS_Override')",
+  "menu_path": "LCR/DR - COS Override (510)"
+ },
+ {
+  "program": "512",
+  "program_label": "512 SMDR for SYSTEM",
+  "page_id": "Javascript:launchLegacy('SMDR')",
+  "menu_path": "Miscellaneous - SMDR (512,513,514)"
+ },
+ {
+  "program": "513",
+  "program_label": "513 SMDR for ILG",
+  "page_id": "Javascript:launchLegacy('SMDR')",
+  "menu_path": "Miscellaneous - SMDR (512,513,514)"
+ },
+ {
+  "program": "514",
+  "program_label": "514 SMDR for OLG",
+  "page_id": "Javascript:launchLegacy('SMDR')",
+  "menu_path": "Miscellaneous - SMDR (512,513,514)"
+ },
+ {
+  "program": "515",
+  "program_label": "515 Relay Service Display",
+  "page_id": "Javascript:launchLegacy('BIOU_Relay_Type')",
+  "menu_path": "External Devices - BIOU Relay Type (515)"
+ },
+ {
+  "program": "516",
+  "program_label": "516 Station Speed Dial",
+  "page_id": "Javascript:launchLegacy('Speed_Dial')",
+  "menu_path": "Station - Speed Dial (516)"
+ },
+ {
+  "program": "517",
+  "program_label": "517 Multiple Call Group",
+  "page_id": "Javascript:launchLegacy('Multiple_Call_Group')",
+  "menu_path": "Station - Multiple Call Group - Group (517,519*)"
+ },
+ {
+  "program": "518",
+  "program_label": "518 Multiple Call Members",
+  "page_id": "Javascript:launchLegacy('Multiple_Call_Group')",
+  "menu_path": "Station - Multiple Call Group - Members (518)"
+ },
+ {
+  "program": "519",
+  "program_label": "519 Multiple Call Group Delete",
+  "page_id": "Javascript:launchLegacy('Multiple_Call_Group')",
+  "menu_path": "Station - Multiple Call Group - Group (517,519*)"
+ },
+ {
+  "program": "520",
+  "program_label": "520 LCR Parameters",
+  "page_id": "Javascript:launchLegacy('LCRAssignment')",
+  "menu_path": "LCR/DR - Assignment (520,521,522)"
+ },
+ {
+  "program": "521",
+  "program_label": "521 LCR Routing Plan AnalysisTable",
+  "page_id": "Javascript:launchLegacy('LCRAssignment')",
+  "menu_path": "LCR/DR - Assignment (520,521,522)"
+ },
+ {
+  "program": "522",
+  "program_label": "522 LCR Exceptional Routing Plan AnalysisTable",
+  "page_id": "Javascript:launchLegacy('LCRAssignment')",
+  "menu_path": "LCR/DR - Assignment (520,521,522)"
+ },
+ {
+  "program": "523",
+  "program_label": "523 LCR Route Plan ScheduleTable",
+  "page_id": "Javascript:launchLegacy('Route_Schedule')",
+  "menu_path": "LCR/DR - Route Schedule (523,528)"
+ },
+ {
+  "program": "524",
+  "program_label": "524 LCR Route ChoiceTable",
+  "page_id": "Javascript:launchLegacy('Route_Define')",
+  "menu_path": "LCR/DR - Route Define (524,525,526)"
+ },
+ {
+  "program": "525",
+  "program_label": "525 LCR Route DefinitionTable",
+  "page_id": "Javascript:launchLegacy('Route_Define')",
+  "menu_path": "LCR/DR - Route Define (524,525,526)"
+ },
+ {
+  "program": "526",
+  "program_label": "526 LCR Digit ModificationTable",
+  "page_id": "Javascript:launchLegacy('Route_Define')",
+  "menu_path": "LCR/DR - Route Define (524,525,526)"
+ },
+ {
+  "program": "527",
+  "program_label": "527 LCR Public Holiday Calendar Table",
+  "page_id": "Javascript:launchLegacy('Public_Holidays_and_LCR_Time_Zones')",
+  "menu_path": "LCR/DR - Public Holidays and LCR Time Zones (527,529)"
+ },
+ {
+  "program": "528",
+  "program_label": "528 LCR Public Day Of Week Mapping Table",
+  "page_id": "Javascript:launchLegacy('Route_Schedule')",
+  "menu_path": "LCR/DR - Route Schedule (523,528)"
+ },
+ {
+  "program": "529",
+  "program_label": "529 LCR Route Plan Schedule Table Time Zone",
+  "page_id": "Javascript:launchLegacy('Public_Holidays_and_LCR_Time_Zones')",
+  "menu_path": "LCR/DR - Public Holidays and LCR Time Zones (527,529)"
+ },
+ {
+  "program": "530",
+  "program_label": "530 Toll Restriction LCR Screening Table",
+  "page_id": "Javascript:launchLegacy('LCR/DR_Screening')",
+  "menu_path": "LCR/DR - LCR/DR Screening (530,531)"
+ },
+ {
+  "program": "531",
+  "program_label": "531 Toll Restriction LCR Screening For OLG Table",
+  "page_id": "Javascript:launchLegacy('LCR/DR_Screening')",
+  "menu_path": "LCR/DR - LCR/DR Screening (530,531)"
+ },
+ {
+  "program": "532",
+  "program_label": "532 Toll RestrictionTable Allow Deny",
+  "page_id": "Javascript:launchLegacy('Destination_Restriction')",
+  "menu_path": "LCR/DR - Destination Restriction (532,533,534,111)"
+ },
+ {
+  "program": "533",
+  "program_label": "533 Toll RestrictionTable",
+  "page_id": "Javascript:launchLegacy('Destination_Restriction')",
+  "menu_path": "LCR/DR - Destination Restriction (532,533,534,111)"
+ },
+ {
+  "program": "534",
+  "program_label": "534 Exceptional Toll Restriction Table",
+  "page_id": "Javascript:launchLegacy('Destination_Restriction')",
+  "menu_path": "LCR/DR - Destination Restriction (532,533,534,111)"
+ },
+ {
+  "program": "535",
+  "program_label": "535 LCR PDN and Authorization Code",
+  "page_id": "Javascript:launchLegacy('LCR_Authorization')",
+  "menu_path": "LCR/DR - LCR PDN and Authorization Code (535)"
+ },
+ {
+  "program": "540",
+  "program_label": "540 ACD Pilot DN",
+  "page_id": "Javascript:launchLegacy('Pilot_DN')",
+  "menu_path": "Station - Pilot DN (540,541*)"
+ },
+ {
+  "program": "541",
+  "program_label": "541 Delete ACD Pilot DN",
+  "page_id": "Javascript:launchLegacy('Pilot_DN')",
+  "menu_path": "Station - Pilot DN (540,541*)"
+ },
+ {
+  "program": "550",
+  "program_label": "550 Enhanced 911 Emergency Call Group",
+  "page_id": "Javascript:launchLegacy('Enhanced_911')",
+  "menu_path": "Miscellaneous - Enhanced 911 (550)"
+ },
+ {
+  "program": "551",
+  "program_label": "551 - Emergency Network Access Code",
+  "page_id": "Javascript:launchLegacy('Emergency_Network_Access_Code_Assignment')",
+  "menu_path": "Networking - Emergency Network Access Code Assigment (551)"
+ },
+ {
+  "program": "570",
+  "program_label": "570 Account Code Digit Length",
+  "page_id": "Javascript:launchLegacy('Account_Codes')",
+  "menu_path": "LCR/DR - Account Codes - Digit Length (506,570,571)"
+ },
+ {
+  "program": "571",
+  "program_label": "571 Exception Number Of Forced Account Codes",
+  "page_id": "Javascript:launchLegacy('Account_Codes')",
+  "menu_path": "LCR/DR - Account Codes - Exception Number (506,570,571)"
+ },
+ {
+  "program": "573",
+  "program_label": "573 Door Phone Delete",
+  "page_id": "Javascript:launchLegacy('Door_Phones')",
+  "menu_path": "External Devices - Door Phones (507,508,573*,576)"
+ },
+ {
+  "program": "576",
+  "program_label": "576 Door Phone Ring on External Paging In Night Mode",
+  "page_id": "Javascript:launchLegacy('Door_Phones')",
+  "menu_path": "External Devices - Door Phones (507,508,573*,576)"
+ },
+ {
+  "program": "577",
+  "program_label": "577 Call History Store Terminal",
+  "page_id": "Javascript:launchLegacy('Call_History_Store_Terminal')",
+  "menu_path": "Miscellaneous - Call History Store Terminal (577)"
+ },
+ {
+  "program": "579",
+  "program_label": "579 Voice Mail Data For System",
+  "page_id": "Javascript:launchLegacy('Voice_Mail_Data')",
+  "menu_path": "System - Voice Mail Data (579)"
+ },
+ {
+  "program": "580",
+  "program_label": "580 Voice Mail Data",
+  "page_id": "Javascript:launchLegacy('Voice_Mail_Port_Data')",
+  "menu_path": "System - Voice Mail Port Data (580)"
+ },
+ {
+  "program": "650",
+  "program_label": "650 Behind Centrex Assignment",
+  "page_id": "Javascript:launchLegacy('Behind_Centrex')",
+  "menu_path": "Miscellaneous - Behind Centrex (650)"
+ },
+ {
+  "program": "651",
+  "program_label": "651 Private Route Plan AnalysisTable",
+  "page_id": "Javascript:launchLegacy('Route_Plan_Analysis')",
+  "menu_path": "Networking - Route Plan Analysis (651)"
+ },
+ {
+  "program": "653",
+  "program_label": "653 Private Route ChoiceTable",
+  "page_id": "Javascript:launchLegacy('Route_Choice_Definition')",
+  "menu_path": "Networking - Route Choice Definition (653,654,655)"
+ },
+ {
+  "program": "654",
+  "program_label": "654 Private Route DefinitionTable",
+  "page_id": "Javascript:launchLegacy('Route_Choice_Definition')",
+  "menu_path": "Networking - Route Choice Definition (653,654,655)"
+ },
+ {
+  "program": "655",
+  "program_label": "655 Private Digit ModificationTable",
+  "page_id": "Javascript:launchLegacy('Route_Choice_Definition')",
+  "menu_path": "Networking - Route Choice Definition (653,654,655)"
+ },
+ {
+  "program": "656",
+  "program_label": "656 Node ID",
+  "page_id": "Javascript:launchLegacy('Node_ID')",
+  "menu_path": "Networking - Node ID (656)"
+ },
+ {
+  "program": "657",
+  "program_label": "657 network COS Mapping",
+  "page_id": "Javascript:launchLegacy('Mapping')",
+  "menu_path": "Networking - Mapping (657,658,659,660)"
+ },
+ {
+  "program": "658",
+  "program_label": "658 network DRL Mapping",
+  "page_id": "Javascript:launchLegacy('Mapping')",
+  "menu_path": "Networking - Mapping (657,658,659,660)"
+ },
+ {
+  "program": "659",
+  "program_label": "659 network FRL Mapping",
+  "page_id": "Javascript:launchLegacy('Mapping')",
+  "menu_path": "Networking - Mapping (657,658,659,660)"
+ },
+ {
+  "program": "660",
+  "program_label": "660 network QPL Mapping",
+  "page_id": "Javascript:launchLegacy('Mapping')",
+  "menu_path": "Networking - Mapping (657,658,659,660)"
+ },
+ {
+  "program": "661",
+  "program_label": "661 network Dn Table",
+  "page_id": "Javascript:launchLegacy('Network_DN_Table')",
+  "menu_path": "Networking - Network DN Table (661)"
+ },
+ {
+  "program": "670",
+  "program_label": "670 Remote Node Data Assignment",
+  "page_id": "Javascript:launchLegacy('Remote_Node_Data')",
+  "menu_path": "Networking - Remote Node Data (670)"
+ },
+ {
+  "program": "671",
+  "program_label": "671 IP Address Convert for PNOverIP",
+  "page_id": "Javascript:launchLegacy('Network_Over_IP')",
+  "menu_path": "Networking - Network Over IP - IP Route (671,672,673*)"
+ },
+ {
+  "program": "672",
+  "program_label": "672 Node Id Detail Info for PNOverIP",
+  "page_id": "Javascript:launchLegacy('Network_Over_IP')",
+  "menu_path": "Networking - Network Over IP - Detail Info (671,672,673*)"
+ },
+ {
+  "program": "673",
+  "program_label": "673 Node Id Check and Delete",
+  "page_id": "Javascript:launchLegacy('Network_Over_IP')",
+  "menu_path": "Networking - Network Over IP - Detail Info (671,672,673*)"
+ },
+ {
+  "program": "674",
+  "program_label": "674 Remote Node IPU IP Address",
+  "page_id": "Javascript:launchLegacy('Remote_Node_IPU_IP')",
+  "menu_path": "Networking - Remote IPU Address (674)"
+ },
+ {
+  "program": "801",
+  "program_label": "801 LAN Data",
+  "page_id": "Javascript:launchLegacy('I/O_Device')",
+  "menu_path": "System - I/O Device (801,803,804)"
+ },
+ {
+  "program": "803",
+  "program_label": "803 IO Logical Device",
+  "page_id": "Javascript:launchLegacy('I/O_Device')",
+  "menu_path": "System - I/O Device (801,803,804)"
+ },
+ {
+  "program": "804",
+  "program_label": "804 RS232C Data",
+  "page_id": "Javascript:launchLegacy('I/O_Device')",
+  "menu_path": "System - I/O Device (801,803,804)"
+ },
+ {
+  "program": "900",
+  "program_label": "900 CTX/CIX Restart",
+  "page_id": "Javascript:launchLegacy('CIX/CTX_Restart')",
+  "menu_path": "Utilities - Operations - CIX/CTX Restart (900,901,915)"
+ },
+ {
+  "program": "901",
+  "program_label": "901 CTX/CIX Version and Processor Hardware",
+  "page_id": "Javascript:launchLegacy('CIX/CTX_Restart')",
+  "menu_path": "Utilities - Operations - CIX/CTX Restart (900,901,915)"
+ },
+ {
+  "program": "903",
+  "program_label": "903 Event Trace Control",
+  "page_id": "Javascript:launchLegacy('Event_Trace_Control')",
+  "menu_path": "Utilities - Maintenance - Event Trace Control (903,904,905,906)"
+ },
+ {
+  "program": "904",
+  "program_label": "904 ISDN Trace Location",
+  "page_id": "Javascript:launchLegacy('Event_Trace_Control')",
+  "menu_path": "Utilities - Maintenance - ISDN Trace Location (903,904,905,906)"
+ },
+ {
+  "program": "905",
+  "program_label": "905 All ISDN Lines Trace Level Selection",
+  "page_id": "Javascript:launchLegacy('Event_Trace_Control')",
+  "menu_path": "Utilities - Maintenance - All ISDN Lines Trace Level Selection (903,904,905,906)"
+ },
+ {
+  "program": "906",
+  "program_label": "906 Change Trace Selection",
+  "page_id": "Javascript:launchLegacy('Event_Trace_Control')",
+  "menu_path": "Utilities - Maintenance - Change Trace Selection (903,904,905,906)"
+ },
+ {
+  "program": "908",
+  "program_label": "908 Format/Unmount SM/SD Media Card",
+  "page_id": "Javascript:launchLegacy('SM/SD_Card')",
+  "menu_path": "Utilities - Operations - SM/SD Card (908)"
+ },
+ {
+  "program": "909",
+  "program_label": "909 MAC Address",
+  "page_id": "Javascript:launchLegacy('MAC_Address')",
+  "menu_path": "Utilities - Operations - MAC Address (909)"
+ },
+ {
+  "program": "910",
+  "program_label": "910 Data Backup",
+  "page_id": "~/main/equipment_update/backup_equipment.aspx",
+  "menu_path": "Utilities - Operations - Data Backup (910)"
+ },
+ {
+  "program": "915",
+  "program_label": "915 Regional Selection",
+  "page_id": "Javascript:launchLegacy('CIX/CTX_Restart')",
+  "menu_path": "Utilities - Operations - CIX/CTX Restart (900,901,915)"
+ },
+ {
+  "program": "916",
+  "program_label": "916 IP Configuration",
+  "page_id": "Javascript:launchLegacy('IP_Configuration')",
+  "menu_path": "Utilities - Operations - IP Configuration (916)"
+ },
+ {
+  "program": "919",
+  "program_label": "919 Alarm Control for System",
+  "page_id": "Javascript:launchLegacy('System_Alarm_Control')",
+  "menu_path": "Utilities - Operations - System Alarm (919)"
+ },
+ {
+  "program": "920",
+  "program_label": "920 Alarm Control for Slot",
+  "page_id": "Javascript:launchLegacy('Alarm_Control_for_Slot')",
+  "menu_path": "Utilities - Operations - Alarm Slot (920)"
+ },
+ {
+  "program": "921",
+  "program_label": "921 Traffic Measure",
+  "page_id": "Javascript:launchLegacy('Traffic_Measure')",
+  "menu_path": "Utilities - Operations - Traffic Measure (921)"
+ },
+ {
+  "program": "922",
+  "program_label": "922 Traffic Report Generator",
+  "page_id": "Javascript:launchLegacy('Traffic_Report_Control')",
+  "menu_path": "Utilities - Operations - Traffic Report Control (922)"
+ }
+]

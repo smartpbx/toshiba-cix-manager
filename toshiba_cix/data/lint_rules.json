@@ -1,0 +1,44 @@
+{
+  "_comment": "Config-linter rules (DESIGN_PLAN §6). Each rule is matched by a pure function in lint.py keyed on `type`. Editable without touching code; the shipped defaults in lint.py mirror this file.",
+  "rules": [
+    {
+      "id": "default-community",
+      "type": "weak_value",
+      "severity": "error",
+      "field_contains": "communit",
+      "bad_values": ["communityName", "public", "private", ""],
+      "message": "SNMP community is a well-known default — change it"
+    },
+    {
+      "id": "weak-secret",
+      "type": "weak_value",
+      "severity": "warn",
+      "secret_only": true,
+      "bad_values": ["", "0000", "1111", "1234", "000000", "123456", "password", "admin"],
+      "message": "password / security code is blank or a weak default"
+    },
+    {
+      "id": "empty-station-name",
+      "type": "empty_field",
+      "severity": "warn",
+      "programs": ["200", "1200"],
+      "field_names": ["name", "station_name"],
+      "message": "station has no name"
+    },
+    {
+      "id": "name-comment-mismatch",
+      "type": "fields_differ",
+      "severity": "info",
+      "a": "name",
+      "b": "comment",
+      "message": "station name and comment differ — one may be stale"
+    },
+    {
+      "id": "orphan-vmid",
+      "type": "orphan_reference",
+      "severity": "warn",
+      "field_contains": "vmid",
+      "message": "VMID is referenced but no mailbox / station owns it"
+    }
+  ]
+}

@@ -1,0 +1,7889 @@
+[
+ {
+  "tbl_file": "Libra_oamSystemSetup.tbl",
+  "view_class": "oamSystemSetupView",
+  "program": "902",
+  "title": "CTX/CIX Date & Time",
+  "description": "This is the CTX date that displays on the telephone LCDs or system log files. Click on the calendar to change the date then Submit.",
+  "ui_fields": [
+   {
+    "name": "year",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "month",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "date",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "day",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "leap",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "hour",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "minute",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "second",
+    "ui_type": "HIDDEN"
+   }
+  ]
+ },
+ {
+  "tbl_file": "attEmergencyCall.tbl",
+  "view_class": "attEmergencyCallView",
+  "program": "400",
+  "title": "EMERGENCY CALL DESTINATION ASSIGNMENT",
+  "description": "This command assigns Emergency Call destinations to Emergency Call groups. There is one group for each Day mode (Day1; Day2 and Night)",
+  "ui_fields": [
+   {
+    "name": "emergencyCallDayNightMode",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "emergencyCallCalledNumberIndex",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "emergencyCallCalledNumber",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "emergencyCallCalledNumberSetType",
+    "ui_type": "HIDDEN"
+   }
+  ]
+ },
+ {
+  "tbl_file": "attGroupAssignment.tbl",
+  "view_class": "attGroupAssignmentView",
+  "program": "404",
+  "title": "ATTENDANT GROUP ASSIGNMENT",
+  "description": "Establishes the Attendant Group;its distribution methods; ICI key assignments and alternate destinations.",
+  "ui_fields": [
+   {
+    "name": "attendantGroupNumber",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "attendantCallDistribution",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "attendantAlternativeDest",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "attendantOverflowTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "attendantOverflowDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "attendantVoiceMailId",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "equIOLogical.tbl",
+  "view_class": "equIOLogicalView",
+  "program": "803",
+  "title": "APPLICATION PORT ASSIGNMENTS",
+  "description": "This program is used to assign external applications to a LAN port or an RS-232 port.",
+  "ui_fields": [
+   {
+    "name": "ioLogicalDevice",
+    "ui_type": "NONE"
+   },
+   {
+    "name": "ioPhysicalDevice",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ioPortNumber",
+    "ui_type": "LABELONLY"
+   }
+  ]
+ },
+ {
+  "tbl_file": "equLANDevice.tbl",
+  "view_class": "equLANDeviceView",
+  "program": "801",
+  "title": "CIX/CTX NETWORK JACK LAN DEVICE ASSIGNMENTS",
+  "description": "This program is used to assign the LAN parameters for the CIX/CTX server and Client applications connected to the CIX/CTX processor Network Jack on the LAN.",
+  "ui_fields": [
+   {
+    "name": "lanPortNumber",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "lanConnection",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "lanEmployment",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "lanSynchronization",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "lanPortNo",
+    "ui_type": "NUMERALFIELD"
+   },
+   {
+    "name": "lanIpAddress1",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "lanIpAddress2",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "lanIpAddress3",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "lanIpAddress4",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "lanClientPortNo",
+    "ui_type": "NUMERALFIELD"
+   },
+   {
+    "name": "lanReadRetryCounter",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lanWriteRetryCounter",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lanCallerNameSet",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "equRS232.tbl",
+  "view_class": "equRS232View",
+  "program": "804",
+  "title": "BSIS RS-232  SERIAL PORT SET UP",
+  "description": "Use this screen to setup the RS-232 serial Ports on the BSIS interface PCB",
+  "ui_fields": [
+   {
+    "name": "rs232cPhysicalPortNumber",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "rs232cBaudRate",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "rs232cParity",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "rs232cDataLength",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "rs232cFlowControl",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "rs232cMaxWaitTimer",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "oamAlarmControlForSlot.tbl",
+  "view_class": "sysAlarmControlForSlotView",
+  "program": "920",
+  "title": "Alarm Control For Slot",
+  "description": "This program allows you enable and disable alarm monitor for selected equipment. The equipment alarms are enabled/disabled on the cabinet/slot level.",
+  "ui_fields": [
+   {
+    "name": "alarmPerceptionEquip",
+    "ui_type": "KEYCARDSLOTNUM"
+   },
+   {
+    "name": "alarmPerceptionAvailability",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "oamAlarmControlForSystem.tbl",
+  "view_class": "sysAlarmControlForSystemView",
+  "program": "919",
+  "title": "System Alarm Control",
+  "description": "This program allows you to reset and enable/disable the alarm summary notification periodically.",
+  "ui_fields": [
+   {
+    "name": "resetCurrentAlarmSummary",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "alarmSummaryTrapAvailability",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemLabel",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "oamDataBackup.tbl",
+  "view_class": "BackupDataView",
+  "program": "910",
+  "title": "Data Backup",
+  "description": "Use these controls to create a backup file of your CTX/CIX database and to monitor the progress of the procedure.",
+  "ui_fields": [
+   {
+    "name": "backupState",
+    "ui_type": "SELECT_DISABLED"
+   },
+   {
+    "name": "currentData",
+    "ui_type": "NONE"
+   },
+   {
+    "name": "allData",
+    "ui_type": "NONE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "oamDateTime.tbl",
+  "view_class": "dateTimeView",
+  "program": "902",
+  "title": "CTX/CIX Date & Time",
+  "description": "This is the CTX/CIX date that displays on the telephone LCDs or system log files. Click on the calendar to change the date then Submit.",
+  "ui_fields": [
+   {
+    "name": "year",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "month",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "date",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "day",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "leap",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "hour",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "minute",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "second",
+    "ui_type": "HIDDEN"
+   }
+  ]
+ },
+ {
+  "tbl_file": "oamEventTrace.tbl",
+  "view_class": "EventTraceView",
+  "program": "904",
+  "title": "ISDN Trace Location",
+  "description": "Click on the appropriate button to change the trace selection.",
+  "ui_fields": [
+   {
+    "name": "messageTraceStartStop",
+    "ui_type": "SELECT_DISABLED"
+   },
+   {
+    "name": "judgeOfCompletionMessageTrace",
+    "ui_type": "SELECT_DISABLED"
+   },
+   {
+    "name": "messageTraceSize",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "messageTraceCategory",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "eventTracePortCabinetNumber",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "eventTracePortSlotNumber",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "eventTracePortPortNumber",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "eventTracePortTraceKind",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "eventTracePortTraceLevel",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "changeSide",
+    "ui_type": "SELECT_DISABLED"
+   },
+   {
+    "name": "judgeOfCompletionChangeSide",
+    "ui_type": "SELECT_DISABLED"
+   }
+  ]
+ },
+ {
+  "tbl_file": "oamIPConfig.tbl",
+  "view_class": "TcpipConfigView",
+  "program": "916",
+  "title": "IP Configuration",
+  "description": "Use the controls in this area to modify the IP network parameters of the currently connected Strata CTX/CIX.",
+  "ui_fields": [
+   {
+    "name": "tcpIpIpAddress",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "tcpIpSubNetMask",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "tcpIpDefaultGateway",
+    "ui_type": "IPADDRESS"
+   }
+  ]
+ },
+ {
+  "tbl_file": "oamMACAddress.tbl",
+  "view_class": "MacAddressView",
+  "program": "909",
+  "title": "MAC Address",
+  "description": "You can view the unique Serial Number and MAC Address assigned to your Strata CTX/CIX.",
+  "ui_fields": [
+   {
+    "name": "macAddressData",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "oamSmartMedia.tbl",
+  "view_class": "DosCommandView",
+  "program": "908",
+  "title": "Format/Unmount SM/SD Media Card",
+  "description": "Click on one of the buttons in this area to send the desired command to Strata CTX/CIX.",
+  "ui_fields": [
+   {
+    "name": "dosOperation",
+    "ui_type": "SELECT_DISABLED"
+   },
+   {
+    "name": "judgeOfCompletionDosCommand",
+    "ui_type": "SELECT_DISABLED"
+   }
+  ]
+ },
+ {
+  "tbl_file": "oamSystemAdminLog.tbl",
+  "view_class": "SystemAdminLogView",
+  "program": "907",
+  "title": "Start/Stop System Admin Log",
+  "description": "You can start or stop the System Admin Log in Strata CTX/CIX by clicking on the corresponding button.",
+  "ui_fields": [
+   {
+    "name": "systemAdminLogStartStop",
+    "ui_type": "SELECT_DISABLED"
+   },
+   {
+    "name": "judgeOfCompletionSystemAdminLog",
+    "ui_type": "SELECT_DISABLED"
+   }
+  ]
+ },
+ {
+  "tbl_file": "oamSystemSetup.tbl",
+  "view_class": "oamSystemSetupView",
+  "program": "900",
+  "title": "CTX/CIX Restart",
+  "description": "This assignment sets built-in core LSI hardware parameters that are not changeable with jumpers or switches. The parameters must be set uniquely for each region and affect system operation.",
+  "ui_fields": [
+   {
+    "name": "activeSideVersionNumber",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "standbySideVersionNumber",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "regionNumber",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "currentRegionNumber",
+    "ui_type": "SELECT_DISABLED"
+   }
+  ]
+ },
+ {
+  "tbl_file": "oamTrafficMeasure.tbl",
+  "view_class": "sysTrafficMeasureView",
+  "program": "921",
+  "title": "Traffic Measurement Control",
+  "description": "This Program is used to setup and control Traffic Measurement.",
+  "ui_fields": [
+   {
+    "name": "trafficMeasureActivate",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trafficMeasureIntensityUnit",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trafficMeasureMemoryCardOutput",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trafficMeasureTenantNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "trafficMeasureWorkingDayZone1Activate",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trafficMeasureWorkingDayZone1Start",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficMeasureWorkingDayZone1End",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficMeasureWorkingDayZone2Activate",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trafficMeasureWorkingDayZone2Start",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficMeasureWorkingDayZone2End",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficMeasureWorkingDayZone3Activate",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trafficMeasureWorkingDayZone3Start",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficMeasureWorkingDayZone3End",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficMeasureNonWorkingDayZone1Activate",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trafficMeasureNonWorkingDayZone1Start",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficMeasureNonWorkingDayZone1End",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficMeasureNonWorkingDayZone2Activate",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trafficMeasureNonWorkingDayZone2Start",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficMeasureNonWorkingDayZone2End",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficMeasureNonWorkingDayZone3Activate",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trafficMeasureNonWorkingDayZone3Start",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficMeasureNonWorkingDayZone3End",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficMeasureHolidayZone1Activate",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trafficMeasureHolidayZone1Start",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficMeasureHolidayZone1End",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficMeasureHolidayZone2Activate",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trafficMeasureHolidayZone2Start",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficMeasureHolidayZone2End",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficMeasureHolidayZone3Activate",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trafficMeasureHolidayZone3Start",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficMeasureHolidayZone3End",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "oamTrafficMeasure14.tbl",
+  "view_class": "sysTrafficMeasureView",
+  "program": "921",
+  "title": "Traffic Measurement Control",
+  "description": "This Program is used to setup and control Traffic Measurement.",
+  "ui_fields": [
+   {
+    "name": "trafficMeasureIlg",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "trafficMeasureIlgActivate",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "oamTrafficMeasure15.tbl",
+  "view_class": "sysTrafficMeasureView",
+  "program": "921",
+  "title": "Traffic Measurement Control",
+  "description": "This Program is used to setup and control Traffic Measurement.",
+  "ui_fields": [
+   {
+    "name": "trafficMeasureOlg",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "trafficMeasureOlgActivate",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "oamTrafficMeasure16.tbl",
+  "view_class": "sysTrafficMeasureView",
+  "program": "921",
+  "title": "Traffic Measurement Control",
+  "description": "This Program is used to setup and control Traffic Measurement.",
+  "ui_fields": [
+   {
+    "name": "trafficMeasureDidIlg",
+    "ui_type": "NONE"
+   },
+   {
+    "name": "trafficMeasureDidDidNumber",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "trafficMeasureDidActivate",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "oamTrafficMeasure17.tbl",
+  "view_class": "sysTrafficMeasureView",
+  "program": "921",
+  "title": "Traffic Measurement Control",
+  "description": "This Program is used to setup and control Traffic Measurement.",
+  "ui_fields": [
+   {
+    "name": "trafficMeasureNoDidIlg",
+    "ui_type": "NONE"
+   },
+   {
+    "name": "trafficMeasureNoDidOrNotDetermine",
+    "ui_type": "KEYSELECT_OPTION"
+   },
+   {
+    "name": "trafficMeasureNoDidActivate",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "oamTrafficMeasure1819.tbl",
+  "view_class": "sysTrafficMeasureView",
+  "program": "921",
+  "title": "Traffic Measurement Control",
+  "description": "This Program is used to setup and control Traffic Measurement.",
+  "ui_fields": [
+   {
+    "name": "trafficMeasureDtmfActivate",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trafficMeasureConferenceActivate",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "oamTrafficMeasureHuntGroup.tbl",
+  "view_class": "sysTrafficMeasureView",
+  "program": "921",
+  "title": "Traffic Measurement Control",
+  "description": "This Program is used to setup and control Traffic Measurement.",
+  "ui_fields": [
+   {
+    "name": "trafficMeasureHuntingGroup",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "trafficMeasureHuntingGroupActivate",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "oamTrafficReportControl.tbl",
+  "view_class": "trafficReportControlView",
+  "program": "922",
+  "title": "Traffic Report Generator",
+  "description": "This program allows you to generate a traffic report on a single file (Traffic.TRF) and send it to the CIX processor SD card. The data will also be sent to a LAN or RS-232 Traffic Measuring Device or application per Prg. 803. Device 600. The parameters setup in this program determine the Dates and Times to be included in the traffic report. The Traffic.TRF file will be included with the hourly dated files generated by Prg921.",
+  "ui_fields": [
+   {
+    "name": "trafficReportFirstDate",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficReportFirstTime",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficReportLastDate",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficReportLastTime",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trafficReportState",
+    "ui_type": "SELECT_DISABLED"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvACDPilotDN.tbl",
+  "view_class": "srvACDPilotDNView",
+  "program": "540",
+  "title": "PILOT DN ASSIGNMENTS",
+  "description": "This command assigns the pilot DN for ACD service.",
+  "ui_fields": [
+   {
+    "name": "acdPilotDn",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "acdPilotAfterShiftForwardType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "acdPilotAfterShiftForwardDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "acdPilotVoiceMailId",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvAccountCode.tbl",
+  "view_class": "srvAccountCodeView",
+  "program": "506",
+  "title": "VERIFIED ACCOUNT CODES",
+  "description": "The list of accounting codes that can be verified is limited to 800.  Each code entered may be flagged whether it is to be used for verification prior to the call be placed or whether it is used for changing the restriction level for that call or both.",
+  "ui_fields": [
+   {
+    "name": "verifiedAccountCode",
+    "ui_type": "NONE"
+   },
+   {
+    "name": "verifiedAccountCodeCodeFlag",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "verifiedAccountCodeDrl",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "verifiedAccountCodeFrl",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "verifiedAccountCodeNetworkCos",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvAccountCodeDigit.tbl",
+  "view_class": "accountCodeDigitLengthAssignmentView",
+  "program": "570",
+  "title": "SYSTEM ACCOUNT CODE DATA",
+  "description": "The number of digits that are expected to be used for entering Account Codes must be set in the Registered Digit Length.  This allows dialing to proceed automatically once the correct account code is dialed; numbers dialed after the account code are the digits used for making the phone call. Also; the number of digits that must be verified can be entered if using verified account codes. The Verified Digit Length can be less than; or the same as; the total Registered Digit Length.",
+  "ui_fields": [
+   {
+    "name": "accountCodeLengthVerifiedDigitLength",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "accountCodeLengthInputDigitLength",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "accountCodeLengthCFExternalWithForcedAcc",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvAccountCodeExcept.tbl",
+  "view_class": "exceptionNumbersOfForcedAccountCodesAssignmentView",
+  "program": "571",
+  "title": "EXCEPTION NUMBERS FOR FORCED ACCOUNT CODES",
+  "description": "Up to four telephone numbers can be programmed as exceptions to the forced and /or verified account code entries (including 911). These special codes enable numbers to bypass the verification process and proceed unhindered",
+  "ui_fields": [
+   {
+    "name": "eceptionNumber1",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "eceptionNumber2",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "eceptionNumber3",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "eceptionNumber4",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvBIOURelay.tbl",
+  "view_class": "srvBIOURelayView",
+  "program": "515",
+  "title": "VIEW BIOU CONTROL RELAY ASSIGNMENTS",
+  "description": "This assignment is used to view the functions of the 4 control relays on each BIOU PCB set in <br>Program 105; Night Mode and Night Bell relays<br>Program 508; Door Lock relay<br>Program 503; BGM mute relay.<br>The system allows up to two BIOU PCBs to provide a total of 8 control relays.The control relays can be configured as an external BGM mute control; Night Bell control; Night Mode Control; and Door Lock Control.<br>Note:<br>BIOU-1 relays are identified as Control Relays 1~4<br>BIOU-2 relays are identified as Control Relays 5~8.",
+  "ui_fields": [
+   {
+    "name": "biouBIOUCardNumber",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "biouPortTypeGenericRelay1",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "biouPortTypeGenericRelay2",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "biouPortTypeGenericRelay3",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "biouPortTypeGenericRelay4",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvBehindConnection.tbl",
+  "view_class": "srvBehindConnectionView",
+  "program": "650",
+  "title": "BEHIND CENTREX ASSIGNMENT",
+  "description": "This feature allows Strata CTX/CIX to connect to the station side of a PBX or Centrex using a physical loop trunk interface. DR and Least Cost Routing may need to account for access codes required by the PBX or Centrex before connecting to the public network.",
+  "ui_fields": [
+   {
+    "name": "behindOlgNum",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "behindBehindConnection",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "behindAccountCentrexFeature",
+    "ui_type": "RADIOBUTTON"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvCOSOverride.tbl",
+  "view_class": "srvCOSOverrideView",
+  "program": "510",
+  "title": "CLASS OF SERVICE OVERRIDE ASSIGNMENT",
+  "description": "Assigns the COS; FRL; DRL and QPL to be used by COS Override.  If a COS parameter has been assigned in either the original or the override COS; it will be applied.",
+  "ui_fields": [
+   {
+    "name": "cosOverideCosIndex",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "cosOverideCosCode",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "cosOverideCos",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "cosOverideDrl",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "cosOverideFrl",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "cosOverideQpl",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "cosOverideNetworkCos",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvCallHistory.tbl",
+  "view_class": "srvCallHistoryView",
+  "program": "577",
+  "title": "CALL HISTORY",
+  "description": "This command assigns which station stores Caller ID information for  PDN;CO;GCO and POOL line buttons.",
+  "ui_fields": [
+   {
+    "name": "callHistoryCircuitType",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "callHistoryTerminal",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvDoorPhone.tbl",
+  "view_class": "srvDoorPhoneView",
+  "program": "507",
+  "title": "DOOR PHONE ASSIGNMENT",
+  "description": "This command deletes door phone.",
+  "ui_fields": [
+   {
+    "name": "doorPhone",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "doorPhoneEquipment",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "doorPhoneTenant",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "doorPhoneCallTime",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "doorPhoneName",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "doorPhoneDay1DestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "doorPhoneDay1DestinationNumber",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "doorPhoneDay2DestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "doorPhoneDay2DestinationNumber",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "doorPhoneNightDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "doorPhoneNightDestinationNumber",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "doorPhoneRingTenantNumber",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "doorPhoneRingPagingGrpNum",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "doorLockNumber",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "doorLockConnectionType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "doorLockPositionOfBIOU",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "doorLockPositionOfrDDCB",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "doorPhoneDeleteDoorPhoneNumber",
+    "ui_type": "HIDDEN"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvEmergencyCall.tbl",
+  "view_class": "srvEmergencyCallView",
+  "program": "550",
+  "title": "ENHANCED 911 EMERGENCY CALL GROUP ASSIGNMENT",
+  "description": "This command assigns Outgoing Line Groups to the Enhanced 911 Emergency Call Group.",
+  "ui_fields": [
+   {
+    "name": "emergencyGroupNum",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "emergencyGroupOlg1",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "emergencyGroupOlg2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "emergencyGroupOlg3",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "emergencyGroupOlg4",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "emergencyGroupOlg5",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "emergencyGroupOlg6",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "emergencyGroupOlg7",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "emergencyGroupOlg8",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvEmergencyNetworkAccessCode.tbl",
+  "view_class": "srvEmergencyNetworkAccessCodeView",
+  "program": "551",
+  "title": "EMERGENCY NETWORK ACCESS CODE ASSIGNMENT",
+  "description": "This command assigns the network access code to access E911 feature.",
+  "ui_fields": [
+   {
+    "name": "emerNetworkAccessCodeAccessCode1",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "emerNetworkAccessCodeAccessCode2",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "emerNetworkAccessCodeAccessCode3",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvGroupPaging.tbl",
+  "view_class": "srvGroupPagingView",
+  "program": "502",
+  "title": "STATION PAGE GROUP ASSIGNMENT",
+  "description": "Assigns Prime DNs to Page Group(s).<BR>Note: BIOU Page Zone relays are assigned to Page Groups in PRG 503. In order for users to pickup a Page (#5#36+XX; Zone number) the Page Group must be assigned a Page Zone relay in PRG503.",
+  "ui_fields": [
+   {
+    "name": "terminalPagingGroupDn",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "terminalPagingGroupAllPagingList",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "terminalPagingGroupAllEmargencyPagingList",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "terminalPagingGroupPaging1",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "terminalPagingGroupPaging2",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "terminalPagingGroupPaging3",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "terminalPagingGroupPaging4",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "terminalPagingGroupPaging5",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "terminalPagingGroupPaging6",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "terminalPagingGroupPaging7",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "terminalPagingGroupPaging8",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "terminalPagingGroupPaging9",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "terminalPagingGroupPaging10",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "terminalPagingGroupPaging11",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "terminalPagingGroupPaging12",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "terminalPagingGroupPaging13",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "terminalPagingGroupPaging14",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "terminalPagingGroupPaging15",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "terminalPagingGroupPaging16",
+    "ui_type": "CHECKBOX"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvLCRDefinitionTable.tbl",
+  "view_class": "srvLCRDefinitionTableView",
+  "program": "524",
+  "title": "ROUTE TABLE TO ROUTE DEFINITION ASSIGNMENT",
+  "description": "This command modifies LCR dialed numbers by deleting digits from and adding digits to the dialed numbers.",
+  "ui_fields": [
+   {
+    "name": "lcrRouteChoiceTable",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "lcrRouteChoiceRouteDefinitionPriority1",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lcrRouteChoiceTableRouteDefinitionPriority2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lcrRouteChoiceTableRouteDefinitionPriority3",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lcrRouteChoiceTableRouteDefinitionPriority4",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lcrRouteChoiceTableRouteDefinitionPriority5",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lcrRouteChoiceTableRouteDefinitionPriority6",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lcrRouteDefinition",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "lcrRouteDefinitionOlg",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lcrRouteDefinitionDigitModification",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lcrDigitModification",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "lcrDigitModificationDigitToBeDeleted",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lcrDigitModificationAdditionInFront",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "lcrDigitModificationAdditionAtTail",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvLCRPDNAuthCode.tbl",
+  "view_class": "srvLCRPDNAuthCodeView",
+  "program": "535",
+  "title": "LCR PDN AND AUTHORIZATION CODE ASSIGNMENT",
+  "description": "This command modifies LCR dialed numbers by deleting digits from and adding digits to the dialed numbers.",
+  "ui_fields": [
+   {
+    "name": "lcrAccessCodePDN",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "lcrAccessCodeA01",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "lcrAccessCodeA02",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "lcrAccessCodeA03",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "lcrAccessCodeA04",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "lcrAccessCodeA05",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "lcrAccessCodeA06",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "lcrAccessCodeA07",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "lcrAccessCodeA08",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvLCRPlan.tbl",
+  "view_class": "srvLCRPlanView",
+  "program": "520",
+  "title": "LCR LOCAL ROUTE PLAN ASSIGNMENT",
+  "description": "This command assigns up to 1280 dialed external digit strings to the Route Plan Exception Analysis Table which assigns each string to 1 of 64 Route Choice Tables. The values expressed here are exceptions to the values established in Program 521.",
+  "ui_fields": [
+   {
+    "name": "lcrParamHomeAreaCode",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "lcrParamDefaultRoutingPlanNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lcrParamCampon",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "lcrAnalysisDigits",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "lcrAnalysisPlanNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lcrExceptionalDigits",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "lcrExceptionalRoutePlanNumber",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvLCRSchedules.tbl",
+  "view_class": "srvLCRSchedulesView",
+  "program": "523",
+  "title": "LCR ROUTE PLAN SCHEDULE ASSIGNMENTS",
+  "description": "This command defines the days of the week as weekdays; weekend days or holidays for LCR.",
+  "ui_fields": [
+   {
+    "name": "lcrSchduleRoutePlanNumber",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "lcrSchduleTableTypeOfDay",
+    "ui_type": "KEYSELECT_OPTION"
+   },
+   {
+    "name": "lcrSchduleTimeZone",
+    "ui_type": "KEYSELECT_OPTION"
+   },
+   {
+    "name": "lcrSchduleStationLcrGroupNumber",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "lcrSchduleRouteChoiceTableNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lcrPublicDayMonday",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "lcrPublicDayTuesday",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "lcrPublicDayWednesday",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "lcrPublicDayThursday",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "lcrPublicDayFriday",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "lcrPublicDaySaturday",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "lcrPublicDaySunday",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvLCRTimeTable.tbl",
+  "view_class": "srvLCRTimeTableView",
+  "program": "527",
+  "title": "LCR HOLIDAY TABLE",
+  "description": "Defines the time zones used by each Route Plan for each Day Type",
+  "ui_fields": [
+   {
+    "name": "publicHolidayCalendarDay",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "publicHolidayCalendarFlag",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "lcrTimeZoneRoutePlanNumber",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "lcrTimeZoneTypeOfDay",
+    "ui_type": "KEYSELECT_OPTION"
+   },
+   {
+    "name": "lcrTimeZone",
+    "ui_type": "KEYSELECT_OPTION"
+   },
+   {
+    "name": "lcrTimeZoneTime",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvMultipleCallingDelete.tbl",
+  "view_class": "srvMultipleCallingDeleteView",
+  "program": "519",
+  "title": "MULTIPLE CALLING GROUP DELETE",
+  "description": "This command deletes multiple calling group",
+  "ui_fields": [
+   {
+    "name": "multipleCallingIndexDelete",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvMultipleCallingGroup.tbl",
+  "view_class": "srvMultipleCallingGroupView",
+  "program": "517",
+  "title": "MULTIPLE CALL GROUP ASSIGNMENT",
+  "description": "This command assigns Multiple Call Group parameters.",
+  "ui_fields": [
+   {
+    "name": "multipleCallingGroupIndex",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "multipleCallingGroupPilotNumber",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "multipleCallingGroupDelay1Timer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "multipleCallingGroupDelay2Timer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "multipleCallingGroupSystemCFIndex",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "multipleCallingGroupVoiceMailID",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvMultipleCallingMembers.tbl",
+  "view_class": "srvMultipleCallingMembersView",
+  "program": "518",
+  "title": "MULTIPLE CALL GROUP MEMBERS ASSIGNMENT",
+  "description": "This command assigns the members to Multiple Call Groups.",
+  "ui_fields": [
+   {
+    "name": "multipleCallingMembersIndex",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "multipleCallingMembersDestListIndex",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "multipleCallingMembersDestinationType",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "multipleCallingMembersDestinationNumber",
+    "ui_type": "NONE"
+   },
+   {
+    "name": "multipleCallingMembersDestCallType",
+    "ui_type": "NONE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvNetworkDN.tbl",
+  "view_class": "srvNetworkDNView",
+  "program": "661",
+  "title": "NETWORK DN TABLE",
+  "description": "This program assigns the PDN; PhDN or Pilot DNs to a CTX/CIX node ID. This include all DNs in all CTX/CIX nodes on the CTX/CIX network; except the DNs in the node you are currently programming (This feature is available with CTX/CIX R2.2 or higher and Strata eManager R2.2G.0 and higher.<br>This enables someone in one node to call an extension in another node; without having to dial the node ID number. The caller dials the extension and the system appends the Node ID. This function is transparent to the caller and the dialed party.",
+  "ui_fields": [
+   {
+    "name": "networkDnTableNetworkDn",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "networkDnTableNodeId",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvNetworkMapping.tbl",
+  "view_class": "srvNetworkMappingView",
+  "program": "657",
+  "title": "NETWORK CLASS OF SERVICE MAPPING TABLE",
+  "description": "This command is used to establish two mapping tables to equate local QPLs with network QPLs for both outbound and inbound network calls.",
+  "ui_fields": [
+   {
+    "name": "networkCosMappingIndex",
+    "ui_type": "NONE"
+   },
+   {
+    "name": "networkCosLocalCosIndex",
+    "ui_type": "NONE"
+   },
+   {
+    "name": "networkCosOrgInvokeOca",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "networkCosRegSystemSpeedDial",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "networkCosCosOverrideChange",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "networkCosTGACOverRide",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "networkDrlTableType",
+    "ui_type": "NONE"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl1",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl2",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl3",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl4",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl5",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl6",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl7",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl8",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl9",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl10",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl11",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl12",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl13",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl14",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl15",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl16",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkFrlTableType",
+    "ui_type": "NONE"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl1",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl2",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl3",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl4",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl5",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl6",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl7",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl8",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl9",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl10",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl11",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl12",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl13",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl14",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl15",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl16",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkQplTableType",
+    "ui_type": "NONE"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl1",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl2",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl3",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl4",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl5",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl6",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl7",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl8",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl9",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl10",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl11",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl12",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl13",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl14",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl15",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl16",
+    "ui_type": "HIDDEN"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvNodeID.tbl",
+  "view_class": "srvNodeIDView",
+  "program": "656",
+  "title": "NODE ID ASSIGNMENT",
+  "description": "Assigns up to FOUR Network Node IDs to this node for processing incoming network calls.  Each Node ID has an overlap code. The CTX will substitute the Overlap Code for the Node ID before processing the call further. A Network Directory Number consists of a Node ID and the desired extension in that node. Node ID must first be established in CMD102.",
+  "ui_fields": [
+   {
+    "name": "nodeIDPrimary",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "nodeIDPrimaryOverlapCode",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "nodeID2",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "nodeID2OverlapCode",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "nodeID3",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "nodeID3OverlapCode",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "nodeID4",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "nodeID4OverlapCode",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvPNOIPIpAddressConvert.tbl",
+  "view_class": "srvPNOIPIpAddressConvertView",
+  "program": "671",
+  "title": "IP ADDRESS CONVERT TABLE ASSIGNMENT",
+  "description": "This command assigns this CIX/CTX node to route to remote CIX/CTX node BIPU-Q IP addresses.",
+  "ui_fields": [
+   {
+    "name": "ipAddressConvertTableNodeId",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "ipAddressConvertTableIpAddressRoute1",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "ipAddressConvertTableIpAddressRoute2",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "ipAddressConvertTableIpAddressRoute3",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "ipAddressConvertTableIpAddressRoute4",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "ipAddressConvertTableIpAddressRoute5",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "ipAddressConvertTableIpAddressRoute6",
+    "ui_type": "IPADDRESS"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvPNOIPNodeIdDetailInfo.tbl",
+  "view_class": "srvPNOIPNodeIdDetailInfoView",
+  "program": "672",
+  "title": "IP PRIVATE NETWORK NODE ID ASSIGNMENTS",
+  "description": "This command assigns the parameters to beused by BIPU-Q&#x2c; GIPH and LIPU/LIPS at the remote nodes connecting to the BIPU-Q&#x2c; GIPH or LIPU/LIPS in the local node over IP Private Networking. These parameters must match all nodes on the IP network.When setting Node ID assignments on an IP Strata Net network&#x2c; the Node ID assignment settings for each node on an end-to-end connection must be the same.",
+  "ui_fields": [
+   {
+    "name": "nodeIdDetailInfoNodeId",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "nodeIdDetailInfoIpProtocolType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "nodeIdDetailInfoVoicePacketConfigTableIndex",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "nodeIdDetailInfoTCPConnectionRelease",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "nodeIdDetailInfoFastConnectionProcedure",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "nodeIdDetailInfoChannelNegotiation",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "nodeIdDetailInfoAudioCodec",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "nodeIdDetailInfoDTMFTranslation",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "nodeIdDetailInfoE911Priority",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "nodeIdDetailInfoT38Protocol",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "nodeIdDetailInfoT38TableIndex",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "nodeIdDetailInfoT38Substitution",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvPagingDevice.tbl",
+  "view_class": "srvPagingDeviceView",
+  "program": "503",
+  "title": "PAGE ZONE RELAY TO PAGE GROUP ASSIGNMENT",
+  "description": "Assigns BIOU Page Zone Relays or  built-in relay to Page Groups.<br>Note: Station PDN to Page Group assignments are in PRG 502",
+  "ui_fields": [
+   {
+    "name": "zoneRelayNumber",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "externalPagingGroupAllPagingList",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalPagingGroupAllEmargencyPagingList",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalGenericRelayNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "externalPagingGroupPaging1",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalPagingGroupPaging2",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalPagingGroupPaging3",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalPagingGroupPaging4",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalPagingGroupPaging5",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalPagingGroupPaging6",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalPagingGroupPaging7",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalPagingGroupPaging8",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalPagingGroupPaging9",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalPagingGroupPaging10",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalPagingGroupPaging11",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalPagingGroupPaging12",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalPagingGroupPaging13",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalPagingGroupPaging14",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalPagingGroupPaging15",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalPagingGroupPaging16",
+    "ui_type": "CHECKBOX"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvPrivateRouteAnalysis.tbl",
+  "view_class": "srvPrivateRouteAnalysisView",
+  "program": "651",
+  "title": "PRIVATE ROUTING PLAN ANALYSIS TABLE ASSIGNMENT",
+  "description": "Assigns Node IDs to Route Choice Tables for Private Networking.",
+  "ui_fields": [
+   {
+    "name": "privateAnalysisNodeId",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "privateAnalysisRouteChoiceTable",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvPrivateRouteDefinition.tbl",
+  "view_class": "srvPrivateRouteDefinitionView",
+  "program": "653",
+  "title": "PVT NTWK ROUTE CHOICE TABLE ASSIGNMENT",
+  "description": "The Pvt Ntwk Digit Modification table may contain up to 64 entries.  Each entry specifies the number of leading digits to be deleted from the dialed number and the dial string to be inserted as leading digits.  The inserted dial string may have up to 23 digits.",
+  "ui_fields": [
+   {
+    "name": "privateRouteChoiceTbl",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "privateRouteChoiceTblDefIndex1",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "privateRouteChoiceTblDefIndex2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "privateRouteChoiceTblDefIndex3",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "privateRouteChoiceTblDefIndex4",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "privateRouteChoiceTblDefIndex5",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "privateRouteChoiceTblDefIndex6",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "privateRouteDefinition",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "privateRouteDefinitionOlg",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "privateRouteDefinitionDigitModification",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "privateDigitModification",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "privateDigitModificationDigitToBeDeleted",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "privateDigitModificationAdditionInFront",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvRemoteIpuIpAddress.tbl",
+  "view_class": "remoteNodeIpuIpAddressAssignmentTableView",
+  "program": "674",
+  "title": "REMOTE NODE IPU IP ADDRESS ASSIGNMENT",
+  "description": "This command assigns to Remote node data for IPU",
+  "ui_fields": [
+   {
+    "name": "remoteNodeIpuNodeId",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "remoteNodeIpuIpAddress",
+    "ui_type": "IPADDRESS"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvRemoteNodeData.tbl",
+  "view_class": "srvRemoteNodeDataView",
+  "program": "670",
+  "title": "REMOTE NODE DATA ASSIGNMENT",
+  "description": "This command assigns to Remote node data",
+  "ui_fields": [
+   {
+    "name": "remoteNodeId",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "remoteNodeIpAddress",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "remoteNodePortNo",
+    "ui_type": "NUMERALFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvSMDR.tbl",
+  "view_class": "srvSMDRView",
+  "program": "512",
+  "title": "SMDR FOR SYSTEM ASSIGNMENT",
+  "description": "Assigns SMDR parameters for Outgoing Line Groups.",
+  "ui_fields": [
+   {
+    "name": "smdrCallerIdFieldIndicate",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "smdrBRecordOutput",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "smdrAniFieldIndicate",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "smdrAuthorizationCodeOutput",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "smdrCarriageReturnAddition",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "smdrAbandonedCall",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "smdrVMCallIdFieldIndicate",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "ilgSmdrIlg",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "ilgSmdrDnisFieldIndication",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "ilgSmdrIncomingCallRecordOutput",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "ilgSmdrBRecordOutput",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "ilgSmdrDisplaySelection",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ilgSmdrQosRecordOutput",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "olgSmdrOlg",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "olgSmdrOutgoingCallRecordOutput",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "olgSmdrDisplaySelection",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "olgSmdrBRecordOutput",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "olgSmdrQosRecordOutput",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvScreeningTable.tbl",
+  "view_class": "srvScreeningTableView",
+  "program": "530",
+  "title": "DESTINATION RESTRICTION LCR SCREENING TABLE ASSIGNMENT",
+  "description": "Assigns Destination Restriction Screening Table for an Outgoing Line Group.  Up to 4 codes may be assigned per line group. Used for outgoing calls other than LCR.",
+  "ui_fields": [
+   {
+    "name": "trLCRtableCode",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "trLCRtableSetNoSet",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trLCRtableTrAction",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trLCRtableLcrAction",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trLCRtableDmAction",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trLCRtableSkipLength",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "trLCROlg",
+    "ui_type": "NONE"
+   },
+   {
+    "name": "trLCROlgCode",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "trLCROlgCodeSetNoSet",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trLCROlgTrAction",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trLCROlgSkipLength",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "trLCROlgPauseInsertion",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvSpeedDial.tbl",
+  "view_class": "srvSpeedDialView",
+  "program": "501",
+  "title": "SYSTEM SPEED DIAL",
+  "description": "System Speed Dial consists of up to 800 pre-programmed numbers each containing up to 32 digits (Digits 0 \u0096 9; *; # and Pauses).  If the number being entered exceeds the 32 digits; the next speed dial location will automatically be appended to create longer numbers.  One other speed dial location can be nested within the number for dialing a common routine with the number.",
+  "ui_fields": [
+   {
+    "name": "systemSpeedDialsIndex",
+    "ui_type": "NONE"
+   },
+   {
+    "name": "systemSpeedDialNumber",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "systemSpeedDialUserName",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvTROverride.tbl",
+  "view_class": "srvTROverrideView",
+  "program": "509",
+  "title": "TOLL RESTRICTION OVERRIDE BY SPEED DIAL",
+  "description": "This command assigns the service class components that are used by Destination Restriction Override By Speed Dial. DR Override must first be enabled in Program 105; System Data.",
+  "ui_fields": [
+   {
+    "name": "tollRestrictionOverrideCos",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "tollRestrictionOverrideDrl",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "tollRestrictionOverrideFrl",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "tollRestrictionOverrideQpl",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvTollRestriction.tbl",
+  "view_class": "srvTollRestrictionView",
+  "program": "532",
+  "title": "DESTINATION RESTRICTION TABLE ALLOW/DENY DEFINITION",
+  "description": "This program enables credit card calling for a DRL",
+  "ui_fields": [
+   {
+    "name": "tollRestrictionDrl",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "tollRestriction",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "trTableCode",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "trTableCodeFlag",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "exceptionalTrCode",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "exceptionalTrCodeFlag",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "drlCreditCardCalling",
+    "ui_type": "RADIOBUTTON"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvTravelingClassMark.tbl",
+  "view_class": "srvTravelingClassMarkView",
+  "program": "657",
+  "title": "NETWORK CLASS OF SERVICE MAPPING TABLE",
+  "description": "This command is used to establish two mapping tables to equate local QPLs with network QPLs for both outbound and inbound network calls.",
+  "ui_fields": [
+   {
+    "name": "networkCosMappingIndex",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "networkCosLocalCosIndex",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkCosOrgInvokeOca",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "networkCosRegSystemSpeedDial",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "networkCosCosOverrideChange",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "networkCosTGACOverRide",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "networkDrlTableType",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl1",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl3",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl4",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl5",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl6",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl7",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl8",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl9",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl10",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl11",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl12",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl13",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl14",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl15",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkDrlConvertedDrlFromDrl16",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkFrlTableType",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl1",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl3",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl4",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl5",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl6",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl7",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl8",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl9",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl10",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl11",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl12",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl13",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl14",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl15",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkFrlConvertedFrlFromFrl16",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkQplTableType",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl1",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl3",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl4",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl5",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl6",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl7",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl8",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl9",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl10",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl11",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl12",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl13",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl14",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl15",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "networkQplConvertedQplFromQpl16",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvVoiceMail.tbl",
+  "view_class": "srvVoiceMailView",
+  "program": "579",
+  "title": "SYSTEM VOICE MAIL DATA",
+  "description": "This command assigns DTMF/SMDI Voice Mail parameters for the system.",
+  "ui_fields": [
+   {
+    "name": "vmSystemApplication",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "vmSystemCancelOfMw",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "vmSystemMessageDeskNo",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "vmSystemOutputClass",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "vmSystemCallerNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "vmSystemBlankNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "vmSystemAutoCancel",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "vmSystemDialSendTime",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "vmSystemLcdControlOfVoiceMail",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "vmSystemCentralizedVmCallBackDn",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "vmSystemCfAllCallRecord",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "vmSystemCfBusyRecord",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "vmSystemCfNoAnswerRecord",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "vmSystemDirectryRecord",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "vmSystemRetrievingMessage",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "vmSystemTransferVmDn",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "vmSystemLengthOfVmId",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "vmSystemVMcallidByDC",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "vmSystemClassAniDnisCallerNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "vmSystemVMCompatibilityForDKT5000",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "vmSystemVmSmdiTimeStampPacket",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "vmSystemVmSmdiTRecord",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "srvVoiceMailData.tbl",
+  "view_class": "srvVoiceMailDataView",
+  "program": "580",
+  "title": "VM PORT DATA",
+  "description": "Assign characteristics of individual voice mail ports.",
+  "ui_fields": [
+   {
+    "name": "vmDataDN",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "vmDataControlMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "vmDataADToneSend",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "vmDataBToneSend",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "vmDataEndToEndSignal",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "vmDataVMToVMBlocking",
+    "ui_type": "RADIOBUTTON"
+   }
+  ]
+ },
+ {
+  "tbl_file": "stnBasic.tbl",
+  "view_class": "stnBasicView",
+  "program": "200",
+  "title": "STATION DATA",
+  "description": "This command assigns stations to the system.",
+  "ui_fields": [
+   {
+    "name": "stationDn",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "stationEquipment",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "stationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationExtensionPortType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationCos",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationCosDay2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationCosNight",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationDrl",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationDrlDay2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationDrlNight",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationFrl",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationFrlDay2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationFrlNight",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationQpl",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationQplDay2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationQplNight",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationStationLcrGroupNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationStationName",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationSenderizedModeTone",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationIndexCallFoward",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationCallPickup",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationBearCap",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationDisplayDN",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationCESID",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationEmergencyGroup",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationRemotePassword",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationVoiceMailId",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationCenterPort",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationTravelCodeChange",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationTGACOverRide",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationServiceTonePermission",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationCwtRob",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationNameDisplay",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationDoorPhoneDND",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationRegSystemSpeedDial",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationNetworkCos",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationOriginatingOca",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationOrgInvokeOca",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationReleaseSupervision",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationStationSpeedDialNumber",
+    "ui_type": "LABELONLY"
+   },
+   {
+    "name": "stationSLTType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationCallForwardDialTone",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationDialingDigitRestriction",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationHoldIndication",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationStutteredDialToneSend",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationMWWithDialing",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationTenant",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationRecallAfterCHoldAndONH",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationAutoCamponasDest",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationPDNCodeDigits",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationDefaultCallingNumberId",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationPersonalAdminPassword",
+    "ui_type": "PASSWORD"
+   },
+   {
+    "name": "stationPersonalAdminSecurityLevel",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationSLTFSKModemSignalType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationSLTOffHookCOPreference",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationSLTCOPreferenceTrunkOrOlg",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationCallingNameType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationSystemSpeedDialSupplement",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationAnalogStationDisconnectSignal",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationCallWaitingSwap",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "stnBasicRef.tbl",
+  "view_class": "stnBasicRefView",
+  "program": "200",
+  "title": "STATION DATA",
+  "description": "This command assigns DKT digital telephone data.",
+  "ui_fields": [
+   {
+    "name": "stationDn",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "stationEquipment",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataDn",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "dktDataKeyNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "dktDataAddOnModule",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "stnDKTData.tbl",
+  "view_class": "stnDKTDataView",
+  "program": "204",
+  "title": "DKT Parameters",
+  "description": "This command assigns DKT digital telephone data.",
+  "ui_fields": [
+   {
+    "name": "dktDataDn",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "dktDataStationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataKeyPatern",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataKeyNumberNoDP5000",
+    "ui_type": "LABELONLY"
+   },
+   {
+    "name": "dktDataKeyNumber",
+    "ui_type": "LABELONLY"
+   },
+   {
+    "name": "dktDataAddOnModule",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataToneFirstVoiceFirst",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataOcaType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataHandsFreeMic",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataHandsFreeSplash",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataExternalRingingRepeat",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataRingingPreference",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataTypeOfIdlePreference",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataTypeOfRingingPreference",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataTextMsgDisplay",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataCallHistoryMemorySize",
+    "ui_type": "LABELONLY"
+   },
+   {
+    "name": "dktDataDTMF",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataLCDDisplayLanguage",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataBPCIBATI",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataBlindTransfer",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataMailBoxSelectMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktMicrophoneInitial",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktMicrophoneUse",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataSpeakerCwtRob",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataRobReptitionTime",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataOverflowDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "dktDataTrunkTestVerify",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktAutoLineHold",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataCriterionOfBusy",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataProgrammingModeSecurity",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataStopSendingLCDInfo",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataAdministratorTelephone",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataNoRingNoFlash",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataExclusiveHold",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataDialDirectorySpeakerStart",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataDialDirectorySpeakerMakeCall",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataLcdKeystripKindOfDKT",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataLcdKeystripKindOfADM1",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataLcdKeystripKindOfADM2",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "dktDataKeepStationNameDisplayAfterAnswerCall",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "stnDSS.tbl",
+  "view_class": "stnDSSView",
+  "program": "214",
+  "title": "DSS CONSOLE ASSIGNMENT",
+  "description": "This assignment allows up to eight Direct Station Selection (DSS) Consoles to be assigned to a station.<br>The assignment is referenced to the stations's Prime Directory Number (PDN).",
+  "ui_fields": [
+   {
+    "name": "dssStationDn",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "dss1Equip",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "dss2Equip",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "dss3Equip",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "dss4Equip",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "dss5Equip",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "dss6Equip",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "dss7Equip",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "dss8Equip",
+    "ui_type": "EQUIPMENTNUM"
+   }
+  ]
+ },
+ {
+  "tbl_file": "stnGroupPickup.tbl",
+  "view_class": "stnGroupPickupView",
+  "program": "210",
+  "title": "GROUP CALL PICKUP",
+  "description": "The Call Pickup Group assignments specify which group numbers this station will participate when either the Group Call Pickup or the Group Directed Call Pickup features are invoked.  A user may be assigned to more than one group.",
+  "ui_fields": [
+   {
+    "name": "callPickupGroupDn",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "callPickupGroupPickup1",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup2",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup3",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup4",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup5",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup6",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup7",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup8",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup9",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup10",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup11",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup12",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup13",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup14",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup15",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup16",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup17",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup18",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup19",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup20",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup21",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup22",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup23",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup24",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup25",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup26",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup27",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup28",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup29",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup30",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup31",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup32",
+    "ui_type": "CHECKBOX"
+   }
+  ]
+ },
+ {
+  "tbl_file": "stnGroupPickup_1200.tbl",
+  "view_class": "stnGroupPickup_1200View",
+  "program": "210",
+  "title": "GROUP CALL PICKUP",
+  "description": "The Call Pickup Group assignments specify which group numbers this station will participate when either the Group Call Pickup or the Group Directed Call Pickup features are invoked.  A user may be assigned to more than one group.",
+  "ui_fields": [
+   {
+    "name": "callPickupGroupPickup33",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup34",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup35",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup36",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup37",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup38",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup39",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup40",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup41",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup42",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup43",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup44",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup45",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup46",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup47",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "callPickupGroupPickup48",
+    "ui_type": "CHECKBOX"
+   }
+  ]
+ },
+ {
+  "tbl_file": "stnHuntGroup.tbl",
+  "view_class": "stnHuntGroupView",
+  "program": "209",
+  "title": "HUNT GROUPS",
+  "description": "This command assigns Station Hunt Groups.",
+  "ui_fields": [
+   {
+    "name": "stationHuntGrp",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "stationHuntMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationHuntPilotNumber",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationHuntDisplayDN",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationHuntCallForwardIndex",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationHuntCF",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationHuntAutomaticCampon",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationHuntUCD",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationHuntUCDMusicOnHold",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationHuntUCDOverflowTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationHuntUCDResponseTimer",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "stnHuntGroupAssignment.tbl",
+  "view_class": "stnHuntGroupAssignmentView",
+  "program": "218",
+  "title": "STATION HUNT GROUP ASSIGNMENTS",
+  "description": "This assignment configures which station DNs are in each hunt group and the rotation order in which the DNs are hunted.",
+  "ui_fields": [
+   {
+    "name": "huntGrpMemberNumber",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "huntGrpMemberIndex",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "huntGrpMemberDn",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "huntGrpMemberModIns",
+    "ui_type": "HIDDEN"
+   }
+  ]
+ },
+ {
+  "tbl_file": "stnIPData.tbl",
+  "view_class": "stnIPDataView",
+  "program": "250",
+  "title": "IPT DATA ASSIGNMENT",
+  "description": "This command assigns the IP Telephone data parameters.",
+  "ui_fields": [
+   {
+    "name": "stationIpDn",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "stationIpStationID",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationIpIpAddressType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationIpIpAddress",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "stationIpStationIDAutomaticAssignment",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationIpTerminalAuthentication",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationIpMacAddress",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationIpVoicePacketConfigTableIndex",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationIpAudioCodec",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationIpVersionNumberDisplay",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationIpURI",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationIpPassword",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationIpDTMFTranslationMode",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationIpSecondaryAudioCodec",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationIpSecondaryVPConfigTableIndex",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationIpNATTraversal",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationIpMediaChannelBase",
+    "ui_type": "NUMERALFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "stnIPData_text.tbl",
+  "view_class": "stnIPDataView",
+  "program": "250",
+  "title": "IPT DATA ASSIGNMENT",
+  "description": "This command assigns the IP Telephone data parameters.",
+  "ui_fields": [
+   {
+    "name": "stationIpDn",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "stationIpStationID",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationIpIpAddressType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationIpIpAddress",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "stationIpStationIDAutomaticAssignment",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationIpTerminalAuthentication",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationIpMacAddress",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationIpVoicePacketConfigTableIndex",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationIpAudioCodec",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "stationIpVersionNumberDisplay",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationIpURI",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationIpPassword",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationIpKeepAliveTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationIpDTMFTranslationMode",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "stnIPStationAssign.tbl",
+  "view_class": "stnIPStationAssignView",
+  "program": "260",
+  "title": "Full IP Station Assignment",
+  "description": "MIPU and LIPU/LIPS interfaces.",
+  "ui_fields": [
+   {
+    "name": "ipStationDn",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "ipStationEquipment",
+    "ui_type": "CARDSLOTNUM"
+   },
+   {
+    "name": "ipStationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationLanInterfaceNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipStationCos",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipStationCosDay2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipStationCosNight",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipStationDrl",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipStationDrlDay2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipStationDrlNight",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipStationFrl",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipStationFrlDay2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipStationFrlNight",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipStationQpl",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipStationQplDay2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipStationQplNight",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipStationStationLcrGroupNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipStationStationName",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "ipStationSenderizedModeTone",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationIndexCallFoward",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipStationCallPickup",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationBearCap",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationDisplayDN",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "ipStationCESID",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "ipStationEmergencyGroup",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipStationRemotePassword",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "ipStationVoiceMailId",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "ipStationCenterPort",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "ipStationTravelCodeChange",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationTGACOverRide",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationServiceTonePermission",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationCwtRob",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationNameDisplay",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationDoorPhoneDND",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationRegSystemSpeedDial",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationNetworkCos",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipStationOriginatingOca",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationOrgInvokeOca",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationReleaseSupervision",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationStationSpeedDialNumber",
+    "ui_type": "LABELONLY"
+   },
+   {
+    "name": "ipStationCallForwardDialTone",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationDialingDigitRestriction",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationHoldIndication",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationStutteredDialToneSend",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationMWWithDialing",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationTenant",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipStationRecallAfterCHoldAndONH",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationAutoCamponasDest",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationPDNCodeDigits",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationDefaultCallingNumberId",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "ipStationPersonalAdminPassword",
+    "ui_type": "PASSWORD"
+   },
+   {
+    "name": "ipStationPersonalAdminSecurityLevel",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationSpeakerOcaAcception",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationT38Protocol",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationT38TableIndex",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipStationT38Substitution",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationLoginPassword",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationTransferRegistration",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationConnectingEquipment",
+    "ui_type": "CARDSLOTNUM"
+   },
+   {
+    "name": "ipStationstationCallingNameType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationSpecifiedCallerId",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationSystemSpeedDialSupplement",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipStationSipInbandMode",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "stnISDNBasic.tbl",
+  "view_class": "stnISDNBasicView",
+  "program": "202",
+  "title": "ISDN BRI STATION",
+  "description": "This command assigns ISDN BRI Stations.",
+  "ui_fields": [
+   {
+    "name": "isdnBasicStationDn",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "isdnBasicStationEquipment",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "isdnBasicStationChGrp",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnBasicStationConnectionFormat",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStationProtocol",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStationCosDay1",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnBasicStationCosDay2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnBasicStationCosNight",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnBasicStationDrlDay1",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnBasicStationDrlDay2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnBasicStationDrlNight",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnBasicStationFrlDay1",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnBasicStationFrlDay2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnBasicStationFrlNight",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnBasicStationQplDay1",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnBasicStationQplDay2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnBasicStationQplNight",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnBasicStationLcrGroupNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnBasicStationSpeech",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStation31kHzAudio",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStation7kHzAudio",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStationUnrest64kbps",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStationUnrest56kbps",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStationUnrest2x64kbps",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStationBchSelectedOriginatingMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStationIdleBchSelectionMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStationInterdigit1Timer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnBasicStationInterdigit2Timer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnBasicStationCESID",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "isdnBasicStationVoiceCallNumber",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStationServiceTonePermission",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStationTGACOverRide",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStationRegSystemSpeedDial",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStationNetworkCos",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnBasicStationAdditionalDn2",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "isdnBasicStationAdditionalDn6",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "isdnBasicStationAdditionalDn3",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "isdnBasicStationAdditionalDn7",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "isdnBasicStationAdditionalDn4",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "isdnBasicStationAdditionalDn8",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "isdnBasicStationAdditionalDn5",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "isdnBasicStationOriginatingOca",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStationOrgInvokeOca",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStationStationSpeedDialNumber",
+    "ui_type": "LABELONLY"
+   },
+   {
+    "name": "isdnBasicStationSystemCallForwardDialTone",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStationDialingDigitRestriction",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStationStutteredDialToneSend",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStationTenant",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnBasicStationAutoCamponasDest",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStationPDNCodeDigits",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicStationDefaultCallingNumberId",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "stnISDNData.tbl",
+  "view_class": "stnISDNDataView",
+  "program": "217",
+  "title": "ISDN STATION DATA",
+  "description": "ISDN stations need a set of parameters to be set to define its capabilities.  These include a Name when calling display phones; Call of Service settings; etc.",
+  "ui_fields": [
+   {
+    "name": "isdnStationDn",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "isdnStationStationName",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "isdnStationSenderizedModeTone",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnStationIndexCallFoward",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnStationRemotePassword",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "isdnStationDoorPhoneDND",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnStationEmergencyGroup",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnStationChangeCOSOverrideCode",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnStationDisplayDN",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "isdnStationVoiceMailId",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "isdnStationNameDisplay",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnStationCPNIEContent",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "stnKey.tbl",
+  "view_class": "stnKeyView",
+  "program": "205",
+  "title": "DKT FEATURE KEYS",
+  "description": "This command assigns PhantomDN parameters.",
+  "ui_fields": [
+   {
+    "name": "featureDn",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "featureKeyNo",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "featureCode",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "featureParameter1",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "featureParameter2",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "featureParameter3",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "featureParameter4",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "featureParameter5",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "addOnDnModule",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "addOnFeatureKeyNo",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "addOnFeatureCode",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "addOnParameter1",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "addOnParameter2",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "addOnParameter3",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "addOnParameter4",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "addOnParameter5",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "dssNumber",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "dssFeatureKeyNo",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "dssFeatureCode",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "dssFeatureParameter1",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "dssFeatureParameter2",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "dssFeatureParameter3",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "dssFeatureParameter4",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "dssFeatureParameter5",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "singleTouchButtonPrimeDn",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "singleTouchButtonFkNo",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "singleTouchButtonRegistrationData",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "stnNetworkDSSNotifyDataDelete.tbl",
+  "view_class": "stnNetworkDSSNotifyDataDeleteView",
+  "program": "219",
+  "title": "NETWORK DSS KEY NOTIFY DATA DELETE",
+  "description": "This program lets you disable the DSS function for the node ID entered in this screen.",
+  "ui_fields": [
+   {
+    "name": "networkDSSnotifyNodeId",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "stnPhantomDN.tbl",
+  "view_class": "stnPhantomDNView",
+  "program": "206",
+  "title": "PHANTOM DNs",
+  "description": "This command assigns PhantomDN parameters.",
+  "ui_fields": [
+   {
+    "name": "phDn",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "phDNParameterOwnerShipDn",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "phDNParameterToneFirstVoiceFirst",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "phDNParameterDisplayDN",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "phDNParameterCallForwardIndex",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "phDNParameterVoiceMailId",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "phDNParameterCenterPort",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "phDNParameterUserName",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "phDNParameterNameDisplay",
+    "ui_type": "RADIOBUTTON"
+   }
+  ]
+ },
+ {
+  "tbl_file": "stnRingDown.tbl",
+  "view_class": "stnRingDownView",
+  "program": "216",
+  "title": "EMERGENCY RING DOWN ASSIGNMENT",
+  "description": "Assigns emergency ring down parameters to Prime DNs.",
+  "ui_fields": [
+   {
+    "name": "emgRingDownDn",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "emgRingDownApplicability",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "emgRingDownTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "emgRingDownDestination",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "stnSpeedDial.tbl",
+  "view_class": "stnSpeedDialView",
+  "program": "516",
+  "title": "STATION SPEED DIAL",
+  "description": "Station Speed Dial consists of up to 100 pre-programmed numbers each containing up to 32 digits (Digits 0 \u0096 9; *; # and Pauses).  If the number being entered exceeds the 32 digits; the next speed dial location will automatically be appended to create longer numbers.  One other speed dial bin number can be nested within the number of another speed dial bin for dialing a common routine with the number.",
+  "ui_fields": [
+   {
+    "name": "stationSpeedDN",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "stationSpeedDialsIndex",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "stationSpeedDialNumber",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "stationSpeedDialUserName",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "stnTimer.tbl",
+  "view_class": "stnTimerView",
+  "program": "208",
+  "title": "STATION TIMER ASSIGNMENT",
+  "description": "Assigns timing parameters to Prime DNS.",
+  "ui_fields": [
+   {
+    "name": "stationTimerDn",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "stationTimerAbrRetryCount",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationTimerAbrIntervalTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationTimerAbrRecallTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationTimerHoldRecallTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationTimerInterdigit1Timer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationTimerInterdigit2Timer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationTimerNoAnswerTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationTimerVmwiSendingTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "stationTimerAnalogStationDisconnectSignalTimer",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysAdvisoryMessage.tbl",
+  "view_class": "sysAdvisoryMessageView",
+  "program": "115",
+  "title": "ADVISORY MESSAGES",
+  "description": "Specifies a set of messages that users may apply to their telephone to provide status information when others call their station.<br>When the user sets a message on a telephone; LCD telephones that call this telephone will display the message.<br>When the user sets a message; the message can be customized to include a varable directory number; time or date as part of the message.",
+  "ui_fields": [
+   {
+    "name": "advisoryMessageNumber",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "advisoryMessageCharacter",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "advisoryMessageAddDigitsType",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysBIPUConfiguration.tbl",
+  "view_class": "sysBIPUConfigurationView",
+  "program": "151",
+  "title": "BIPU CONFIGURATION",
+  "description": "This command set up BIPU configuration",
+  "ui_fields": [
+   {
+    "name": "bipuCardSlotEquip",
+    "ui_type": "KEYCARDSLOTNUM"
+   },
+   {
+    "name": "bipuIpAddress",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "bipuSubNetAddress",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "bipuDefaultGWAddress",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "bipuVersionNumberDisplay",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "bipuMediaChannelBase",
+    "ui_type": "HIDDEN"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysCOS.tbl",
+  "view_class": "sysCOSView",
+  "program": "103",
+  "title": "CLASS OF SERVICE",
+  "description": "Class of Service assignments are a registration of feature capabilities the user is entitled to use.  Each assignment is defined as Enabled or Disabled for privileges/permissions granted.  Privileges enable users to perform a feature while permissions allow others to use some feature when calling your phone.",
+  "ui_fields": [
+   {
+    "name": "cosCos",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "cosAbr",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosJoin",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosCallForwardOverride",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosThroughDialing",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosCallTransferWithCampon",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosTandemConnection",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosDisaSecurityCode",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosDayNightModeChange",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosDndOverrideInvoke",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosExternalBGM",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosDndOverridePermit",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosLCRFeatureAvailability",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosDndSetLocal",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosIndividualTrunk",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosDndSetRemote",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosTrunkGroup",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosExecutiveOverrideOriginator",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosOriginaterAccountCode",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosExecutiveOverrideOverriddenParty",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosVerifyAccountCode",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosOffhookCampon",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosShortFlashOnOff",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosGroupPickup",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosLongFlashOnOff",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosDirectedTerminalPickup",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosHookingSignalOnOff",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosDirectedGroupPickup",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosDataOriginatingOca",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosDirectedDnPickup",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosDiscTalkingOfOutgoingCall",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosAnyExternalCallPickup",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosHearingBGM",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosCoRetrievePickup",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosCallForwardOverrideWithDSSKey",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosRemoteRetrievePickup",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosLcdDnisAniPriority",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosDirectedDNRetrieve",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosAutoDiscPagingCall",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosHandsFreeAnswerBack",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosUCDAgentLoginLocal",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosPrivacyOverride",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosUCDAgentLoginRemote",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "cosEmergencyPaging",
+    "ui_type": "CHECKBOX"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysCardSlot.tbl",
+  "view_class": "sysCardSlotView",
+  "program": "100",
+  "title": "CIX/CTX CABINET SLOT PCB ASSIGNMENTS",
+  "description": "All PCBs except for the system processors are assigned to cabinet slots using this command. The CIX/CTX processor PCBs have dedicated slots in their respective Base cabinets so they do not require this assignment.",
+  "ui_fields": [
+   {
+    "name": "cardSlotEquip",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "cardSlotCardType",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "cardSlotPCMhighway",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "cardSlotNewDKUType",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "cardSlotTEI",
+    "ui_type": "HIDDEN"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysData.tbl",
+  "view_class": "sysDataView",
+  "program": "105",
+  "title": "SYSTEM PARAMETERS",
+  "description": "This command assigns the system parameters.",
+  "ui_fields": [
+   {
+    "name": "systemDataExecutiveOverride",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataDomesticCode",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "systemDataMusicOnHold",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataInternationalCode",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "systemDataRingingTransfer",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataNumberingPlanIdOnCPN",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataTransferPrivacy",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataConvertHooking",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataPrivacyOverride",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataAnalogTrunkHunting",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataServiceCodeCreditCard",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "systemDataDisplayCheckSumError",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataMinDialDigitsCreditCard",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemDataTandemTalkContinue",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataE911Service",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataAnalogDID",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataTROverride",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataChangeALawMuLaw",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataAutoStationRelease",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataPlayMelody",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataSpidOperation",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataSelectMelody",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataNightRelayNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemDataInternalPad",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataExternalPagingZoneNum",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemDataRingingCadence",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataLostCallDest",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "systemDataCascadingSystemCF",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataCosOverrideCodeDigits",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemDataAppendedBchIntoCstaDevId",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataManyMemberConference",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataAppendedSendingCompleteIE",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataCallerNumberDisplay",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataRecIncompleteOutgoingDial",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataNightBell",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemDataDefaultCallingNumberId",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataDNISorCallerIDDisplay",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataCalledIndicationOfDssBlf",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataNetworkingTransitCounter",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemDataCLIDForTransferCall",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataPrimaryClockSource",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "systemDataTypeOfNumberOnCallingPartyNumber",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataSecondaryClockSource",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "systemDataNumberingPlanIdOnCallingPartyNumber",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataPrefix1InCallHistory",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataLCDKeystripRefreshInterval",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemDataE911SendingDigits",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "systemDataCallHistoryRecallPrefix",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "systemDataDpMakeRatio",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataCarrierBasedVMWICoPosition",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemDataJumpingLed",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemDataCarrierBasedVMWIFkPosition",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysDataInitialize.tbl",
+  "view_class": "sysDataInitializeView",
+  "program": "116",
+  "title": "DATA INITIALIZE",
+  "description": "This program is used to initialize the tables of selected programs in the Strata CTX system.",
+  "ui_fields": [
+   {
+    "name": "dataInitCommandNo",
+    "ui_type": "NONE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysDayNightMode.tbl",
+  "view_class": "sysDayNightModeView",
+  "program": "112",
+  "title": "DAY/NIGHT MODE CALENDAR",
+  "description": "The Day/Night Mode daily schedule defines the times for the start of the Work Day; Non-work Day; and Holiday for each of the modes (Day; Day2. Night).",
+  "ui_fields": [
+   {
+    "name": "privateCalendarDay",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "privateCalendarDayMode",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "privateDayMonday",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "privateDayTuesday",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "privateDayWednesday",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "privateDayThursday",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "privateDayFriday",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "privateDaySaturday",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "privateDaySunday",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "typeWorkingDayDay1",
+    "ui_type": "SETTIME"
+   },
+   {
+    "name": "typeWorkingDayDay2",
+    "ui_type": "SETTIME"
+   },
+   {
+    "name": "typeWorkingDayNight",
+    "ui_type": "SETTIME"
+   },
+   {
+    "name": "typeNonWorkingDayDay1",
+    "ui_type": "SETTIME"
+   },
+   {
+    "name": "typeNonWorkingDayDay2",
+    "ui_type": "SETTIME"
+   },
+   {
+    "name": "typeNonWorkingDayNight",
+    "ui_type": "SETTIME"
+   },
+   {
+    "name": "typePrivateHolidayDay1",
+    "ui_type": "SETTIME"
+   },
+   {
+    "name": "typePrivateHolidayDay2",
+    "ui_type": "SETTIME"
+   },
+   {
+    "name": "typePrivateHolidayNight",
+    "ui_type": "SETTIME"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysDayNightMode220.tbl",
+  "view_class": "sysDayNightMode220View",
+  "program": "112",
+  "title": "DAY/NIGHT MODE CALENDAR",
+  "description": "The Day/Night Mode daily schedule defines the times for the start of the Work Day; Non-work Day; and Holiday for each of the modes (Day; Day2. Night).",
+  "ui_fields": [
+   {
+    "name": "privateCalendarPerTenantTenantNumber",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "privateCalendarPerTenantDay",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "privateCalendarPerTenantDayMode",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "privateDayPerTenantTenantNumber",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "privateDayPerTenantMonday",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "privateDayPerTenantTuesday",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "privateDayPerTenantWednesday",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "privateDayPerTenantThursday",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "privateDayPerTenantFriday",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "privateDayPerTenantSaturday",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "privateDayPerTenantSunday",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "typePerTenantTenantNumber",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "typePerTenantWorkingDayDay1",
+    "ui_type": "SETTIME"
+   },
+   {
+    "name": "typePerTenantWorkingDayDay2",
+    "ui_type": "SETTIME"
+   },
+   {
+    "name": "typePerTenantWorkingDayNight",
+    "ui_type": "SETTIME"
+   },
+   {
+    "name": "typePerTenantNonWorkingDayDay1",
+    "ui_type": "SETTIME"
+   },
+   {
+    "name": "typePerTenantNonWorkingDayDay2",
+    "ui_type": "SETTIME"
+   },
+   {
+    "name": "typePerTenantNonWorkingDayNight",
+    "ui_type": "SETTIME"
+   },
+   {
+    "name": "typePerTenantPrivateHolidayDay1",
+    "ui_type": "SETTIME"
+   },
+   {
+    "name": "typePerTenantPrivateHolidayDay2",
+    "ui_type": "SETTIME"
+   },
+   {
+    "name": "typePerTenantPrivateHolidayNight",
+    "ui_type": "SETTIME"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysDaylightSaving.tbl",
+  "view_class": "sysDaylightSavingView",
+  "program": "121",
+  "title": "AUTOMATIC DAYLIGHT SAVING CHANGE",
+  "description": "This command is used to set Daylight Savings Time automatic time change parameters.  The defaults are set for USA; Canada and Mexico. All that is necessary to have DST time change to be automatic each year is to endable this feature in the first parameter of this command.",
+  "ui_fields": [
+   {
+    "name": "daylightSavingAvailability",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "daylightSavingMode",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "daylightSavingWeekModeStartMonth",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "daylightSavingWeekModeStartNumOfWeek",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "daylightSavingWeekModeStartDayOfWeek",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "daylightSavingWeekModeEndMonth",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "daylightSavingWeekModeEndNumOfWeek",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "daylightSavingWeekModeEndDayOfWeek",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "daylightSavingDateModeStartDate",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "daylightSavingDateModeEndDate",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "daylightSavingStartTime",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "daylightSavingEndTime",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "daylightSavingShiftTime",
+    "ui_type": "HIDDEN"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysFaxOverIpParameterTable.tbl",
+  "view_class": "sysFaxOverIpParameterView",
+  "program": "166",
+  "title": "FAX OVER IP PARAMETER TABLE ASSIGNMENT",
+  "description": "Parameters assigned to IP VM ports and IP Starta Net nodes that support T.38 Fax over IP.",
+  "ui_fields": [
+   {
+    "name": "faxOverIpTblNumber",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "faxOverIpTblSlowDataRedundancy",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "faxOverIpTblFastDataRedundancy",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "faxOverIpTblSlowDataFecNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "faxOverIpTblFastDataFecNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "faxOverIpTblDatagramSize",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "faxOverIpTblMaxRate",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysFaxOverIpSystemData.tbl",
+  "view_class": "sysFaxOverIpSystemDataAssignView",
+  "program": "165",
+  "title": "FAX OVER IP SYSTEM DATA ASSIGNMENT",
+  "description": "Do not change these parameters unless instructed to do so by Toshiba engineers. These parameters are optimized to get the best quality with default values.",
+  "ui_fields": [
+   {
+    "name": "faxOverIpSystemCngDetectThreshold",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "faxOverIpSystemCngBandRatio",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "faxOverIpSystemCedDetectThreshold",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "faxOverIpSystemCedMarginThreshold",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "faxOverIpSystemCedFlatnessThreshold",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "faxOverIpSystemCedReleaseThreshold",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysFullIPQsigDTMFDetection.tbl",
+  "view_class": "sysFullIPQsigDTMFDetectionView",
+  "program": "164",
+  "title": "DTMF DETECTION PARAMETER TABLE ASSIGNMENT",
+  "description": "Do not change these parameters unless instructed to do so by Toshiba engineers. These parameters are optimized to get the best quality with default values.",
+  "ui_fields": [
+   {
+    "name": "lipuDtmfDetectAbsoluteThreshold",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuDtmfDetectForwardTwist",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuDtmfDetectReverseTwist",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuDtmfDetectFlatnessLimit",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuDtmfDetectSnrLimit",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuDtmfDetectWidebandThreshold",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuDtmfDetectHoldOffLimit",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuDtmfDetectAdditionalTime",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysFullIPQsigDTMFDetection_text.tbl",
+  "view_class": "sysFullIPQsigDTMFDetectionView",
+  "program": "164",
+  "title": "FULL IP QSIG DTMF DETECTION CONTROL",
+  "description": "-1",
+  "ui_fields": [
+   {
+    "name": "lipuDtmfDetectAbsoluteThreshold",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuDtmfDetectForwardTwist",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuDtmfDetectReverseTwist",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuDtmfDetectFlatnessLimit",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuDtmfDetectSnrLimit",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuDtmfDetectWidebandThreshold",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuDtmfDetectHoldOffLimit",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuDtmfDetectAdditionalTime",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysGIPHConfiguration.tbl",
+  "view_class": "sysLIPUConfigurationView",
+  "program": "161",
+  "title": "LIPU-X/GIPH-X CONFIGURATION",
+  "description": "This command is for LIPU-X/GIPH-X configuration",
+  "ui_fields": [
+   {
+    "name": "lipuCardSlotEquip",
+    "ui_type": "KEYCARDSLOTNUM"
+   },
+   {
+    "name": "lipuIpAddress1",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "lipuSubNetAddress1",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "lipuDefaultGWAddress1",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "lipuVersionNumberDisplay1",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "lipuIdleIPPortNumberDisplay1",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuIEEE8021p1",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "lipuIEEE8021pData1",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "lipuIEEE8021q1",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "lipuIEEE8021qData1",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuMediaChannelBase1",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "lipuMediaChannelBase2",
+    "ui_type": "HIDDEN"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysIPData.tbl",
+  "view_class": "sysIPDataView",
+  "program": "150",
+  "title": "SYSTEM IP DATA ASSIGNMENT",
+  "description": "This command assigns IP data to the system.",
+  "ui_fields": [
+   {
+    "name": "systemIpStationIDAutoAssignment",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpTerminalAuthentication",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpDiffserv",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpTosFieldType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpTosPrecedence",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpTosDelay",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpTosThroughput",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpTosReliability",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpDscp",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemIpIEEE8021p",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpIEEE8021pData",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpIPCTXId",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "systemIpEchoCancel",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpGainControlMode",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpCEDControl",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpIpQsigBMode",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpFaxMaxHop",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemIpFaxMaxHop",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "systemIpEchoCancelForMIPU",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpSIPTrunkDiffserv",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpSIPTrunkTosFieldType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpSIPTrunkTosPrecedence",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpSIPTrunkTosDelay",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpSIPTrunkTosThroughput",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpSIPTrunkTosReliability",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemIpSIPTrunkDscp",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysInitializeLockPassword.tbl",
+  "view_class": "sysInitializeLockPasswordView",
+  "program": "119",
+  "title": "INITIALIZE LOCK PASSWORD",
+  "description": "Initialize Lock Password",
+  "ui_fields": [
+   {
+    "name": "dataInitializeLockPassword",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysLIPUConfiguration.tbl",
+  "view_class": "sysLIPUConfigurationView",
+  "program": "161",
+  "title": "LIPU/MIPU/GIPU CONFIGURATION",
+  "description": "This command set up LIPU/MIPU/GIPx configuration",
+  "ui_fields": [
+   {
+    "name": "lipuCardSlotEquip",
+    "ui_type": "KEYCARDSLOTNUM"
+   },
+   {
+    "name": "lipuIpAddress1",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "lipuSubNetAddress1",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "lipuDefaultGWAddress1",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "lipuVersionNumberDisplay1",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "lipuIdleIPPortNumberDisplay1",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuIpAddress2",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "lipuSubNetAddress2",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "lipuDefaultGWAddress2",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "lipuVersionNumberDisplay2",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "lipuIdleIPPortNumberDisplay2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuIEEE8021p1",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "lipuIEEE8021pData1",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "lipuIEEE8021q1",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "lipuIEEE8021qData1",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuIEEE8021p2",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "lipuIEEE8021pData2",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "lipuIEEE8021q2",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "lipuIEEE8021qData2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuMediaChannelBase1",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "lipuMediaChannelBase2",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "lipuDHCP1",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "lipuDNSServerPrimary1",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "lipuDNSServerSecondary1",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "lipuHostName1",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "lipuPrimaryDNSSuffix1",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "lipuDHCP2",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "lipuDNSServerPrimary2",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "lipuDNSServerSecondary2",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "lipuHostName2",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "lipuPrimaryDNSSuffix2",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysLIPUConfiguration_text.tbl",
+  "view_class": "sysLIPUConfigurationView",
+  "program": "161",
+  "title": "LIPU CONFIGURATION",
+  "description": "This command set up LIPU configuration",
+  "ui_fields": [
+   {
+    "name": "lipuCardSlotEquip",
+    "ui_type": "KEYCARDSLOTNUM"
+   },
+   {
+    "name": "lipuIpAddress1",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "lipuSubNetAddress1",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "lipuDefaultGWAddress1",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "lipuVersionNumberDisplay1",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "lipuIpAddress2",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "lipuSubNetAddress2",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "lipuDefaultGWAddress2",
+    "ui_type": "IPADDRESS"
+   },
+   {
+    "name": "lipuVersionNumberDisplay2",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysLIPUVoiceProcessorControl.tbl",
+  "view_class": "sysLIPUVoiceProcessorControlView",
+  "program": "163",
+  "title": "VOICE PROCESSOR CONTROL TABLE ASSIGNMENT",
+  "description": "Do not change these parameters unless instructed to do so by Toshiba engineers. These parameters are optimized to get the best quality with default values. If you change these parameters; IPT quality may not be acceptible.",
+  "ui_fields": [
+   {
+    "name": "lipuVpDeviceNumber",
+    "ui_type": "LABELONLY"
+   },
+   {
+    "name": "lipuVpNlp",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "lipuVpNlpThreshold",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuVpAdaptation",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "lipuVpAdaptationDuration",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuVpComfortNoise",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "lipuVpBypass",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "lipuVpCgcEncoder",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuVpCgcDecoder",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuVpVgcInput",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuVpVgcOutput",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuVpBetaMantissa",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuVpBetaExponent",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuVpAbsoluteThreshold1",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuVpAbsoluteThreshold2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuVpRelativeThreshold",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuVpDoubleTalkHangtime",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "lipuVpIptMode",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysLockPassword.tbl",
+  "view_class": "sysLockPasswordView",
+  "program": "118",
+  "title": "LOCK PASSWORD MASTER ID CODE ASSIGNMENT",
+  "description": "Set Master ID Code and Delete",
+  "ui_fields": [
+   {
+    "name": "lockPasswordMasterIdCode",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysMOH.tbl",
+  "view_class": "sysMOHView",
+  "program": "109",
+  "title": "MUSIC ON HOLD & BACK GROUND MUSIC SOURCE ASSIGNMENTS",
+  "description": "This program enables Music On Hold (MOH) and Back Ground Music (BGM) source interfaces.",
+  "ui_fields": [
+   {
+    "name": "externalMusicOnHold1",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "externalMusicOnHold8Equip",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "externalMusicOnHold8",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalMusicOnHold9Equip",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "externalMusicOnHold9",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalMusicOnHold1",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "externalMusicOnHold2",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "externalMusicOnHold3",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "externalMusicOnHold4",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "externalMusicOnHold5",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "externalMusicOnHold6",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "externalMusicOnHold7",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "externalMusicOnHold8Equip",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "externalMusicOnHold8",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalMusicOnHold9Equip",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "externalMusicOnHold9",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalMusicOnHold10Equip",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "externalMusicOnHold10",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalMusicOnHold11Equip",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "externalMusicOnHold11",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalMusicOnHold12Equip",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "externalMusicOnHold12",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalMusicOnHold13Equip",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "externalMusicOnHold13",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalMusicOnHold14Equip",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "externalMusicOnHold14",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "externalMusicOnHold15Equip",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "externalMusicOnHold15",
+    "ui_type": "CHECKBOX"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysNumberPlan.tbl",
+  "view_class": "sysNumberPlanView",
+  "program": "102",
+  "title": "FLEXIBLE ACCESS CODES",
+  "description": "Assigns feature access codes; individual line access codes and outgoing line group (OLG) access codes to the Flexible Numbering Plan. <br>Does not use PDNs; PhDNs; Pilot numbers; or Hunt Group Pilot numbers as access codes.",
+  "ui_fields": [
+   {
+    "name": "flaxibleNumberlingPlan",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "flaxibleNumberlingFeature",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "flaxibleNumberlingOlg",
+    "ui_type": "NUMERALFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysPADTable.tbl",
+  "view_class": "padGroupAssignmentTableView",
+  "program": "108",
+  "title": "PAD GROUP ASSIGNMENT",
+  "description": "This program permits the addition of up to 32 devices to the Pad Table to deal with exceptions to the default table.",
+  "ui_fields": [
+   {
+    "name": "padGroupDeviceType",
+    "ui_type": "NONE"
+   },
+   {
+    "name": "padGroupNumber",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysPWD.tbl",
+  "view_class": "sysPWDView",
+  "program": "110",
+  "title": "PASSWORD ASSIGNMENT",
+  "description": "The system has two passwords levels. Logging into the system with the Level 1 password allows the user to administer all system programs while the level 2 password provides restricted program administration.",
+  "ui_fields": [
+   {
+    "name": "passwordLevel",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "password",
+    "ui_type": "PASSWORD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysPublicNumberingPlan.tbl",
+  "view_class": "sysPublicNumberingPlanView",
+  "program": "117",
+  "title": "PUBLIC DIAL PLAN DIGIT ANALYSIS",
+  "description": "This command is used to prevent users from circumventing Destination Restriction (DR) by sending tones directly to the PSTN before DR  analysis is complete. It also prevents delays in cut through after a call is made - the cut through delays can cuase a period of one-way-speech when the call is first answered. This command defines the total number of digits expected to be dialed after accessing a CO line for particular dialing patterns.  For example; a number starting with the toll prefix  1  would be expected to have a dialing pattern of 11 digits.  Calls will be cut through to the public network only after the expected number of digits have been dialed.",
+  "ui_fields": [
+   {
+    "name": "publicNumberingPlanAnalyzedNumber",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "publicNumberingPlanAnalyzedDigits",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysTenantData.tbl",
+  "view_class": "sysTenantDataView",
+  "program": "120",
+  "title": "TENANT ASSIGNMENTS",
+  "description": "This command configures Tenant Service assignments for each of the Tenant.",
+  "ui_fields": [
+   {
+    "name": "tenantDataTenantNumber",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "tenantDataDay1OpeCallDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "tenantDataDay1OpeCallDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "tenantDataDay2OpeCallDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "tenantDataDay2OpeCallDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "tenantDataNightOpeCallDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "tenantDataNightOpeCallDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "tenantDataNightRelayNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "tenantDataNightBell",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysTimer.tbl",
+  "view_class": "sysTimerView",
+  "program": "104",
+  "title": "SYSTEM TIMERS",
+  "description": "System timers set a variety of times to control calls and features for the system.",
+  "ui_fields": [
+   {
+    "name": "systemTimerAcb",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerEmergencyCall",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerAcbOverall",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerTalkingOutputTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerPark",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerLostCallTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerCampon",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerLostCallFinalTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerSmdr",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerDialSendTime",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemTimerUserInputDuration",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerAutoDiscTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerUserInputTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerPresetPauseTimer",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "systemTimerSystemCallForward",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerAnswerWaitTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerDialInput",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerOutgoingCallTalkDiscTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerDelayed1Ring",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerNetworkDSSRefreshTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerDelayed2Ring",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerOutgoingNumberDisplayTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerUnlockingTime",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerPagingAutoDiscTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerDialed911Judgment",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "systemTimerCallerIdDisplayTimer",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysVoicePacketConfiguration.tbl",
+  "view_class": "sysVoicePacketConfigurationView",
+  "program": "152",
+  "title": "VOICE PACKET CONFIGURATION TABLE ASSIGNMENT",
+  "description": "Assigns VoIP timing parameters to up to 256 voice packet tables.  Each table can be customized and assigned to individule IP Telephones and BIPU-Q interfaces.",
+  "ui_fields": [
+   {
+    "name": "voiceTblNumber",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "voiceTblPacketTransmissionInterval",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "voiceTblJitterBufferType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "voiceTblJitterBufferLength",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "voiceTblPacketLossThreshold",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "voiceTblPacketTransmissionIntervalForMIPU",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "voiceTblJitterBufferTypeForMIPU",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "voiceTblJitterBufferLengthForMIPU",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "voiceTblPacketLossThresholdForMIPU",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "sysVoiceProcessorControl.tbl",
+  "view_class": "sysVoiceProcessorControlView",
+  "program": "153",
+  "title": "VOICE PROCESSOR CONTROL TABLE ASSIGNMENT",
+  "description": "Do not change these parameters unless instructed to do so by Toshiba engineers. These parameters are optimized to get the best quality with default values. If you change these parameters; IPT quality may not be acceptible.",
+  "ui_fields": [
+   {
+    "name": "vpDeviceNumber",
+    "ui_type": "LABELONLY"
+   },
+   {
+    "name": "vpNlp",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "vpNlpThreshold",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "vpAdaptation",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "vpAdaptationDuration",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "vpComfortNoise",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "vpBypass",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "vpCgcEncoder",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "vpCgcDecoder",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "vpVgcInput",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "vpVgcOutput",
+    "ui_type": "SELECT_RANGE"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkCallByCall.tbl",
+  "view_class": "trkCallByCallView",
+  "program": "324",
+  "title": "CBC TIME ZONES",
+  "description": "Call-by-Call service allows multiple facilities to share the PRI channel group.  Since the traffic requirements of each facility may vary at different times; it becomes possible to use fewer 'B'channels to perform the equivalent services of the discrete counterpart.  This sharing the 'B'channels on a call-by-call basis can save the user money.  To accomplish CBC services; each facility needs to be defined; its related Line Group assigned and minimum and maximum values for the services provided.  These service parameters may be set for three different time zones; thus allowing fewer or more services of different types at different times of the day.",
+  "ui_fields": [
+   {
+    "name": "cbcTimeZoneChGrp",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "cbcTimeZone1",
+    "ui_type": "SETTIME"
+   },
+   {
+    "name": "cbcTimeZone2",
+    "ui_type": "SETTIME"
+   },
+   {
+    "name": "cbcTimeZone3",
+    "ui_type": "SETTIME"
+   },
+   {
+    "name": "cbcLineServiceIndex",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "cbcKindOfLineService",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "cbcFacilityCodeValue",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "cbcServiceParameters",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "cbcNetworkIdentification",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "cbcIlg",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "cbcOlg",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "cbcMinZone1",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "cbcMaxZone1",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "cbcMinZone2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "cbcMaxZone2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "cbcMinZone3",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "cbcMaxZone3",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "cbcChGrp",
+    "ui_type": "HIDDEN"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkDID.tbl",
+  "view_class": "trkDIDView",
+  "program": "309",
+  "title": "DIRECT INWARD DIALING",
+  "description": "This command deletes DID Number.",
+  "ui_fields": [
+   {
+    "name": "didIlg",
+    "ui_type": "NONE"
+   },
+   {
+    "name": "didNumber",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "didMusicOnHold",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "didGco",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "didPoolLineGroup",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "didDay1AudioDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "didDay1AudioDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "didDay2AudioDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "didDay2AudioDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "didNightAudioDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "didNightAudioDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "didDay1DataDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "didDay1DataDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "didDay2DataDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "didDay2DataDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "didNightDataDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "didNightDataDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "didVoiceMailId",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "didDestinationName",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "didVmSendingDial",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "didTenant",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "didDeleteIlg",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "didDeleteNumber",
+    "ui_type": "HIDDEN"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkDIDIntercept.tbl",
+  "view_class": "trkDIDInterceptView",
+  "program": "318",
+  "title": "DID INTERCEPT ASSIGNMENTS",
+  "description": "This command assigns the DID Routing table<br>when DID numbers are undefined or not received.",
+  "ui_fields": [
+   {
+    "name": "noDidIlg",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "noDidNoDidOrNotDetermin",
+    "ui_type": "KEYSELECT_OPTION"
+   },
+   {
+    "name": "noDidMusicOnHold",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "noDidGco",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "noDidPoolLineGroup",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "noDidDay1AudioDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "noDidDay1AudioDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "noDidDay2AudioDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "noDidDay2AudioDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "noDidNightAudioDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "noDidNightAudioDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "noDidDay1DataDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "noDidDay1DataDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "noDidDay2DataDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "noDidDay2DataDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "noDidNightDataDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "noDidNightDataDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "noDidVoiceMailId",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "noDidDestinationName",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "noDidVmSendingDial",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkDIT.tbl",
+  "view_class": "trkDITView",
+  "program": "310",
+  "title": "DIRECT INWARD TERMINATION",
+  "description": "This command assigns DIT Number Analysis Table for DIT trunks. DIT trunks are ground and loop start trunks",
+  "ui_fields": [
+   {
+    "name": "ditEquipment",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "ditDay1AudioDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ditDay1AudioDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "ditDay2AudioDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ditDay2AudioDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "ditNightAudioDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ditNightAudioDestination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "ditMusicOnHold",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkFullIPQsig.tbl",
+  "view_class": "trkFullIPQsigView",
+  "program": "325",
+  "title": "STRATA NET FULL IP TRUNK ASSIGNMENT",
+  "description": "This command assigns full Strata Net IP trunks to the system.",
+  "ui_fields": [
+   {
+    "name": "ipQsigTrunkChGrp",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "ipQsigTrunkEquipment",
+    "ui_type": "CARDSLOTNUM"
+   },
+   {
+    "name": "ipQsigTrunkLanInterfaceNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipQsigTrunkChannelNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipQsigTrunkIlg",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipQsigTrunkOlg",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipQsigTrunkSpeech",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipQsigTrunk31kHzAudio",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipQsigTrunkRbt",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipQsigTrunkQ931ProtocolTimer",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkFullIPQsig_text.tbl",
+  "view_class": "trkFullIPQsigView",
+  "program": "325",
+  "title": "FULL IP QSIG TRUNK ASSIGNMENT",
+  "description": "-1",
+  "ui_fields": [
+   {
+    "name": "ipQsigTrunkChGrp",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "ipQsigTrunkEquipment",
+    "ui_type": "CARDSLOTNUM"
+   },
+   {
+    "name": "ipQsigTrunkLanInterfaceNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipQsigTrunkChannelNumber",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipQsigTrunkIlg",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipQsigTrunkOlg",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ipQsigTrunkSpeech",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipQsigTrunk31kHzAudio",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipQsigTrunkRbt",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkQsigPreferenceLine",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ipQsigTrunkQ931ProtocolTimer",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkILG.tbl",
+  "view_class": "trkILGView",
+  "program": "304",
+  "title": "INCOMING LINE GROUP ASSIGNMENT",
+  "description": "This command deletes incoming line groups.",
+  "ui_fields": [
+   {
+    "name": "ilgGrpNo",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "ilgAnalogISDNType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ilgTrunkType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ilgTrunkServiceType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ilgTrunkPrivateServiceType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ilgGCO",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgPoolLineGroup",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgCos",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgCosDay2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgCosNight",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgDrl",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgDrlDay2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgDrlNight",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgFrl",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgFrlDay2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgFrlNight",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgQpl",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgQplDay2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgQplNight",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgContractBeamCount",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgBearCap",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ilgDelay1Ring",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgDelay2Ring",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgInterdigit1Timer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgInterdigit2Timer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgAutomaticCampon",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ilgCallingNumberIdentification",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ilgIntercept",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ilgCalledDialTone",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ilgTGACOverRide",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ilgNetworkCos",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgStationLcrGroupNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgCosOverrideCodeChange",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ilgRegSystemSpeedDial",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ilgOrgInvokeOca",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ilgSenderizedModeTone",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "ilgEmergencyGroup",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgTenant",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "ilgCauseValueOfFailure",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "deleteIlg",
+    "ui_type": "HIDDEN"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkISDNBChannel.tbl",
+  "view_class": "trkISDNBChannelView",
+  "program": "320",
+  "title": "PRI 'B' CHANNELS",
+  "description": "PRI interfaces are purchased on per interface and channel basis.  The 'B' channel assignments <br>allow for a flexible activation of channels to match the subscribed services from the Public Service<br>Telephone Network.This command allows you to enable or disable each B channel on selected PRI Cards.",
+  "ui_fields": [
+   {
+    "name": "bchEquipment",
+    "ui_type": "KEYEQUIPMENTNUM"
+   },
+   {
+    "name": "bchPosition1",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition2",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition3",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition4",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition5",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition6",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition7",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition8",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition9",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition10",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition11",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition12",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition13",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition14",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition15",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition16",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition17",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition18",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition19",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition20",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition21",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition22",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition23",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition24",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition25",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition26",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition27",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition28",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition29",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition30",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "bchPosition31",
+    "ui_type": "CHECKBOX"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkISDNBRI.tbl",
+  "view_class": "trkISDNBRIView",
+  "program": "317",
+  "title": "ISDN BRI TRUNK",
+  "description": "This command assigns ISDN BRI Trunk.",
+  "ui_fields": [
+   {
+    "name": "isdnBasicChGroup",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "isdnBasicTrunkEquipment",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "isdnBasicTrunkProtocol",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicTrunkIlg",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnBasicTrunkOlg",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnBasicTrunkSpeech",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicTrunk31kHzAudio",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicTrunk7kHzAudio",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicTrunkUnrest64kbps",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicTrunkUnrest56kbps",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicTrunkUnrest2x64kbps",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicTrunkBchSelectedOriginatingMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicTrunkIdleBchSelectionMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicSPIDInitialize",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicSPIDInitializeType",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "isdnBasicTrunkSpidValue1",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "isdnBasicTrunkSpidValue2",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "isdnBasicTrunkTWait",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicVoiceCallNumber",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicTrunkSubscriberNumber1",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "isdnBasicTrunkSubscriberNumber2",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "isdnBasicTrunkShortLineBreakSupport",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicTrunkTEI",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicTrunkSendMCID",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicTrunkDeActiveMode",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnBasicTrunkETSISendingType",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkISDNCallingNumber.tbl",
+  "view_class": "trkISDNCallingNumberView",
+  "program": "321",
+  "title": "CALLING NUMBER IDENTIFICATION",
+  "description": "When calls are sent to the PSTN with Calling Number Identification Service (CNIS); the CTX can supply special CNIS information as part of the Setup Message. This program may be used for sending a unique number based on the source directing the call to the Strata CTX PRI.",
+  "ui_fields": [
+   {
+    "name": "callingNumOlgNum",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "callingNumDefaultCallingNum",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "callingNumCallingNumberPrefix",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "callingNumCallingNumberVerification",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "callingNumDefaultCallingNum2",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "callingNumDefaultCallingName",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "callingNumOLG",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "callingNumDestType",
+    "ui_type": "KEYSELECT_OPTION"
+   },
+   {
+    "name": "callingNumDestination",
+    "ui_type": "KEYTEXTFIELD"
+   },
+   {
+    "name": "callingNumDIDNumber",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "callingNumDIDName",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkISDNDChannel.tbl",
+  "view_class": "trkISDNDChannelView",
+  "program": "316",
+  "title": "SHARED 'D' CHANNEL",
+  "description": "The PRI Interface can be extended to include an additional PRI card to <br>expand the total number of channels to 47 on a Channel Group.<br>This second PRI may optionally offer a backup 'D' channel.",
+  "ui_fields": [
+   {
+    "name": "dchSharedChGroup",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "dchSharedEquipment",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "dchSharedIfIdNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "dchSharedExistenceOfDch",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkISDNPRI.tbl",
+  "view_class": "trkISDNPRIView",
+  "program": "302",
+  "title": "PRI and IP QSIG",
+  "description": "RPTU; BPTU and BIPU-Q Channel groups need to have a number of assignments for defining thier operation. <br>For BIPU-Q Channel Groups; parameters 01~04 must be configured; all other parameters should remain at default.<br>All parameters should be configured for ISDN - many of these are normally set to default..",
+  "ui_fields": [
+   {
+    "name": "isdnPrimaryTrunkChGrp",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "isdnPrimaryTrunkEquipment",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "isdnPrimaryTrunkProtocol",
+    "ui_type": "LABELONLY"
+   },
+   {
+    "name": "isdnPrimaryTrunkIlg",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnPrimaryTrunkOlg",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnPrimaryTrunkIfIdNumberImplicit",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkIfIdNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnPrimaryTrunkDchPosition",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "isdnPrimaryTrunkSpeech",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "isdnPrimaryTrunkSpeechChMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunk31kHzAudio",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "isdnPrimaryTrunk31kHzAudioChMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunk7kHzAudio",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "isdnPrimaryTrunk7kHzAudioChMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkUnrest64kbps",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "isdnPrimaryTrunkUnrest64kbpsChMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkUnrest56kbps",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "isdnPrimaryTrunkUnrest56kbpsChMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkUnrest2x64kbps",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "isdnPrimaryTrunkUnrest2x64kbpsChMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkUnrest384kbps",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "isdnPrimaryTrunkUnrest384kbpsChMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkUnrest1536kbps",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "isdnPrimaryTrunkUnrest1536kbpsChMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkUnrest1920kbps",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "isdnPrimaryTrunkUnrest1920kbpsChMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkRestrictDigitalInfo",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "isdnPrimaryTrunkRestrictDigitalInfoChMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkVideo",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "isdnPrimaryTrunkVideoChMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkUnrestMultirate",
+    "ui_type": "CHECKBOX"
+   },
+   {
+    "name": "isdnPrimaryTrunkBchSelectedOriginatingMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkIdleBchSelectionMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkTWait",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkRbt",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkQsigInterfaceType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkQsigPreferenceLine",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkShortLineBreakSupport",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkTBCTContract",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkQ931ProtocolTimer",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkSendMCID",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkSendCallingName",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "isdnPrimaryTrunkETSISendingType",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkOLG.tbl",
+  "view_class": "trkOLGView",
+  "program": "306",
+  "title": "OUTGOING LINE GROUPS",
+  "description": "This command deletes outgoing line groups.",
+  "ui_fields": [
+   {
+    "name": "olgGrpNo",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "olgAnalogISDNType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "olgTrunkType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "olgTrunkPrivateServiceType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "olgGco1",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "olgPoolLineGroup1",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "olgPoolLineGroup2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "olgCos",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "olgCosDay2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "olgCosNight",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "olgFrl",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "olgFrlDay2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "olgFrlNight",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "olgQpl",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "olgQplDay2",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "olgQplNight",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "olgBearCap",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "olgMusicOnHold",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "olgAccountCode",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "olgTr",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "olgCreditCardCalling",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "olgCesidSend",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "olgQsigSendingType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "olgNetworkCos",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "olgAnalogExclusiveLineFlash",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "deleteOlg",
+    "ui_type": "HIDDEN"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkServices.tbl",
+  "view_class": "trkServicesView",
+  "program": "311",
+  "title": "DISA SECURITY CODE",
+  "description": "This command assigns Intercept destinations for Day1; Day2 and Night modes.",
+  "ui_fields": [
+   {
+    "name": "disaNecessitySecurityCode",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "disaSecurityCode",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "disaResponseTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "disaIdleTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "disaAccessToTieLine",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "interceptDay1DestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "interceptDay1Destination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "interceptDay2DestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "interceptDay2Destination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "interceptNightDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "interceptNightDestination",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkServices220.tbl",
+  "view_class": "trkServices220View",
+  "program": "311",
+  "title": "DISA SECURITY CODE",
+  "description": "This command assigns Intercept destinations for Day1; Day2 and Night modes.",
+  "ui_fields": [
+   {
+    "name": "disaNecessitySecurityCode",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "disaSecurityCode",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "disaResponseTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "disaIdleTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "disaAccessToTieLine",
+    "ui_type": "RADIOBUTTON"
+   },
+   {
+    "name": "interceptPerTenantTenantNumber",
+    "ui_type": "KEYSELECT_RANGE"
+   },
+   {
+    "name": "interceptPerTenantDay1DestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "interceptPerTenantDay1Destination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "interceptPerTenantDay2DestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "interceptPerTenantDay2Destination",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "interceptPerTenantNightDestinationType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "interceptPerTenantNightDestination",
+    "ui_type": "TEXTFIELD"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkSipTrunkChannelGrp.tbl",
+  "view_class": "sipTrunkAssignmentTableView",
+  "program": "326",
+  "title": "SIP TRUNK ASSIGNMENT",
+  "description": "This command assigns SIP trunks to the system.",
+  "ui_fields": [
+   {
+    "name": "sipTrunkChGrp",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "sipTrunkEquipment",
+    "ui_type": "CARDSLOTNUM"
+   },
+   {
+    "name": "sipTrunkLanInterfaceNumber",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkChannelNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "sipTrunkRbt",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkSipTrunkServiceKindAssign.tbl",
+  "view_class": "sipTrunkServiceKindAssignmentTableView",
+  "program": "327",
+  "title": "SIP TRUNK SERVICE KIND ASSIGNMENT",
+  "description": "Assigns sip trunk service.",
+  "ui_fields": [
+   {
+    "name": "sipTrunkServiceKindIndex",
+    "ui_type": "KEYNUMERALFIELD"
+   },
+   {
+    "name": "sipTrunkServiceKindRegistrationMode",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindTrunkIlg",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "sipTrunkServiceKindTrunkOlg",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "sipTrunkServiceKindTrunkChannelNumber",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "sipTrunkServiceKindDomainName",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "sipTrunkServiceKindServerLocation",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "sipTrunkServiceKindVPTableIndexPrimary",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "sipTrunkServiceKindVPTableIndexSecondary",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "sipTrunkServiceKindRegisterPeriod",
+    "ui_type": "NUMERALFIELD"
+   },
+   {
+    "name": "sipTrunkServiceKindTimerB",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "sipTrunkServiceKindRecoveryTimer",
+    "ui_type": "NUMERALFIELD"
+   },
+   {
+    "name": "sipTrunkServiceKindNetworkTransfer",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindUserAgentHeader",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindServerHeader",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindProtocolOption",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindSessionTimer",
+    "ui_type": "NUMERALFIELD"
+   },
+   {
+    "name": "sipTrunkServiceKindAudioCodecPrimary",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindAudioCodecSecondary",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindDtmf",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindRtcp",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindT38",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindServerCaches",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "sipTrunkServiceKindMediaDiffserv",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindMediaTosFieldType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindMediaTosPrecedence",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindMediaTosDelay",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindMediaTosThroughput",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindMediaTosReliability",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindMediaDscp",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "sipTrunkServiceKindSignalingDiffserv",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindSignalingTosFieldType",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindSignalingTosPrecedence",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindSignalingTosDelay",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindSignalingTosThroughput",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindSignalingTosReliability",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindSignalingDscp",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "sipTrunkServiceKindElementCallRelease",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindElementFailureTimer",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "sipTrunkServiceKindRecoveryRegisterCycle",
+    "ui_type": "NUMERALFIELD"
+   },
+   {
+    "name": "sipTrunkServiceKindOptionsInterval",
+    "ui_type": "NUMERALFIELD"
+   },
+   {
+    "name": "sipTrunkServiceKindSipMessageOption",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindSipMessageToHeaderOption",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindRegisterMessageFromHeaderOption",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindRegisterMessageToHeaderOption",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "sipTrunkServiceKindAssertIdentity",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkT1.tbl",
+  "view_class": "trkT1View",
+  "program": "315",
+  "title": "T1 TRUNK CARD",
+  "description": "This command assigns T1 trunk data.",
+  "ui_fields": [
+   {
+    "name": "t1TrunkEquipment",
+    "ui_type": "KEYCARDSLOTNUM"
+   },
+   {
+    "name": "t1TrunkZeroCodeSuppress",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "t1TrunkFrameFormat",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "t1TrunkReceivePAD",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "t1TrunkSendPAD",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkTimer.tbl",
+  "view_class": "trkTimerView",
+  "program": "308",
+  "title": "TRUNK TIMERS",
+  "description": "This command assigns trunk timers for analog and T1 trunks. These timers do not apply to PRI/BRI lines.",
+  "ui_fields": [
+   {
+    "name": "trunkTimerPort",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "trunkTimerDetectArCpc",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trunkTimerShortFlashTime",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "trunkTimerLongFlashTime",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "trunkTimerPauseTimeAfterFlash",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "trunkTimerDIDandDMIResponse",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "trunkTimerAbandonSuperviseTime",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkTrunkCallerId.tbl",
+  "view_class": "trkTrunkCallerIdView",
+  "program": "313",
+  "title": "CALLER ID ASSIGNMENTS",
+  "description": "This program assigns RCIU/RCIS Caller ID circuits to the RCOU/RCOS CO Lines and defines the ANI;DNIS; DID formats for TI and analog DID CO Lines.",
+  "ui_fields": [
+   {
+    "name": "callerIdTrunkNo",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "callerIdReceivingMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "callerIdNoticeContents",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "callerIdCIUEquip",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "callerIdImmediateCallerId",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ },
+ {
+  "tbl_file": "trkTrunkGroup.tbl",
+  "view_class": "trkTrunkGroupView",
+  "program": "300",
+  "title": "TRUNK ASSIGNMENT",
+  "description": "Assigns an analog or T1 trunk (line) and its parameters to the system.<br>Trunk is another name for Line in CTX.",
+  "ui_fields": [
+   {
+    "name": "trunkNo",
+    "ui_type": "HIDDEN"
+   },
+   {
+    "name": "trunkEquipment",
+    "ui_type": "EQUIPMENTNUM"
+   },
+   {
+    "name": "trunkIlg",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "trunkOlg",
+    "ui_type": "SELECT_RANGE"
+   },
+   {
+    "name": "trunkDialMode",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trunkSignaling",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trunkStartMethod",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trunkReleaseSupervision",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trunkAnswerSupervision",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trunkTrunkName",
+    "ui_type": "TEXTFIELD"
+   },
+   {
+    "name": "trunkSupplyOfRinging",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trunkDtmfBackTone",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trunkHuntingOrder",
+    "ui_type": "LABELONLY"
+   },
+   {
+    "name": "trunkRingDownCircuit",
+    "ui_type": "SELECT_OPTION"
+   },
+   {
+    "name": "trunkGuardTime",
+    "ui_type": "SELECT_OPTION"
+   }
+  ]
+ }
+]

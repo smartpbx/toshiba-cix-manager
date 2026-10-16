@@ -1,0 +1,18 @@
+{
+  "_note": "Recognised two-value enum pairs rendered as a two-label segmented control (DESIGN_PLAN 3.4), never a toggle or a plain select. 'on' is the symbol whose raw value is the affirmative/enabled side; 'off' its complement. Matching is order-independent on the two symbols a field actually offers; captions come from the enum_label pipeline unless given here.",
+  "pairs": [
+    {"on": "enable", "off": "disable"},
+    {"on": "enabled", "off": "disabled"},
+    {"on": "on", "off": "off"},
+    {"on": "oN", "off": "oFF"},
+    {"on": "allowed", "off": "notAllowed"},
+    {"on": "permitted", "off": "notPermitted"},
+    {"on": "possible", "off": "impossible"},
+    {"on": "yes", "off": "no"},
+    {"on": "need", "off": "noNeed"},
+    {"on": "need", "off": "no-need"},
+    {"on": "add", "off": "delete"},
+    {"on": "connected", "off": "notConnected"},
+    {"on": "use", "off": "notUse"}
+  ]
+}

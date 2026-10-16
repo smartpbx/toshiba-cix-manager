@@ -66,11 +66,56 @@ def _embedded_html() -> str:
             "  # bundled UI")
 
 
-def _embedded_catalog() -> str:
-    with open(os.path.join(PKG, "data", "emanager_catalog.json"), "rb") as fh:
+def _embedded_data(filename: str, global_name: str, note: str) -> str:
+    with open(os.path.join(PKG, "data", filename), "rb") as fh:
         b64 = base64.b64encode(fh.read()).decode("ascii")
-    return (f'EMBEDDED_CATALOG_JSON = base64.b64decode("{b64}").decode("utf-8")'
-            "  # bundled eManager catalog")
+    return (f'{global_name} = base64.b64decode("{b64}").decode("utf-8")'
+            f"  # {note}")
+
+
+def _embedded_catalog() -> str:
+    return _embedded_data("emanager_catalog.json", "EMBEDDED_CATALOG_JSON",
+                          "bundled eManager catalog")
+
+
+def _embedded_volatile_fields() -> str:
+    return _embedded_data("volatile_fields.json", "EMBEDDED_VOLATILE_FIELDS_JSON",
+                          "curated volatile-field list (diff hiding)")
+
+
+def _embedded_references() -> str:
+    return _embedded_data("references.json", "EMBEDDED_REFERENCES_JSON",
+                          "field -> referenced entity kind (where-used)")
+
+
+def _embedded_lint_rules() -> str:
+    return _embedded_data("lint_rules.json", "EMBEDDED_LINT_RULES_JSON",
+                          "config-linter rules (Problems panel)")
+
+
+def _embedded_enum_labels() -> str:
+    return _embedded_data("enum_labels.json", "EMBEDDED_ENUM_LABELS_JSON",
+                          "bundled enum value labels")
+
+
+def _embedded_program_menus() -> str:
+    return _embedded_data("program_menus.json", "EMBEDDED_PROGRAM_MENUS_JSON",
+                          "bundled eManager menu-area map")
+
+
+def _embedded_ui_schema() -> str:
+    return _embedded_data("ui_schema.json", "EMBEDDED_UI_SCHEMA_JSON",
+                          "bundled generated UI schema")
+
+
+# Flatten-namespace aliases for the voicemail modules: each ``vm_X.py`` is
+# referenced as ``vm_X.func`` by its siblings, so after the amalgam strips the
+# intra-package imports we bind ``vm_X`` back to the single flattened module.
+def _vm_aliases():
+    names = ["vm_data", "vm_serial", "vm_records", "vm_link", "vm_sysparams",
+             "vm_pbxdb", "vm_catalog", "vm_reports", "vm_backup", "vm_session"]
+    return {f"{n}.py": [f"{n} = sys.modules[__name__]  # flatten alias"]
+            for n in names}
 
 
 def build(order, out_name, *, title, with_web, tail):
@@ -85,10 +130,31 @@ def build(order, out_name, *, title, with_web, tail):
         aliases["discover.py"] = ["DISC = sys.modules[__name__]  # 'discover as DISC' alias"]
         # Preserve the reader CLI main() before webapp.py redefines `main`.
         aliases["cli.py"] = ["reader_cli_main = main  # reader CLI entry (webapp redefines main)"]
-        # Embed the vendored eManager catalog so the single-file build is
-        # self-contained (catalog.load_catalog_text() reads this global first).
-        aliases["catalog.py"] = [_embedded_catalog()]
+        # Embed the vendored eManager catalog + enum labels + menu map so the
+        # single-file build is self-contained (catalog.py reads these globals
+        # first, before any bundled-file lookup).
+        aliases["catalog.py"] = [_embedded_catalog(), _embedded_enum_labels(),
+                                 _embedded_program_menus(),
+                                 _embedded_volatile_fields(),
+                                 _embedded_references(),
+                                 _embedded_lint_rules()]
+        # The generated UI schema rides with the schema module (same embed →
+        # _MEIPASS → packaged-data resolution as the catalog).
+        aliases["server/schema.py"] = [_embedded_ui_schema()]
         aliases["webapp.py"] = [_embedded_html()]
+        # Voicemail modules: flatten aliases + embed their vendored data so the
+        # single-file build reads the catalog/help/PBX-defaults offline.
+        aliases.update(_vm_aliases())
+        aliases["vm_data.py"] = aliases["vm_data.py"] + [
+            _embedded_data("stratagy_vm_catalog.json",
+                           "EMBEDDED_VM_CATALOG_JSON", "bundled VM field catalog"),
+            _embedded_data("stratagy_sysparams_help.json",
+                           "EMBEDDED_VM_SYSPARAMS_HELP_JSON",
+                           "bundled Stratagy sysparam help"),
+            _embedded_data("stratagy_pbx_defaults.json",
+                           "EMBEDDED_VM_PBX_DEFAULTS_JSON",
+                           "bundled Stratagy PBX dial-code/integration defaults"),
+        ]
 
     parts = [
         "#!/usr/bin/env python3",
@@ -143,8 +209,31 @@ def main() -> None:
     )
     build(
         ["snmp.py", "decode.py", "scan.py", "catalog.py", "write.py",
-         "backup.py", "diff.py", "restore.py", "discover.py",
-         "report.py", "cli.py", "update.py", "webapp.py"],
+         "backup.py", "enrich.py", "diff.py", "diff_view.py", "restore.py",
+         "discover.py", "report.py", "cli.py", "update.py",
+         # generic single-program read + snapshot engine (depend on backup /
+         # enrich / catalog above), the snapshot store and the value index.
+         "programs.py", "snapshot.py", "store.py", "index.py",
+         # P2 write path (pure): field/row validation, the three-way review,
+         # bulk-edit planners, and the staged changeset. Listed after programs/
+         # write/snmp because they reference those as flattened globals.
+         "validate.py", "review.py", "bulk.py", "changeset.py",
+         # P4 polish (pure): hover/row history, templates, the config linter and
+         # the wizard planners (depend on programs / write / index above).
+         "history.py", "template.py", "lint.py", "wizards.py",
+         # voicemail leg (DESIGN_PLAN §8): byte pipe -> framing/link -> decoders
+         # -> sysparams/pbxdb/catalog -> reports/backup -> the exclusive session.
+         # Listed before webapp.py, which registers their routes.
+         "vm_data.py", "vm_serial.py", "vm_records.py", "vm_link.py",
+         "vm_sysparams.py", "vm_pbxdb.py", "vm_catalog.py", "vm_reports.py",
+         "vm_backup.py", "vm_session.py",
+         # disk-state layer, then the server package (dependency order: a
+         # module is listed after everything it references, because the
+         # amalgam flattens them into one namespace and strips the imports).
+         "appdirs.py", "sites.py", "journal.py",
+         "server/events.py", "server/auth.py", "server/router.py",
+         "server/jobs.py", "server/sessions.py", "server/schema.py",
+         "server/http.py", "server/app.py", "webapp.py"],
         "toshiba_cix_manager.py",
         title="Toshiba CIX Manager — standalone web app (generated).",
         with_web=True,

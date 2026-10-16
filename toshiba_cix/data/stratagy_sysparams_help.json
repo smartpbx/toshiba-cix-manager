@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "source": "curated starter subset — the full 187-entry help ships in VM Manager's Install.dhp and is not bundled here. Parameters without an entry render with no inline help (never a fabricated description).",
+    "status": "partial"
+  },
+  "params": {
+    "pbx_type": {"description": "The PBX model this Stratagy is integrated with (selects the dial-code/integration template).", "default": "", "group": "System"},
+    "password": {"description": "System administration password (max 8 chars, case-sensitive). The shipped default 'Stratagy' is a security finding.", "default": "Stratagy", "group": "System"},
+    "hot_box": {"description": "Mailbox a caller reaches immediately on connect (the 'hot' box).", "default": "994", "group": "Reserved boxes"},
+    "error_box": {"description": "Mailbox that handles callers who make repeated errors.", "default": "999", "group": "Reserved boxes"},
+    "box_snd": {"description": "System-send mailbox used for broadcast / future delivery.", "default": "998", "group": "Reserved boxes"},
+    "box_idx": {"description": "Directory-information mailbox (dial-by-name).", "default": "411", "group": "Reserved boxes"},
+    "defaults_box": {"description": "Template mailbox (997) copied into every newly created User ID.", "default": "997", "group": "Reserved boxes"},
+    "guest_defaults": {"description": "Template mailbox for guest IDs.", "default": "996", "group": "Reserved boxes"},
+    "future_delivery": {"description": "Mailbox that holds future-delivery messages.", "default": "995", "group": "Reserved boxes"},
+    "security_max_length": {"description": "Maximum number of digits a mailbox security code may have.", "possible": "1-16", "default": "16", "group": "Security"},
+    "security_min_length": {"description": "Minimum number of digits a mailbox security code must have.", "possible": "1-16", "default": "1", "group": "Security"},
+    "baud1": {"description": "Baud rate of serial port 1 (the maintenance port).", "possible": "9600 / 19200 / 38400 / 57600", "default": "9600", "group": "Serial"},
+    "serial_port1": {"description": "Which physical serial port is port 1.", "default": "2", "group": "Serial"},
+    "lognam": {"description": "Filename of the Stratagy activity log on the card.", "default": "Stratagy.LOG", "group": "System"},
+    "shutdown": {"description": "Scheduled automatic shutdown/restart time, as 'DAY HHMM' (day 0=Sunday).", "default": "", "group": "System"},
+    "fixed_len0": {"description": "Fixed User ID digit length for boxes whose first digit is 0.", "default": "3", "group": "Numbering"},
+    "fixed_len1": {"description": "Fixed User ID digit length for boxes whose first digit is 1.", "default": "3", "group": "Numbering"},
+    "fixed_len2": {"description": "Fixed User ID digit length for boxes whose first digit is 2.", "default": "3", "group": "Numbering"},
+    "max_prompt": {"description": "Maximum number of times a prompt is replayed before timeout.", "default": "3", "group": "Timers"},
+    "tmo_idle": {"description": "Idle timeout (seconds) before the system hangs up a quiet caller (0 = none).", "default": "0", "group": "Timers"},
+    "tmo_menu": {"description": "Seconds to wait for a menu selection before timing out.", "default": "20", "group": "Timers"},
+    "tape_length": {"description": "Maximum total recording time (minutes) across all mailboxes.", "default": "30", "group": "System"},
+    "play_caller_id": {"description": "Announce the caller ID when playing a message.", "possible": "true / false", "default": "true", "group": "Options"},
+    "active_hold": {"description": "Allow callers to be placed on active hold.", "possible": "true / false", "default": "true", "group": "Options"},
+    "country_code": {"description": "Country code used when expanding notify/AMIS phone numbers.", "default": "1", "group": "AMIS"}
+  }
+}

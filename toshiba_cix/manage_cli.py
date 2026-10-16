@@ -18,13 +18,16 @@ import argparse
 import json
 import sys
 
+from .appdirs import store_root
 from .backup import backup as do_backup
-from .backup import render_backup_text
+from .backup import load_document, render_backup_text
 from .catalog import load_catalog
 from .diff import diff_backups, render_diff_text
+from .index import build_index, search as index_search
 from .restore import plan_summary, restore
 from .snmp import SnmpError, SnmpV1
-from .write import WRITES_ENABLED, WriteError
+from .store import SnapshotStore
+from .write import writes_enabled, WriteError
 
 
 def _load_json(path: str) -> dict:
@@ -92,6 +95,27 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--confirm", action="store_true",
                    help="actually SEND the writes (default is preview only)")
     r.add_argument("--batch-size", type=int, default=20)
+
+    f = sub.add_parser("find", help="value search over a backup / live CIX")
+    f.add_argument("query", help="a DN, name, digit string, or prg:/field:/cos: query")
+    src = f.add_mutually_exclusive_group(required=True)
+    src.add_argument("--backup", help="search a backup JSON / .cixbak")
+    src.add_argument("--ip", help="read a live CIX and search it")
+    _add_snmp_opts(f)
+    f.add_argument("--limit", type=int, default=200)
+
+    s = sub.add_parser("snapshot", help="snapshot store: take / list / name / prune")
+    s.add_argument("action", choices=["take", "list", "name", "prune"])
+    s.add_argument("--ip", help="CIX IP (take)")
+    _add_snmp_opts(s)
+    s.add_argument("--site", default=None, help="site label stored in meta")
+    s.add_argument("--site-id", dest="site_id", default=None,
+                   help="store key for the site (defaults to the IP / label)")
+    s.add_argument("--scope", default="all", choices=["all", "core"])
+    s.add_argument("--name", default=None, help="snapshot name (take / name)")
+    s.add_argument("--id", dest="sid", default=None, help="snapshot id (name)")
+    s.add_argument("--store", default=None, help="store root (default: per-OS)")
+    s.add_argument("--kind", default="manual")
 
     u = sub.add_parser("update",
                        help="check for / install the latest release")
@@ -175,7 +199,7 @@ def _cmd_restore(args) -> int:
           file=sys.stderr)
     if result["mode"] == "preview":
         print(result["message"])
-        print(f"(writes_enabled={WRITES_ENABLED}; re-run with --confirm to apply)")
+        print(f"(writes_enabled={writes_enabled()}; re-run with --confirm to apply)")
         for op in result["planned_ops"]:
             if op["sendable"]:
                 print(f"  SET {op['target_oid']} = {op['new_value']!r}"
@@ -187,6 +211,85 @@ def _cmd_restore(args) -> int:
         print(f"  [{flag}] {r['field']} = {r['read_back']!r} "
               f"(requested {r['requested']!r})")
     return 0 if result["ok"] else 1
+
+
+def _cmd_find(args) -> int:
+    cat = load_catalog()
+    if args.backup:
+        doc = load_document(args.backup) if args.backup.endswith(".json") \
+            else _load_cixbak(args.backup)
+    else:
+        try:
+            doc = do_backup(_client(args), cat, width=args.width)
+        except SnmpError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 2
+    idx = build_index(doc, cat)
+    res = index_search(idx, args.query, limit=args.limit)
+    print(f"{res['count']} match(es) for {args.query!r}")
+    for g in res["groups"]:
+        print(f"\n  {g.get('menu_path') or g['program']}")
+        for o in g["occurrences"]:
+            dn = f" [{o['display_no']}]" if o.get("display_no") else ""
+            row = o.get("row_key") or o.get("index") or "-"
+            print(f"    {row:<16} {o['field']}{dn} = {o['value']}")
+    return 0
+
+
+def _load_cixbak(path: str) -> dict:
+    from .store import unpack_cixbak
+    doc, _ = unpack_cixbak(path)
+    return doc
+
+
+def _cmd_snapshot(args) -> int:
+    cat = load_catalog()
+    st = SnapshotStore(store_root(override=args.store), catalog=cat)
+    if args.action == "take":
+        if not args.ip:
+            print("ERROR: snapshot take needs --ip", file=sys.stderr)
+            return 2
+        site_id = args.site_id or (args.site or args.ip)
+        programs = None if args.scope == "all" else _core_keys(cat)
+        try:
+            entry = st.take(_client(args), site_id=site_id, catalog=cat,
+                            scope=args.scope, programs=programs, site=args.site,
+                            name=args.name, kind=args.kind)
+        except SnmpError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 2
+        st.prune(site_id)
+        dd = " (unchanged — deduped)" if entry.get("dedupe_of") else ""
+        print(f"snapshot {entry['id']} [{entry['kind']}] "
+              f"{entry['counts'].get('rows')} rows{dd}")
+        return 0
+    if not args.site_id:
+        print("ERROR: --site-id is required", file=sys.stderr)
+        return 2
+    if args.action == "list":
+        for e in st.index(args.site_id):
+            flag = "📌" if e.get("pinned") else "  "
+            dd = " deduped" if e.get("dedupe_of") else ""
+            print(f"{flag} {e['id']}  {e['kind']:<16} "
+                  f"{(e.get('name') or ''):<28} {e['counts'].get('rows')} rows{dd}")
+        return 0
+    if args.action == "name":
+        if not (args.sid and args.name):
+            print("ERROR: name needs --id and --name", file=sys.stderr)
+            return 2
+        entry = st.name(args.site_id, args.sid, args.name)
+        print("named" if entry else "no such snapshot")
+        return 0 if entry else 1
+    if args.action == "prune":
+        removed = st.prune(args.site_id)
+        print(f"pruned {len(removed)} snapshot(s)")
+        return 0
+    return 2
+
+
+def _core_keys(cat):
+    from .snapshot import core_program_keys
+    return core_program_keys(cat)
 
 
 def _cmd_update(args) -> int:
@@ -230,6 +333,7 @@ def main(argv: list[str] | None = None) -> int:
     return {
         "backup": _cmd_backup, "view": _cmd_view,
         "diff": _cmd_diff, "restore": _cmd_restore,
+        "find": _cmd_find, "snapshot": _cmd_snapshot,
         "update": _cmd_update,
     }[args.cmd](args)
 

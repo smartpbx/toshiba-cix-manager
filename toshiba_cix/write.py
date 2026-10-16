@@ -48,16 +48,26 @@ Safety contract (kept strict):
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import Iterable
 
 from .decode import decode_value
 from .snmp import SnmpError, Value, ber_integer, ber_octet, encode_set_message
 
-# Master switch. Writes are implemented and unit-tested offline against a fake
-# agent; a supervised live write (reversible station-name set -> read-back ->
-# re-read) is done with the owner present before trusting it in the field.
-WRITES_ENABLED = True
+# Master switch — defaults OFF. This tool SETs live customer PBXs over SNMP, so
+# a write must be an opt-in: the flag is read from the environment and is False
+# unless ``CIX_WRITES_ENABLED`` is explicitly set truthy. Writes are implemented
+# and unit-tested offline against a fake agent; a supervised live write
+# (reversible station-name set -> read-back -> re-read) is done with the owner
+# present before trusting it in the field.
+#
+# NOTE: never import this value into another module (``from .write import
+# WRITES_ENABLED``) — that freezes a snapshot at import time. Read it live via
+# :func:`writes_enabled` (or ``write.WRITES_ENABLED`` within this module), so a
+# runtime toggle (a test, a future UI switch) is honoured at request time.
+WRITES_ENABLED = os.environ.get("CIX_WRITES_ENABLED", "").strip().lower() in (
+    "1", "true", "yes", "on")
 
 # Optional operation/mode pre-op (frame 334). OFF by default: the data SET at
 # frame 634 succeeded without it. Flip on only if a bare SET is ever refused.
@@ -119,6 +129,16 @@ class WriteOp:
     column: int | None = None
     ber_type: str = "OCTET STRING"
     note: str = ""
+    # P2 additions (back-compatible defaults). ``native_wire`` is the field's
+    # catalog-native ASN.1 type; ``wire_proven`` is False when that type was
+    # never seen on the wire in the capture (``WRITE_FORMAT.md``) — the review
+    # surfaces it as an amber "catalog-derived" badge. ``op_class`` tags the
+    # proven commit/apply SET apart from an ordinary data write; ``row_create``
+    # flags an op that would add a new index (unproven, excluded by default).
+    native_wire: str | None = None
+    wire_proven: bool = True
+    op_class: str = "data"      # "data" | "commit"
+    row_create: bool = False
 
     @property
     def sendable(self) -> bool:
@@ -129,6 +149,18 @@ class WriteOp:
         if self.ber_type == "INTEGER":
             return ber_integer(int(self.new_value))
         return ber_octet(self.new_value)
+
+    def inverse(self) -> "WriteOp":
+        """The op that undoes this one: swap old/new. Only meaningful for a
+        data op whose ``old_value`` was read back (never the commit)."""
+        return WriteOp(
+            field=self.field, label=self.label,
+            new_value="" if self.old_value is None else self.old_value,
+            old_value=self.new_value, target_oid=self.target_oid,
+            program=self.program, column=self.column, ber_type=self.ber_type,
+            note="inverse (Undo) of a prior op", native_wire=self.native_wire,
+            wire_proven=self.wire_proven, op_class=self.op_class,
+        )
 
     def as_dict(self) -> dict:
         return {
@@ -142,7 +174,57 @@ class WriteOp:
             "ber_type": self.ber_type,
             "sendable": self.sendable,
             "note": self.note,
+            "native_wire": self.native_wire,
+            "wire_proven": self.wire_proven,
+            "op_class": self.op_class,
+            "row_create": self.row_create,
         }
+
+
+def commit_write_op() -> WriteOp:
+    """The explicit apply/commit SET, modelled as a :class:`WriteOp`.
+
+    Proven from the on-site capture (``emanager-re/WRITE_FORMAT.md``): eManager
+    persists a batch by SETting ``1.3.6.1.4.1.186.1.22.7.7.1.0 = INTEGER 2``.
+    The INTEGER wire type (ASN.1 tag ``0x02``) and value ``2`` are byte-proven;
+    what is **not** proven is that this survives a processor reboot
+    (no reboot in the capture) or that it is required for a row-create. Both are
+    labelled so the review can say so (DESIGN_PLAN "say what is unproven")."""
+    return WriteOp(
+        field="__commit__", label="Apply / commit (save to NVM)",
+        new_value=str(OP_MODE_VALUE), old_value=None, target_oid=OP_MODE_OID,
+        ber_type="INTEGER", native_wire="INTEGER", wire_proven=True,
+        op_class="commit",
+        note=("apply/commit SET — proven on the wire; persistence across reboot "
+              "is UNPROVEN and row-create is UNPROVEN"),
+    )
+
+
+def conflict_guard(ops: Iterable[WriteOp], live_by_oid: dict) -> list[dict]:
+    """Layer-3 preflight: compare each op's ``old_value`` (the base it was
+    planned against) to what the device holds **now** (``live_by_oid`` maps the
+    target OID to its current decoded value). A field whose live value differs
+    from the base is a conflict — someone else programmed it since the read —
+    and the default posture is *keep live* (exclude the op) until the operator
+    chooses to overwrite. Pure: the caller does the live re-read.
+
+    Returns one dict per conflicting op: ``{field, oid, base, live, proposed}``.
+    """
+    conflicts: list[dict] = []
+    for op in ops:
+        if not op.sendable or op.op_class == "commit":
+            continue
+        if op.target_oid not in live_by_oid:
+            continue
+        live = live_by_oid[op.target_oid]
+        live_s = "" if live is None else str(live)
+        base_s = "" if op.old_value is None else str(op.old_value)
+        if live_s != base_s:
+            conflicts.append({
+                "field": op.field, "oid": op.target_oid,
+                "base": op.old_value, "live": live, "proposed": op.new_value,
+            })
+    return conflicts
 
 
 def encode_set_request(community: str, ops: Iterable[WriteOp],
@@ -281,9 +363,21 @@ class CIXWriter:
         ops = self.plan_station_update(station, changes)
         return self.commit(ops, confirm=confirm, verify=verify)
 
+    def conflict_guard(self, ops: Iterable[WriteOp]) -> list[dict]:
+        """Re-read the sendable ops' OIDs live and return the conflicts
+        (DESIGN_PLAN §9 layer 3). Requires a client; the comparison itself is
+        the pure :func:`conflict_guard`. Never writes."""
+        ops = [op for op in ops if op.sendable and op.op_class != "commit"]
+        if not ops or self.client is None:
+            return []
+        vbs = self.client.get([op.target_oid for op in ops])
+        live = {vb.oid: decode_value(vb.value) for vb in vbs}
+        return conflict_guard(ops, live)
+
 
 __all__ = [
     "WRITES_ENABLED", "writes_enabled", "SEND_OP_MODE", "OP_MODE_OID",
     "OP_MODE_VALUE", "WriteError", "WriteOp", "CIXWriter", "encode_set_request",
-    "STATION_WRITE_COLUMNS", "STATION_READONLY_FIELDS",
+    "STATION_WRITE_COLUMNS", "STATION_READONLY_FIELDS", "commit_write_op",
+    "conflict_guard",
 ]

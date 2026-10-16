@@ -39,13 +39,13 @@ def start_server(host: str = "127.0.0.1", port: int = 0):
 
 
 def launch(host: str = "127.0.0.1", port: int = 8765,
-           open_browser: bool = True) -> None:
+           open_browser: bool = True, portable: bool = False) -> None:
     """Foreground launch — the double-click / desktop entry point.
 
     Delegates to :func:`toshiba_cix.webapp.serve`, which finds a free port,
     opens the browser, prints the URL and blocks until Ctrl-C.
     """
-    serve(host, port, open_browser=open_browser)
+    serve(host, port, open_browser=open_browser, portable=portable)
 
 
 def main(argv=None) -> int:
@@ -60,11 +60,14 @@ def main(argv=None) -> int:
                    help="preferred port (default 8765; next free if busy)")
     p.add_argument("--no-browser", action="store_true",
                    help="do not auto-open the browser")
+    p.add_argument("--portable", action="store_true",
+                   help="keep the store beside the executable (USB stick)")
     p.add_argument("--version", action="version",
                    version=f"Toshiba CIX Manager {__version__}")
     args = p.parse_args(argv)
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(message)s")
-    launch(args.host, args.port, open_browser=not args.no_browser)
+    launch(args.host, args.port, open_browser=not args.no_browser,
+           portable=args.portable)
     return 0
 
 

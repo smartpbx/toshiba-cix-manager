@@ -1,0 +1,80 @@
+feature_key_code,feature_name
+000,Unused Key
+100,Prime DN Key
+110,Secondary/Phantom DN Key
+120,CO
+130,CO Line Group
+140,Pooled Line Key
+150,Automatic Busy Redial
+160,Automatic Call Back
+170,Call Park Orbit
+180,Do Not Disturb
+200,Short Flash
+210,Long Flash
+220,All Paging
+230,Group Paging
+240,All Emergency Page
+250,Individual Emergency Page
+260,Speed Dial
+270,Release Button
+280,Release/Answer
+290,Cancel
+300,Source Party
+310,Destination Party
+320,Privacy
+330,Privacy Release
+340,Forward All Call
+350,Forward Busy
+360,Forward No Answer
+370,Forward Busy or No Answer
+380,Forward-External All Call
+390,Forward-External Busy
+400,Forward-External No Answer
+420,Forward-External Busy or No Answer
+430,Pickup-Group
+440,Pickup-Directed Terminal
+450,Pickup-Directed Group
+460,Pickup-Directed DN
+470,Pickup-Any External
+480,Pickup-CO Retrieve
+490,Pickup-Local retrieve
+500,Pickup-Remote
+510,Pickup-Directed DN retrieve
+520,Pickup-On Hold & Incoming
+530,BGM Key
+540,Door Unlock
+560,PhDN Message Waiting
+570,One Touch
+580,CLID
+590,Paging answer feature
+600,Night Transfer
+610,DSS Key
+620,Out Dial
+630,Record
+640,Pause/Resume
+650,Program
+660,Account Code
+700,Att-Answer
+790,Overflow
+800,Position Busy
+810,Trunk Test
+820,Attendant Loop
+830,Supervised Loop Key
+840,Microphone Cut Off
+850,Lock Password
+860,Split
+870,VM Call Monitor
+880,Malicious Call
+890,UCD Agent Log in/out key
+900,Application Start - Application #90
+900,Application Start - Application #91
+900,Application Start - Application #92
+900,Application Start - Application #93
+900,Application Start - Application #94
+900,Application Start - Application #95
+900,Application Start - Application #96
+900,Application Start - Application #97
+900,Application Start - Application #98
+900,Application Start - Application #99
+900,Application Start
+930,System Alarm Key

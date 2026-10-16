@@ -1,0 +1,1170 @@
+00 Access Code
+00 Analysis Digits
+00 Attendant Group Member
+00 Cabinet
+00 Cabinet & Slot Number 
+00 COS Override Index
+00 Destination Restriction Level
+00 Destination Restriction Level 
+00 Destination Restriction Level(DRL)
+00 Device Type
+00 Digit Modification Index 
+00 Door Lock Number 
+00 Door Phone Number 
+00 Emergency Call Group Number
+00 Equipment Number
+00 Exception Digits
+00 File Server Table Index
+00 Incoming Line Group (ILG)
+00 Network DN
+00 Node ID
+00 OLG Number
+00 Outgoing Line Group (OLG)
+00 Pad Group Device Type
+00 Page Zone Relay Number
+00 Password Level 
+00 PRI Card Equipment No.
+00 Prime DN
+00 Pvt Ntwk Digit Modification Table
+00 Pvt Ntwk Route Choice Table Number.
+00 Pvt Ntwk Route Definition
+00 Rcvd NCOS
+00 Remote Node ID
+00 Route Choice Table
+00 Route Plan
+00 SCF Template 
+00 Screened Dial String
+00 SIP Trunk Channel Group
+00 SIP Trunk Service Kind Table Index
+00 SIP URI Trunk Service Index
+00 Source Device Number
+00 Speed Dial Index
+00 T.38 Fax Over IP Table No.
+00 Table Type
+00 Tenant Number  
+00 VM Port DN
+01 Absolute Threshold
+01 ACB Callback Timer
+01 Add/Delete
+01 Add String to Table
+01 Alarm Enable/Disable
+01 Alternate Destination
+01 Auto Busy Redial
+01 Automatic Assignment of Station ID
+01 Automatic Busy Redial Retry Count
+01 Automatic Day Light Savings Time change
+01 Auto Release
+01 Backup/Restore
+01 B Ch
+01 Behind Centrex
+01 Behind Centrex Access Code
+01 BIOU Relay 1or 5; or  CTX100
+01 BRI Equipment No.
+01 Calendar Day
+01 Call Distribution Method
+01 Caller ID Field
+01 Call Type
+01 Clear Alarm Buffer
+01 CNG Tone Detect Threshold
+01 Coding Format
+01 Command No.
+01 Conference Trunk Qty.
+01 Configuration Version
+01 Control Method
+01 COS Override Code
+01 Credit Card Calling
+01 Day1 Destination Type
+01 Day1 Mode/Work Day
+01 Day/Night Mode
+01 DDCB Equipment No. 
+01 Default Number 
+01 Delete
+01 Deleted Digits
+01 Delete Digits
+01 Destination Device Number
+01 Device Type
+01 Dial 0 Day1 Dst Type
+01 Dial String
+01 DID/DNIS or DN VMID Option
+01 DID Number
+01 DISA Enabled
+01 Do Not Disturb
+01 DRL1
+01 DSS 1 Equipment No.
+01 Emergency Ringdown
+01 Equipment
+01 Equipment No.
+01 Exception Dial String 
+01 Exception Number
+01 Executive Override
+01 Feature Key Number
+01 Feature Name
+01 File Server User Name
+01 FRL1
+01 Group Number
+01 Group Type
+01 Hunt Method
+01 Hunt Order
+01 Index
+01 Initialise Lock Password
+01 Interface Type
+01 IP Address
+01 IP Address Route 1
+01 IP Protocol Type
+01 IPU IP Address
+01 Key Number
+01 LCR Day Type
+01 Local Area Code  
+01 Local COS
+01 MC Group Member Index
+01 MC Group Pilot Number
+01 Message Text
+01 MOH/BGM 1 (ACTU or BECU)
+01 Monday
+01 New PDN
+01 Node ID
+01 Non Linear Processing
+01 Number
+01 OLG Number 
+01 Outgoing Line Group
+01 Override COS
+01 Owner PDN
+01 Pad Group Number
+01 Page Group 
+01 Page Group 01
+01 Password 
+01 Pattern Digit Length 
+01 PDN Equipment No.
+01 PDN number for Tandem calls routed via LCR.
+01 Port Speed
+01 PRI  Equipment No. 
+01 Primary Node ID
+01 Prime DN
+01 Pvt Ntwk Route Choice Table Number
+01 QPL1
+01 Redundant Messages-Slow Data
+01 Registration Mode
+01 Remote Node IP Address
+01 Route Definition 1
+01 Route Definition Table 1
+01 Route Plan Number
+01 Route Plan Number 
+01 Sender Device Type
+01 Set Master Lock ID Code
+01 Signaling Method
+01 SIP Trunk Service Number
+01 SIP URI Index
+01 Slot
+01 Source Type
+01 Speed Dial Index
+01 Start of Zone 1
+01 Start Traffic Report
+01 Station ID
+01 Station LCD Name
+01 Station Type
+01 Telephone Status
+01 Traffic Measurement On/Off
+01 Trunk Number
+01 Type
+01 Type of Day 
+01 Verified Digit Length
+01 Verified Flag
+01 Voice Packet Trans. Int. 
+01 Working Day Type
+02 ACB Cancel Recall Timer
+02 Add/Delete
+02 Add Leading Digits
+02 Add or Delete Code
+02 Alarm Buffer Status
+02 Alternate Destination
+02 Any Call CFA Status
+02 Application Type
+02 Assume 9
+02 Automatic Busy Redial Retry Interval Timer
+02 B Ch
+02 BIOU Relay 2 or 6 
+02 BIOU Relay Number 
+02 Call Forward Override
+02 Cancellation Method for VM MW
+02 Channel ID 
+02 CNG Tone Band Ratio
+02 Coefficient Adaptation
+02 Conference Station Qty.
+02 Configuration Data
+02 Configuration Data For System
+02 Customer's Authorization Code 1.
+02 Day2 Destination Type
+02 Day2 Mode/Work Day
+02 Destination Restriction Action
+02 Dial 0 Call Day2 Dst Type
+02 Dial Method
+02 Digit Modification Index
+02 Digit Modification Table
+02 DISA Code
+02 DN
+02 DNIS Field Indication
+02 DRL
+02 DRL2
+02 DSS 2 Equipment No.
+02 DST Change Method 
+02 Emergency Ringdown Timer
+02 Exception Number
+02 Feature Key Number
+02 File Server Password
+02 File Transfer Mode
+02 First Date in Traffic Report
+02 Forward Twist Limit
+02 Frame Format
+02 FRL2
+02 ILG
+02 Incoming Line Group
+02 Insert Leading Digits
+02 IP Address Route 2
+02 IPU Subnet Address
+02 ISDN Channel Group
+02 Jitter Buffer Type
+02 Key Strip Pattern
+02 LAN Interface Number
+02 LCR Time of Day
+02 LCR Time Zone
+02 Line Type
+02 Local Route Plan 
+02 Member Type
+02 MOH/BGM 2 (BIOU1-J1)
+02 MOH Source
+02 Name
+02 Number
+02 Number Prefix
+02 Off-Hook Call Announce
+02 OLG Number (1-128)
+02 Outgoing Records
+02 Override DRL
+02 Page Group 02
+02 PDN Equipment Number
+02 Period 
+02 Pilot Number
+02 Port Parity
+02 Protocol
+02 QPL2
+02 Receiver Device Type
+02 Record for Abandoned Calls
+02 Redundant Messages-Fast Data
+02 Registered Digit Length
+02 Registration Data
+02 Remote Node Port No
+02 Ring Delay 1 Timer
+02 Route Definition 2 
+02 Route Definition Table 2
+02 Send A/D Tone
+02 Send TM Data to SM/SD Card
+02 Set COS
+02 Short Flash
+02 Signaling Contents
+02 SIP Trunk Service Kind Table Index
+02 SIP URI
+02 Source Number 
+02 Start of Zone 2
+02 Station IP Address Type
+02 Station MOH Source
+02 Station Type
+02 Subnet Address
+02 Tenant Number 
+02 Terminal Authentication
+02 Tone/Voice First
+02 Trunk Type
+02 Tuesday
+02 Type of Service
+02 User Entered Variable
+02 Voice Mail ID
+02 Voice Packet Table 
+02 Working Day Type
+03 Add Trailing Digits
+03 Any Call CFB Status
+03 Automatic Busy Redial Recall Timer
+03 B Ch
+03 BIOU Relay  3 or 7
+03 Call Transfer w/ Camp-on
+03 CED Tone Detect Threshold
+03 CF-Ext. Override FAC 
+03 Circuit  Type
+03 CLASS  Equipment No.
+03 Comfort Noise Gen.
+03 Conference Pad Value
+03 CO Service Type
+03 Customer's Authorization Code 2.
+03 Data Bits
+03 Data Flow 
+03 Day of week Method
+03 D-Ch Provided
+03 DDCB Equipment No.
+03 Default Gateway Address
+03 Dial 0 Call Night Dst Type
+03 Diffserv
+03 DN Set Type
+03 DR Action for Centrex
+03 DRL3
+03 DSS 3 Equipment No.
+03 Emergency Ringdown Destination
+03 Exception Number
+03 Facility Code
+03 File Create/Copy Progress
+03 File Server
+03 File Server URL
+03 Forward Error Correct-Slow Data
+03 FRL
+03 FRL3
+03 GCO Key Group
+03 Group CO Destination
+03 Incoming Line Group
+03 IP Address Route 3
+03 IPU Default Gateway Address
+03 ISDN Protocol
+03 Jitter Buffer Length
+03 Keystrip Button Quantity
+03 LAN Interface Number
+03 Last Date in Traffic Report
+03 LCD Keystrip Label Data
+03 LCR Campon
+03 Least Cost Routing Action
+03 Long Flash
+03 Member DN
+03 Message Desk Number
+03 MOH/BGM 3 (BIOU1-J2)
+03 Night Destination Type
+03 Night Mode/Work Day
+03 Number Verification
+03 OLG
+03 Outgoing Line Group
+03 Overflow Time
+03 Override FRL
+03 Pad Loss/Gain
+03 Page Group 03
+03 Park Recall Timer
+03 QPL3
+03 Record ANI
+03 Record Incoming Calls
+03 Response Timer
+03 Reverse Twist Limit
+03 Ring Delay 2 Timer
+03 Ring Transfer Tone
+03 Route Definition 3
+03 Route Definition Table 3
+03 Select Tenant to Measure
+03 Send B Tone
+03 Service Type
+03 Set DRL
+03 SIP Trunk Channels
+03 SIP URI User Name
+03 Special Number Assignments
+03 Speed Dial Name
+03 Start of Zone 3
+03 Start Time
+03 Station IP Address
+03 Station LCR Group
+03 Strata Net IP Channels
+03 System Call Forward
+03 System Speed Dial
+03 TCP Connection Release
+03 Telephone Status
+03 Wednesday
+04 Abandoned Outbound Call
+04 Action 
+04 Add-on Module
+04 Any Call CFN Status
+04 Auto Assign Station ID
+04 B Ch
+04 BIOU Relay  4 or 8 
+04 Bypass Mode
+04 Caller ID Ring Start
+04 Camp-on Timer
+04 CED Tone Margin Threshold
+04 CF Password
+04 Change DISA Codes
+04 COS Day1
+04 COS Override
+04 Customer's Authorization Code 3.
+04 Day1 Mode/Non-work Day
+04 Day Of Week Method
+04 Default Number 2
+04 Destination 1
+04 Dial Mode
+04 Digit Modification Action
+04 Display DN
+04 DRL4
+04 DSS 4 Equipment No.
+04 Effective Channel Number
+04 End-to-End
+04 Exception Number
+04 File Transfer Status
+04 Flow Control
+04 Forward Error Correct-Fast Data
+04 FRL4
+04 GCO Key1 Number
+04 Group Overflow Destination
+04 H.323 Fast Connection 
+04 Hold Recall Timer
+04 Idle Timer
+04 ILG
+04 IP Address Route 4
+04 LIPS IP Address
+04 Measure TZ1 WD
+04 MOH/BGM 4 (BIOU1-J3)
+04 MOH Source
+04 Network COS
+04 Night Mode Relay
+04 Number to Display
+04 Outgoing Line Group
+04 Output of CLASS / ANI and DNIS
+04 Override QPL
+04 Page Group 04
+04 Pause after Flash
+04 Pooled Key Group
+04 Pooled Line Group
+04 Power Flatness Limit
+04 Private Service Type
+04 QPL4
+04 RBT on Incoming Call
+04 Receive PAD
+04 Record Abandoned Calls
+04 Record Authorization Codes
+04 Ring Duration
+04 Ringing Options
+04 Route Choice Table 
+04 Route Definition 4
+04 Route Definition Table 4
+04 Server Port No.
+04 Service Parameters
+04 Set FRL
+04 SIP URI Password
+04 Skip Length
+04 Special Name Assignments
+04 System Call Forward
+04 Thursday
+04 TOS Field Type
+04 Total Data in File
+04 Traffic Report Status
+04 Transfer Privacy
+04 Type Connection
+04 Version Number of BIPU
+05 Any Call CFBN Status
+05 Audio Day1 Dst Type
+05 B Ch
+05 Cal. Gain Cont.(Encoder)
+05 Calibrate Gain Cont.(Encoder)
+05 Calling Number Digits Sent to VM 
+05 CED Tone Flatness Threshold
+05 Channel Negotiation
+05 Client IP 
+05 COS Day1
+05 Customer's Authorization Code 4.
+05 Day2 Mode/Non-work Day
+05 Default Name
+05 Destination 2
+05 Display Transferred Call Records
+05 DND Override - Calling Party
+05 Domain Name
+05 Door Phone Override DND
+05 DRL5
+05 DRL Day1
+05 DSS 5 Equipment No.
+05 End-of-Record CR
+05 First Interdigit Timer
+05 Friday
+05 FRL5
+05 GCO Key Number
+05 IP Address Route 5
+05 IP Fax Datagram Size
+05 IP Strata Net RTP Base Port (BIPU)
+05 LCD Name Display
+05 LIPS Subnet Address
+05 Measure TZ2 WD
+05 MOH/BGM 5 (BIOU2-J1)
+05 Network ID
+05 Night Bell Relay
+05 OLG
+05 Page Group 05
+05 Pause Length
+05 Pilot No. SCFwd
+05 Privacy Override
+05 QPL5
+05 Record QoS Information
+05 Response Timer
+05 Route Definition 5
+05 Route Definition Table 5
+05 Send PAD
+05 Set QPL
+05 Signaling
+05 SIP URI Channel Group
+05 Skip Length
+05 SMDR Valid Call Timer
+05 SNR Limit
+05 Station Terminal Authentication Mode
+05 System Call Forward
+05 TGAC Override
+05 Tie Line Access
+05 Tone Ring/Voice Announce
+05 TOS Precedence Type
+05 Trunk ID Type
+05 VMID Code 
+05 Voice Mail ID
+05 Wait Timer
+06 Abandoned Call Ring Time
+06 Audio Codec
+06 Audio Day2 Dst Type
+06 Audio Day2 Dst Type 
+06 B Ch
+06 Bearer Svc - Speech
+06 Blank Digits Sent to VM 
+06 Call Abandon Timer
+06 CED Tone Release Threshold
+06 Client Port No.
+06 Credit Card Code
+06 Customer's Authorization Code 5.
+06 Day1 Destination 
+06 DND Override - Called Party
+06 DRL6
+06 DRL Day1
+06 DSCP
+06 DSS 6 Equipment No.
+06 Emerg Call Group
+06 External Call CFA Status
+06 FRL6
+06 FRL Day1
+06 Incoming Line Group
+06 IP Address Route 6
+06 IP Fax Data Rate
+06 LIPS Default Gateway Address
+06 Measure TZ3 WD
+06 MOH/BGM 6 (BIOU2-J2)
+06 Multiple DN Hunt
+06 Narrow to Wide Threshold 
+06 Night Mode/Non-work Day
+06 OCA Type
+06 Page Group 06
+06 Pool Key1 Number
+06 Pool Key Number
+06 QPL6
+06 Record QoS Information
+06 Route Definition 6
+06 Route Definition Table 6
+06 Saturday
+06 Second Interdigit Timer
+06 Set Network COS
+06 SIP Server
+06 SIP URI Attribution
+06 Start Method
+06 Station MAC Address
+06 Tandem Timer #1
+06 Trunk ID
+06 VM ID Code
+06 Volume Gain Control(Input)
+06 Volume Gain (Input)
+07 Audio Night Dst Type
+07 Audio Night Dst Type 
+07 Auto Cancel of VM and MW
+07 B Ch
+07 Bearer Svc - 3.1KHz Audio
+07 COS Day1
+07 COS Override Code 
+07 Credit Card Digits
+07 Customer's Authorization Code 6.
+07 Day1 Mode/Holiday
+07 Day2 Destination 
+07 D Ch Position
+07 DHG Auto CampOn 
+07 Do Not Disturb
+07 DRL7
+07 DSS 7 Equipment No.
+07 DTMF Translation
+07 External Call CFB Status
+07 FRL7
+07 FRL Day1
+07 Global Call ID Number
+07 Hold Off Limit
+07 IEEE802.1p
+07 LCR Group
+07 Measure TZ1 Non-WD 
+07 MOH/BGM 7 (BIOU2-J3)
+07 Outgoing Line Group
+07 Packet Loss Threshold
+07 Page Group 07
+07 Pool Key2 Number
+07 Primary Voice Packet Configuration
+07 QPL7
+07 Read Retry No.
+07 Release Supervision
+07 Ring Xfer No Answer Timer
+07 Sunday
+07 Tandem Timer #2
+07 Version of IPU/IPH
+07 VM to VM Call Blocking
+07 Voice Packet  Table
+08 Absolute Threshold (1st)
+08 Additional DTMF Time
+08 Answer Supervision
+08 Audio Codec
+08 B Ch
+08 Bearer Svc - 7KHz Audio
+08 Bearer Svc - Speech
+08 CF No Answer Time
+08 COS Day1
+08 Customer's Authorization Code 7.
+08 Data Day1 Dst Type
+08 Data Day1 Dst Type 
+08 Day2 Mode/Holiday
+08 Display DN
+08 DRL8
+08 DRL Day1
+08 DSS 8 Equipment No.
+08 DTMF Duration
+08 E911 Priority
+08 E911 Service
+08 External Call CFN Status
+08 FRL8
+08 IEEE802.1p Configuration
+08 LCR Group
+08 Measure TZ2 Non-WD 
+08 Min Calls Zone 1
+08 MOH/BGM 8 (RSTU/BSLU Equip.No.)
+08 Night Destination 
+08 Page Group 08
+08 QPL8
+08 QPL Day1
+08 RBT on Incoming Call
+08 Remote Set/Reset DND
+08 Secondary Voice Packet Configuration
+08 SLT MW Lamp Signal Timer
+08 Transmission Interval for MIPU
+08 UCD Enable/Disable
+08 Version  of LIPS
+08 Write Retry No.
+09 Analog Station Disconnect Signal Timer
+09 Available IPU/IPH IP Ports 
+09 B Ch
+09 Bearer Svc - 3.1KHz Audio
+09 Bearer Svc - Unrestr 64K
+09 CallerName Set To CSTA
+09 Customer's Authorization Code 8.
+09 Data Day2 Dst Type
+09 Data Day2 Dst Type 
+09 Dial Input Timer
+09 Display Software Version Number of IPT
+09 DRL9
+09 DR Override by SSD
+09 Executive Override
+09 External Call CFBN Status
+09 FRL9
+09 FRL Day1
+09 Handsfree MIC Setting
+09 IP-CTX Identifier
+09 Jitter Buffer Type for MIPU
+09 Max Calls Zone 1
+09 Measure TZ3 Non-WD 
+09 Message Center
+09 MOH/BGM 9 (RSTU/BSLU Equip.No.)
+09 Name to Display
+09 Night Mode/Holiday
+09 Page Group 09
+09 Q931 Protocol Timer
+09 QPL9
+09 QPL Day1
+09 Registration Period
+09 Station Name
+09 T.38 Protocol For G3 Fax 
+09 Trunk Name
+09 UCD MOH Source
+09 VMID Code 
+09 Voice Mail Soft Keys
+10 Any Call CFA Destination
+10 Auto Station Release
+10 Available LIPS IP Ports
+10 B Ch
+10 Bearer Svc - 7KHz Audio
+10 Bearer Svc - Unrestr 56K
+10 Central VM Callback
+10 Data Night Dst Type
+10 Data Night Dst Type 
+10 Delay 1 Ringing Timer
+10 Double Talk Hangtime
+10 Executive Override Allowed
+10 External Ring Repeat
+10 Handsfree Tone
+10 Jitter Buffer Length for MIPU
+10 LCD Name
+10 Measure TZ1 Holidays
+10 Min Calls Zone 2
+10 MOH/BGM 10 (RSTU/BSLU Equip.No.)
+10 Name to Display
+10 Page Group 10
+10 QPL Day1
+10 SIP Terminal URI
+10 Speech Capbility
+10 T.38 Parameter Table No.
+10 Tail Length of Echo Canceller
+10 TimerB
+10 UCD Overflow Timer
+11 Any Call CFB Destination
+11 B Ch
+11 Bearer Svc - Unrestr 2x64 K
+11 Bearer Svc - Unrestr 64K
+11 CF - All Call Record
+11 Delay 2 Ringing Timer
+11 Dialing Progress Tone
+11 DID Digits
+11 DID/DNIS No. VMID
+11 DID/DNIS No. VMID 
+11 Display Name
+11 DTMF Back Tone
+11 Ext. Ring Repeat
+11 Gain Control of IPT and BIPU
+11 IPT Mode
+11 IPU/IPH Packet Prioritization
+11 ISDN SPID 
+11 LCR Progress Tone
+11 Max Calls Zone 2
+11 Measure TZ2 Holidays
+11 MOH/BGM 11 (RSTU/BSLU Equip.No.)
+11 Offhook Camp-on
+11 Page Group 11
+11 Recovery Timer
+11 SIP Terminal Password
+11 Speech/3.1KHz
+11 T.38 - Alternate Process
+11 UCD RBT Timer
+12 Any Call CFN Destination
+12 B Ch
+12 Bearer Svc - Unrestr 56K
+12 CF - Busy Record
+12 DID/DNIS Name
+12 Door Unlock Timer
+12 Group Pickup
+12 Hunt Order
+12 IPU/IPH Packet Prioritization Type
+12 Measure TZ3 Holidays
+12 Min Calls Zone 3
+12 MOH/BGM 12 (RSTU/BSLU Equip.No.)
+12 MOH Source
+12 Name Display
+12 Network Transfer
+12 Night Mode Relay 
+12 Outgoing B Ch Select
+12 Page Group 12
+12 Speech/3.1KHz 
+12 System Call Forward
+12 System IP CED Control
+13 Account Code
+13 Any Call CFBN Destination
+13 B Ch
+13 B Ch Selection
+13 Bearer Svc - Unrestr 2x64K
+13 BGM External Paging 
+13 Call Pickup
+13 CF - No Answer Record
+13 CPN Presentation to Sbus
+13 Delay1 Ringing Timer
+13 Directed Station Pickup
+13 Immediate Cut-Through
+13 IPU/IPH VLAN
+13 Max Calls Zone 3
+13 MOH/BGM 13 (RSTU/BSLU Equip.No.)
+13 Off Hook Preference
+13 Packet Loss Threshold for MIPU
+13 Page Group 13
+13 Station IP DTMF Translation Mode
+13 Traffic Measurement Unit
+13 User Agent Header
+14 B Ch
+14 Bearer Capability
+14 Bearer Svc - Unrestr 384K
+14 CO Line Guard Time
+14 Delay2 Ringing Timer
+14 Destination Restriction
+14 Direct Call to VM
+14 Directed Group Call Pickup
+14 Emergency Call Timer 
+14 External Call CFA Destination
+14 Initialization Type
+14 IPU/IPH VLAN ID
+14 Lost Call Destination
+14 MOH/BGM 14 (RSTU/BSLU Equip.No.)
+14 Page Group 14
+14 PDN/Line Preference 
+14 Secondary Audio Codec for Full IP station
+14 Select ILG
+14 Server Header
+15 ABR Busy Detection Time
+15 B Ch
+15 Bearer Svc - Unrestr 1536K
+15 COS Override Code
+15 Credit Card Calling
+15 DID/DNIS No. DTMF VMID 
+15 Directed DN Call Pickup
+15 Display DN
+15 External Call CFB Destination
+15 Initialization Display
+15 Interdigit 1 Timer
+15 LIPS Packet Prioritization
+15 MOH/BGM 15 (RSTU/BSLU Equip.No.)
+15 Page Group 15
+15 Protocol Option
+15 Retrieve Messages
+15 Ringing Preference 
+15 Secondary Voice Packet Index
+15 Select OLG  
+15 VM Application Digits
+16 B Ch
+16 Bearer Svc - Unrestr 1920K
+16 CESID
+16 Ext Call Pickup
+16 External Call CFN Destination
+16 Interdigit 2 Timer
+16 IPT NAT/No Peer to Peer
+16 LIPS Packet Prioritization Type
+16 Lost Call Timer
+16 Multi-Conference
+16 Page Group 16
+16 Select DID ILG 
+16 Send CESID
+16 Session Timer
+16 SPID #1
+16 Tenant Number
+16 Text Msg Display
+16 Transfer Direct to VM DN
+17 All Call Page Group
+17 All Call Page Group 
+17 Auto Campon
+17 Base UDP Port for IPT Media Channel
+17 B Ch
+17 Bearer Svc - Restr Digital
+17 Caller Number Display
+17 Call History Memory
+17 Directed CO Call Pickup
+17 Emergency Call Group
+17 External Call CFBN Destination
+17 Idle 'B' Channel Selection
+17 Length of VM-ID
+17 LIPS VLAN
+17 LIPU/GIPx BIPU-Q Mode
+17 Lost Call Final Timer
+17 Primary Audio Codec
+17 QSIG Sending Type
+17 Select DID ILG -Intercept
+17 SPID #2
+18 All Call Emergency Page Group
+18 All Call Emergency Page Group 
+18 Any Call CFN Timer
+18 B Ch
+18 Bearer Svc - Video
+18 Calling Number ID
+18 DTMF Tone Sending Time
+18 Interdigit Timer1
+18 LIPS VLAN ID
+18 Maximum T.38 Fax. Hops
+18 Measure DTMF Receivers
+18 Network COS
+18 Night Bell Relay
+18 Remote CF/DND Password
+18 Remote Retrieve Call Pickup
+18 Secondary Audio Codec
+18 SMDI Call ID Packet
+18 T-Wait Timer 
+19 Any Call CFBN Timer
+19 Auto Disconnect
+19 B Ch
+19 Bearer Svc - Multirate Unrestricted
+19 BGM Mute Relay 
+19 Continuous DTMF
+19 Display Preference
+19 DN Retrieve Call Pickup
+19 DTMF Transmission Method
+19 Intercept
+19 Interdigit Timer 2
+19 IP Strata Net RTP Base Port (IPU/IPH)
+19 Measure Conf. Circuits
+19 Page Group 17
+19 Recall on AC15
+19 SMDI ANI/CLID Digit Length
+19 Tail Length of Echo Canceller for MIPU
+19 VMID Code 
+19 Voice Calls
+20 B Ch
+20 B-Ch Selection Method
+20 CESID
+20 Display Language
+20 External Call CFN Timer
+20 Handsfree Override
+20 IP Strata Net RTP Base Port (LIPS)
+20 Page Group 17
+20 Page Group 18
+20 RTCP Support
+20 Send Dial Tone 
+20 SIP Trunk Diffserv
+20 Station Hunt Group No.
+20 Subscriber 1 No.
+20 Tie Line Delay Timer
+20 Transit Counter
+20 VM MW Center Port
+20 VM Support DP5000 LCD
+21 Adapter 
+21 Answer timer before disconnect
+21 B Ch
+21 B-Ch Selection
+21 External Call CFBN Timer
+21 MIPU DHCP Server
+21 Number Voice Calls Allowed
+21 Page Group 18
+21 Page Group 19
+21 Primary Clock 
+21 Privacy Override
+21 SIP Trunk TOS Field Type
+21 SMDI Time Stamp Packet
+21 Subscriber 2 No.
+21 T.38 Support
+21 TGAC Override
+21 Travel COS Change
+22 B Ch
+22 Blind Transfer
+22 Layer 1 Short Break Tolerant
+22 MIPU Primary DNS
+22 Network COS
+22 Number Of Calls In Call History
+22 Outgoing Call Talking Disconnect Timer
+22 Page Group 19
+22 Page Group 20
+22 Secondary Clock 
+22 Service Tone Permission
+22 SIP Server Caches
+22 SIP Trunk TOS Precedence Type
+22 TGAC Override
+22 Using GUM or IPedge AppServer
+22 VM MW Center Port
+23 B Ch
+23 Call History Prefix '1'
+23 Diffserv for Media
+23 Invoke Emerg Page
+23 Latest Caller Number In Call History
+23 LCR Group
+23 Mailbox Selection
+23 MIPU Secondary DNS Server
+23 Network DSS Refresh Timer
+23 Page Group 20
+23 Page Group 21
+23 Service Tones
+23 SIP Trunk DSCP
+23 TEI assignment
+23 TGAC Override
+23 Traveling COS Change
+24 B Ch
+24 Call Waiting Tone
+24 Change COS Override Code
+24 Emergency Digits Sent
+24 Join Feature
+24 Latest Caller Name In Call History
+24 Malicious Call ID
+24 MIC Init. Value
+24 MIPU Hostname
+24 Outgoing Number Display Timer
+24 Page Group 21
+24 Page Group 22
+24 Set System Speed Dial
+24 TGAC Override
+24 TOS Field Type for Media
+24 T-Wait Timer
+25 B Ch
+25 BRI Trunk De-active Mode
+25 Dial Directory
+25 DP Make Ratio
+25 Latest Call Termination Date in Call History
+25 Microphone
+25 MIPU Primary DNS Suffix
+25 Network COS
+25 Page Auto Diconnect Timer
+25 Page Group 22
+25 Page Group 23
+25 RBT on Incoming Call
+25 Register Speed Dial Codes
+25 Service Tones
+25 Through Dialing
+25 TOS Precedence Type for Media
+26 B Ch
+26 Call Button Jumping
+26 Caller ID Display Timer
+26 Call Waiting Tone 
+26 DHCP for LIPS
+26 DN 2
+26 Door Over DND
+26 DSCP for Media
+26 Latest Call Termination Status in Call History
+26 Network Mode
+26 Originator Invoke OCA
+26 Page Group 23
+26 Page Group 24
+26 Sending Type For ETSI Protocol
+26 Speaker Mode Tones
+26 Tandem CO Connection
+27 B Ch
+27 Call Waiting Tones
+27 Day/Night Control
+27 Dial Directory
+27 Diffserv for Signaling
+27 DN 3
+27 Negotiation Priority
+27 Page Group 24
+27 Previous Caller Number In Call History
+27 Primary DNS Server for LIPS
+27 Senderized Tone Mode
+27 Set Domestic Code
+27 Set System Speed Dial
+28 Attd Overflow Dest.
+28 B Ch
+28 DN 4
+28 Door Ovr DND
+28 Emergency Call Group
+28 Ext BGM Control
+28 Layer 1 short break tolerant
+28 Network COS
+28 Previous Caller Name In Call History
+28 Secondary DNS Server for LIPS
+28 Set International Code
+28 TOS Field Type for Signaling
+29 Auto OCA
+29 B Ch
+29 CPN Numbering Plan
+29 DN 5
+29 LCR Feature
+29 LIPS Hostname
+29 Previous Call Termination Date in Call History
+29 Tenant Number
+29 TOS Precedence Type for Signaling
+29 Trunk Test & Verify
+30 Auto Line Hold
+30 B Ch
+30 Call-By-Call Cause
+30 DN 6
+30 DSCP for Signaling
+30 Individual Trunk Access
+30 Originate OCA 
+30 Previous Call Termination Status in Call History
+30 Primary DNS Suffix for LIPS
+30 Q931 Protocol Timer
+30 Set System Speed Dial
+30 SLT Recall Timer
+31 Analog Trunk Hunting
+31 B Ch
+31 Call Progress Dependency
+31 Call Release On QoS Failure
+31 DN 7
+31 Network COS
+31 RSTU Supervision
+31 Send Malicious Call ID
+31 Trunk Access Allowed
+32 Auto OCA
+32 Display Check Sum Error
+32 DN 8
+32 Forced Account Codes
+32 Programming Mode
+32 QoS Failure Notification Timer
+32 Send Calling Name
+32 Station SpDial Bins
+33 Analog Tie Line Disconnect
+33 Auto OCA
+33 Call Forward Dial Tone
+33 Originate OCA 
+33 Sending Type For ETSI Protocol
+33 SIP Trunk Service Recovery Time
+33 Stop Sending LCD Data.
+33 Verified Account Codes
+34 Administrator Phone
+34 Allow Short Hook Flash
+34 Analog DID Method
+34 Dialing Digit Restriction
+34 Originate OCA
+34 RSTU Supervision
+34 SIP Trunk Options Interval
+35 ALaw/MuLaw
+35 Allow Long Hook Flash
+35 CO Park & Hold
+35 Pool Line Flash
+35 SIP Trunk Message Option
+35 Station SpDial Bins
+36 Allow Hook Flash
+36 Call Forward Dial Tone
+36 Exclusive Hold
+36 MW & DND Dial Tone
+36 Play Melody
+36 SIP Trunk Message To Header Option
+36 Std.Telephone Dial Type
+37 Activate Message Waiting 
+37 Call Forward Dial Tone
+37 Dial Directory - Off Hook
+37 Dialing Digit Restriction
+37 Select Melody
+37 SIP Trunk Register Message From Header Option
+38 Can Receive OCA
+38 Dial Directory - Make Call
+38 Dialing Digit Restriction
+38 Internal Pad
+38 MW Stuttered Dial Tone
+38 SIP Trunk Register Message To Header Option
+38 Tenant Number
+39 Assert Identity
+39 CO Park & Hold
+39 Hook-Switch Recall 
+39 LARGE LCD PHONE
+39 Std. Tel. Ringing Cadence
+39 Tenant Number
+40 ADM1 - LCD KEYSTRIP
+40 Auto-Campon to PDN
+40 Auto-Campon to PDN 
+40 Disconnect Outgoing Call
+40 MW & DND Dial Tone
+40 Sys CF Cascade
+41 Activate Message Waiting 
+41 ADM2 - LCD KEYSTRIP 
+41 BGM Enable
+41 CSTA B-Ch. Operation
+41 LCR PDN Code
+42 DSS Override Call Fwd
+42 ISDN Complete IE Option
+42 Network Calling Number
+42 Station Name Display
+42 Tenant Number
+43 DNIS LCD Preference
+43 Hook-Switch Recall 
+43 Repeat Last No. Dialed
+43 Security Code
+44 Auto-Campon to PDN 
+44 Auto Page Disconnect 
+44 Default Calling Number
+44 My Phone Manager Level
+45 DSS Ringing/DND Indication
+45 LCR PDN Code
+45 Speaker OCA
+45 UCD Local Log-in
+46 Caller ID Call Types
+46 Network Calling Number
+46 T.38 Protocol For G3 Fax
+46 UCD Remote Log-in
+47 ISDN CPN: Number Type
+47 Security Code
+47 T.38 Parameter Table No.
+48 ISDN CPN: Numbering Plan
+48 My Phone Manager Level
+48 T.38-Alternate Process
+49 IP Phone Login Password
+49 SLT MW/CLID Option
+50 LCD Keystrip Refresh Interval
+50 SLT Off-Hook Preference
+50 Transfer Registration
+51 Caller ID Line Access Code
+51 Calling Name Type
+51 Station Connecting Equipment
+52 Calling Name Type
+52 Simple System SpeedDial
+52 SNMP IP Add. Wildcard Bit Length
+53 Analog Disconnect Signal
+53 CO position for Carrier-Based VMWI
+53 Specified Caller Id
+54 Call Waiting Swap
+54 Simple System SpeedDial
+55 SIP Inband Mode

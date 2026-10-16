@@ -108,8 +108,10 @@ def _diff_targets(from_diff: dict) -> set:
             targets.add((key, ch["index"], ch["field"]))
         for ch in c.get("fields_added", []):
             targets.add((key, ch["index"], ch["field"]))
-        # a whole row that is new in B: restore every field of it
-        for index in c.get("rows_added", []):
+        # a whole row that is new in B: restore every field of it. v2 diffs
+        # carry the full row dict ({index,key,fields}); older ones a bare index.
+        for row in c.get("rows_added", []):
+            index = row.get("index") if isinstance(row, dict) else row
             targets.add((key, index, None))      # None = all fields in this row
     return targets
 

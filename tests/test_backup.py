@@ -111,7 +111,7 @@ def test_build_backup_structure():
     pairs = [(o, v) for o, v in data.items()]
     doc = B.build_backup(pairs, cat, meta={"site": "Example Site"})
     assert doc["format"] == "toshiba-cix-backup"
-    assert doc["format_version"] == 1
+    assert doc["format_version"] == 2
     assert doc["meta"]["site"] == "Example Site"
     assert doc["meta"]["catalog_version"] == cat.version
     # station program present with three rows, names promoted by field name
@@ -179,6 +179,105 @@ def test_collect_dedups():
     assert error is None
     oids = [o for o, _ in pairs]
     assert len(oids) == len(set(oids))
+
+
+# -- v2: hashes, identity, secrets, redaction, load_document ----------------
+def test_v2_meta_present_and_hash_stable():
+    cat = load_catalog()
+    data, _ = sample_capture(cat)
+    doc = B.build_backup(list(data.items()), cat)
+    m = doc["meta"]
+    assert doc["format_version"] == 2
+    assert m["content_hash"].startswith("sha256:")
+    assert m["snapshot"]["id"].endswith(m["content_hash"][7:13])
+    assert m["snapshot"]["kind"] == "manual"
+    assert "200StationAssign" in m["program_hashes"]
+    # the content hash excludes meta: a re-read with different meta hashes same
+    doc2 = B.build_backup(list(data.items()), cat, meta={"site": "Other"})
+    assert B.content_hash(doc) == B.content_hash(doc2)
+    # and is stable across a JSON round-trip (canonical form)
+    assert B.content_hash(doc) == B.content_hash(json.loads(json.dumps(doc)))
+
+
+def test_v2_identity_and_sensitive_lists():
+    cat = load_catalog()
+    doc = B.build_backup([], cat)
+    ident = doc["meta"]["identity_programs"]
+    assert "801LAN" in ident and "communityName" in ident
+    refs = doc["meta"]["sensitive_fields"]
+    assert any(r.startswith("110PassWord/*/") for r in refs)
+    assert all(len(r.split("/")) == 3 for r in refs)
+
+
+def test_v2_redact_masks_secrets_only_and_preserves_shape():
+    cat = load_catalog()
+    doc = {
+        "format": B.FORMAT, "format_version": 2,
+        "meta": {"snapshot": {"id": "snap-1"},
+                 "sensitive_fields": B.sensitive_field_refs(cat)},
+        "programs": {
+            "110PassWord": {"number": "110", "name": "PassWord", "rows": [
+                {"index": "1", "key": "1",
+                 "fields": {"password": "hunter2"}}]},
+            "200StationAssign": {"number": "200", "name": "StationAssign",
+                "rows": [{"index": "1.3.50.48.48", "key": "200",
+                          "fields": {"stationStationName": "Front Desk"}}]}},
+        "unmatched": [],
+    }
+    r = B.redact(doc, catalog=cat)
+    pw = r["programs"]["110PassWord"]["rows"][0]["fields"]["password"]
+    assert B.is_redacted_value(pw) and pw != "hunter2"
+    assert r["meta"]["redacted"] is True
+    # non-secret untouched; original object untouched (deep copy); shape intact
+    assert r["programs"]["200StationAssign"]["rows"][0]["fields"][
+        "stationStationName"] == "Front Desk"
+    assert doc["programs"]["110PassWord"]["rows"][0]["fields"]["password"] == "hunter2"
+    assert sorted(r["programs"]) == sorted(doc["programs"])
+    # the masked value never leaks the plaintext in any rendering
+    assert "hunter2" not in B.render_backup_text(r, catalog=cat)
+
+
+def test_v2_redact_salt_is_snapshot_id():
+    cat = load_catalog()
+    base = {"format": B.FORMAT, "format_version": 2,
+            "meta": {"sensitive_fields": B.sensitive_field_refs(cat)},
+            "programs": {"110PassWord": {"number": "110", "name": "PassWord",
+                "rows": [{"index": "1", "key": "1",
+                          "fields": {"password": "same"}}]}}, "unmatched": []}
+    import copy as _c
+    a = _c.deepcopy(base); a["meta"]["snapshot"] = {"id": "A"}
+    b = _c.deepcopy(base); b["meta"]["snapshot"] = {"id": "B"}
+    va = B.redact(a, catalog=cat)["programs"]["110PassWord"]["rows"][0]["fields"]["password"]
+    vb = B.redact(b, catalog=cat)["programs"]["110PassWord"]["rows"][0]["fields"]["password"]
+    assert va != vb                      # different lineage -> different digest
+    c = _c.deepcopy(base); c["meta"]["snapshot"] = {"id": "A"}
+    vc = B.redact(c, catalog=cat)["programs"]["110PassWord"]["rows"][0]["fields"]["password"]
+    assert va == vc                      # same lineage + value -> equal
+
+
+def test_v1_file_loads_and_upgrades_to_v2():
+    cat = load_catalog()
+    v1 = {"format": "toshiba-cix-backup", "format_version": 1,
+          "meta": {"site": "Legacy"},
+          "programs": {"104SystemTimer": {"number": "104", "name": "SystemTimer",
+              "rows": [{"index": "0", "key": "_", "fields": {}}]}},
+          "unmatched": []}
+    loaded = B.load_document(v1)
+    assert loaded["meta"]["site"] == "Legacy"
+    up = B.ensure_v2(dict(loaded, meta=dict(loaded["meta"])), cat)
+    assert up["format_version"] == 2
+    assert up["meta"]["content_hash"].startswith("sha256:")
+    assert up["meta"]["snapshot"]["id"]
+    # idempotent
+    assert B.ensure_v2(up, cat)["meta"]["content_hash"] == up["meta"]["content_hash"]
+
+
+def test_load_document_rejects_foreign_json():
+    try:
+        B.load_document({"format": "something-else"})
+    except ValueError:
+        return
+    raise AssertionError("expected ValueError on a non-Switchroom document")
 
 
 def _run_all():

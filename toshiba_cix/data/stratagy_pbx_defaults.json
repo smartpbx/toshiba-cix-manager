@@ -1,0 +1,9 @@
+{
+  "_meta": {
+    "purpose": "Vendor dial-code / SMDI-integration templates per PBX model (the Stratagy FL.PBX set). Model-generic, NOT customer data. Backs 'Compare with Toshiba default' (voicemail-map §5.4). Starter set: CIX100S, transcribed from a live card's C:\\Stratagy\\PBX.DB\\CIX100S.PBX. The full 40-model set ships with VM Manager and is added as each is transcribed.",
+    "status": "partial"
+  },
+  "models": {
+    "CIX100S": "pbx_name 'Strata CIX 100 w/SMDI'\r\ndl_init  # What to dial when the system first starts up\r\ndl_dtwait F- # Dial code to put a caller on transfer hold\r\ndl_ndtret F- # Dial code to use when there is no transfer dialtone\r\ndl_rnaret F- # Dial code to return to caller after Ring No Answer\r\ndl_bsyret F- # Dial code to return to caller when there is a Busy\r\ndl_hupret F- # Dial code to use after a call screening reject\r\ndl_connect H # Dial code to connect the caller to the extension\r\ndl_prefix  # What to dial BEFORE dialing the User ID extension\r\ndl_suffix  # What to dial AFTER dialing the User ID extension\r\ndl_stop  # What to dial when the system performs a shutdown\r\ndl_pickup  # What to dial when a port goes off-hook\r\nintegration 30 'Axxxxxxrrrr0000000000'\r\nintegration 30 'Bxxxxxxbbbb0000000000'\r\nintegration 30 'Nxxxxxxrrrr0000000000'\r\nintegration 30 'Dxxxxxxxxxxcccccceeee'\r\nintegration 30 'Siiiiiiiiii'\r\n"
+  }
+}

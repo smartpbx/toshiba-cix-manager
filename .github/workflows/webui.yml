@@ -1,0 +1,48 @@
+name: Web UI
+
+# Proves the committed single-file UI (toshiba_cix/webui.html) is byte-identical
+# to a fresh build of the React 19 + TS + Vite source in webui/ (DESIGN_PLAN
+# §2.1, §13). Node is a DEV-ONLY dependency — it never ships in the AppImage/exe.
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "webui/**"
+      - "toshiba_cix/webui.html"
+      - ".github/workflows/webui.yml"
+  pull_request:
+    paths:
+      - "webui/**"
+      - "toshiba_cix/webui.html"
+      - ".github/workflows/webui.yml"
+
+jobs:
+  freshness:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: webui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Pinned so the build output is reproducible for the byte-identical check.
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: webui/package-lock.json
+      - name: Install (exact, from lockfile)
+        run: npm ci
+      - name: Type-check
+        run: npm run typecheck
+      - name: Committed webui.html matches a fresh build
+        run: npm run check:webui
+      # Type-check + freshness prove the source compiles and the committed
+      # artifact is a fresh build — but neither EXECUTES it. A render-time fault
+      # (e.g. a zustand selector returning a new object each render → React #185)
+      # ships with both gates green and #root never mounts. This loads the built
+      # webui.html in a real headless Chromium and asserts the tree mounts.
+      - name: Install headless Chromium (for the runtime smoke)
+        run: npx playwright install --with-deps chromium
+      - name: Built webui.html mounts in a browser (runtime smoke)
+        run: npm run smoke

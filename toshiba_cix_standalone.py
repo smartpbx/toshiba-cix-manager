@@ -10,7 +10,7 @@ import argparse, json, logging, socket, sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Iterable
-__version__ = "1.1.0"
+__version__ = "2.0.0"
 
 # ===== snmp.py =====================================================
 """Pure-stdlib SNMPv1 client (BER GET / GETNEXT), no external dependencies.
@@ -886,13 +886,24 @@ class CIXReader:
     def __init__(self, client: SnmpV1, *, logger: logging.Logger | None = None,
                  max_oids: int = 200000, strategy: str = "bulk",
                  width: int = 10, scope: str = "all",
-                 keep_raw_walk: bool = False):
+                 keep_raw_walk: bool = False, enrich: bool = True,
+                 catalog=None):
         self.client = client
         self.log = logger or logging.getLogger(__name__)
-        self.scope = scope            # "all" (whole tree) or "core" (fast)
+        # "all" (whole tree), "core" (fast), or a catalog-driven scope such as a
+        # feature group (trunks/groups/voicemail/licensing/stations/phantom) or
+        # a menu-area name — resolved against the catalog, falling back to a
+        # whole-tree walk when the catalog is unavailable (e.g. the lean build).
+        self.scope = scope
         self.max_oids = max_oids
         self.strategy = strategy      # "bulk" (fast, batched) or "serial"
         self.width = width            # cursors per GETNEXT PDU in bulk mode
+        # Build the named, menu-grouped program_views from the walk (the
+        # frontend contract). Off in the lean reader build, where the catalog
+        # and enrich modules are not bundled.
+        self._enrich = enrich
+        self._catalog = catalog       # cached across the scope + enrich passes
+        self.varbinds: list[tuple[str, Value]] = []
         # When True, the full flat (oid, value) walk is attached to the result
         # as doc["raw_oid_walk"]. Off by default so the CLI/adapter docs stay
         # lean; the web app turns it on so a backup export can include the raw
@@ -903,6 +914,7 @@ class CIXReader:
     def read(self) -> dict:
         """Walk the device and return the full structured document."""
         varbinds, walk_error = self._collect()
+        self.varbinds = varbinds
         records = [self._classify(oid, val) for oid, val in varbinds]
         doc = self._build(records)
         doc["device"] = {
@@ -916,6 +928,8 @@ class CIXReader:
             "walk_error": walk_error,
         }
         doc["security_findings"] = self._security_findings(doc)
+        # Named, menu-grouped program views — the stable frontend contract.
+        doc["program_views"] = self._program_views(varbinds)
         if self.keep_raw_walk:
             doc["raw_oid_walk"] = [
                 {"oid": oid, "value": D.decode_value(val)}
@@ -923,8 +937,29 @@ class CIXReader:
             ]
         return doc
 
+    def _program_views(self, varbinds) -> dict:
+        """Catalog-driven enrichment; empty when the catalog is unavailable."""
+        if self._enrich:
+            try:
+                # Lazy + guarded: in the lean reader build these submodules are
+                # not bundled, so the names stay undefined and we degrade to
+                # empty views instead of failing the read.
+                cat = self._catalog or load_catalog()
+                self._catalog = cat
+                return build_program_views(varbinds, cat)
+            except Exception as exc:  # noqa: BLE001
+                self.log.debug("program_views unavailable: %r", exc)
+        return {"programs": [], "menu_areas": [], "feature_views": [],
+                "uncataloged": [],
+                "stats": {"programs": 0, "rows": 0, "cells": 0,
+                          "named_cells": 0, "raw_oid_cells": 0,
+                          "uncataloged": 0}}
+
     # -- collection --------------------------------------------------------
     def _collect(self) -> tuple[list[tuple[str, Value]], str | None]:
+        preset = self._preset_roots()
+        if preset is not None:
+            return self._collect_roots(preset)
         if self.strategy == "serial":
             return self._collect_serial()
         try:
@@ -945,6 +980,53 @@ class CIXReader:
                 seen.add(oid)
                 out.append((oid, val))
         return out
+
+    def _preset_roots(self) -> list[str] | None:
+        """GETNEXT roots for a catalog-driven scope (feature group / menu area).
+
+        Returns ``None`` for ``core`` / ``all`` (handled by the branch walkers)
+        and for any scope the catalog cannot resolve — including the lean reader
+        build, where the enrich/catalog submodules are not bundled, so the
+        guarded import below leaves the names undefined and we fall back.
+        """
+        if self.scope in ("core", "all"):
+            return None
+        try:
+            cat = self._catalog or load_catalog()
+            self._catalog = cat
+            roots = scope_roots(cat, self.scope)
+            if roots:
+                # Always include the identity branch so meta (software id,
+                # chassis MAC) and security findings still populate.
+                return list(roots) + [f"{D.ENTERPRISE_ROOT}.7"]
+            return None
+        except Exception as exc:  # noqa: BLE001
+            self.log.debug("scope %r not catalog-resolvable: %r", self.scope, exc)
+            return None
+
+    def _collect_roots(self, roots: list[str]
+                       ) -> tuple[list[tuple[str, Value]], str | None]:
+        """Walk an explicit list of subtree roots (catalog-driven scopes).
+
+        Bulk when possible (many cursors), with a serial fallback so a flaky
+        device degrades to a partial read rather than nothing."""
+        if self.strategy != "serial":
+            try:
+                pairs = self.client.bulk_walk(roots, width=self.width,
+                                              max_total=self.max_oids)
+                return self._dedup(pairs), None
+            except SnmpError as exc:
+                self.log.warning("bulk scope walk failed (%s); serial fallback",
+                                 exc)
+        out: list[tuple[str, Value]] = []
+        error: str | None = None
+        for root in roots:
+            try:
+                out.extend(self.client.walk(root, max_oids=self.max_oids))
+            except SnmpError as exc:
+                self.log.warning("root %s interrupted: %s", root, exc)
+                error = str(exc)
+        return self._dedup(out), error
 
     def _collect_serial(self) -> tuple[list[tuple[str, Value]], str | None]:
         """Per-branch single-varbind GETNEXT walk — the simplest, most robust

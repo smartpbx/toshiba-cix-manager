@@ -54,8 +54,10 @@ def test_field_change_and_row_add():
     pc = d["programs_changed"]["200StationAssign"]
     changed = {(c["field"], c["old"], c["new"]) for c in pc["fields_changed"]}
     assert ("stationStationName", "Lobby", "Reception") in changed
-    # the added DN 203 shows up as an added row
-    assert any(idx.endswith("50.48.51") for idx in pc["rows_added"])
+    # the added DN 203 shows up as an added row, carrying its full fields (v2)
+    added = pc["rows_added"]
+    assert any(r["index"].endswith("50.48.51") for r in added)
+    assert all(isinstance(r, dict) and "fields" in r for r in added)
     assert d["summary"]["fields_changed"] >= 1
     assert d["summary"]["rows_added"] >= 1
 
@@ -114,6 +116,53 @@ def test_render_diff_text():
     assert "backup diff" in text
     assert "Reception" in text
     assert "Summary" in text
+
+
+# -- v2 additions: exclusions, volatile, cross-site key matching ------------
+def test_exclude_programs_drops_them_whole():
+    cat, a, b, _ = _ab()
+    d = diff_backups(a, b, catalog=cat,
+                     exclude_programs={"200StationAssign"})
+    assert "200StationAssign" not in d["programs_changed"]
+    assert d["excluded_programs"] == ["200StationAssign"]
+
+
+def test_exclude_fields_drops_per_row_identity():
+    cat, a, b, _ = _ab()
+    # the station name is the only changed rw field; excluding it hides it
+    d = diff_backups(a, b, catalog=cat,
+                     exclude_fields={"stationStationName"})
+    changed = [c["field"].split("#")[0]
+               for pc in d["programs_changed"].values()
+               for c in pc["fields_changed"]]
+    assert "stationStationName" not in changed
+
+
+def test_volatile_fields_hidden_and_counted():
+    cat = load_catalog()
+    data_a, info = sample_capture(cat)
+    # mutate the scalar timer (104) which we declare volatile for this test
+    timer_oid = info["timer_oid"]
+    data_b = dict(data_a)
+    data_b[f"{timer_oid}.0"] = _int(45)
+    a = B.build_backup(list(data_a.items()), cat)
+    b = B.build_backup(list(data_b.items()), cat)
+    shown = diff_backups(a, b, catalog=cat)
+    assert shown["summary"]["fields_changed"] >= 1
+    hidden = diff_backups(a, b, catalog=cat, volatile={timer_oid})
+    assert hidden["summary"]["volatile_hidden"] >= 1
+    assert hidden["summary"]["fields_changed"] == \
+        shown["summary"]["fields_changed"] - 1
+
+
+def test_cross_site_key_matching_equals_index_on_same_system():
+    # On one system, matching on key must give the same field changes as index
+    cat, a, b, _ = _ab()
+    by_index = diff_backups(a, b, catalog=cat)
+    by_key = diff_backups(a, b, catalog=cat, match_rows_on="key")
+    assert by_key["match_rows_on"] == "key"
+    assert by_index["summary"]["fields_changed"] == \
+        by_key["summary"]["fields_changed"]
 
 
 def _run_all():
