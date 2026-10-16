@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { History, Search } from "lucide-react";
 import { ConnectionPill } from "./ConnectionPill";
 import { ModeBadge } from "./ModeBadge";
 import { ThemeToggle } from "./ThemeToggle";
@@ -26,7 +26,10 @@ function Logo() {
 }
 
 export function TopBar() {
-  const setPaletteOpen = useStore((s) => s.setPaletteOpen);
+  const { setPaletteOpen, openBackups } = useStore((s) => ({
+    setPaletteOpen: s.setPaletteOpen,
+    openBackups: s.openBackups,
+  }));
   const isMac =
     typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
   return (
@@ -45,6 +48,14 @@ export function TopBar() {
         <kbd className="rounded bg-surface px-1 py-0.5 text-2xs text-fg-3">
           {isMac ? "⌘K" : "Ctrl K"}
         </kbd>
+      </button>
+      <button
+        onClick={openBackups}
+        className="flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface-2 px-2.5 text-sm text-fg-2 hover:border-line-strong"
+        title="Backups & Diff"
+      >
+        <History className="h-4 w-4" />
+        <span className="hidden sm:inline">Backups</span>
       </button>
       <ModeBadge />
       <ThemeToggle />

@@ -6,6 +6,7 @@ import type {
   Identity,
   JobState,
   ProgramView,
+  SnapshotHeader,
   SnapshotMeta,
 } from "@/lib/types";
 
@@ -13,9 +14,17 @@ type Theme = "system" | "light" | "dark";
 
 export interface Tab {
   id: string;
-  kind: "home" | "program";
+  kind: "home" | "program" | "backups";
   programKey?: string;
   title: string;
+}
+
+export interface FileMode {
+  siteId: string;
+  sid: string;
+  label: string;
+  savedAt: string;
+  swid?: string | null;
 }
 
 export type ConnStatus =
@@ -76,8 +85,15 @@ interface AppState {
   activeTabId: string;
   openProgram: (key: string, title: string) => void;
   openHome: () => void;
+  openBackups: () => void;
   closeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
+
+  // backups / file mode ----------------------------------------------------
+  fileMode: FileMode | null;
+  siteId: () => string;
+  enterFileMode: (siteId: string, header: SnapshotHeader) => Promise<boolean>;
+  exitFileMode: () => void;
 
   // nav / palette / theme --------------------------------------------------
   openAreas: Record<string, boolean>;
@@ -365,6 +381,14 @@ export const useStore = create<AppState>((set, get) => ({
     if (!tabs.some((t) => t.id === "home")) set({ tabs: [HOME_TAB, ...tabs] });
     set({ activeTabId: "home" });
   },
+  openBackups() {
+    const { tabs } = get();
+    const id = "backups";
+    if (!tabs.some((t) => t.id === id)) {
+      set({ tabs: [...tabs, { id, kind: "backups", title: "Backups" }] });
+    }
+    set({ activeTabId: id });
+  },
   closeTab(id) {
     if (id === "home") return;
     const { tabs, activeTabId } = get();
@@ -380,6 +404,54 @@ export const useStore = create<AppState>((set, get) => ({
     set({ activeTabId: id });
     const tab = get().tabs.find((t) => t.id === id);
     if (tab?.kind === "program" && tab.programKey) get().ensureProgram(tab.programKey);
+  },
+
+  fileMode: null,
+  siteId() {
+    const { form, snapshotMeta } = get();
+    if (form.site_id) return form.site_id;
+    const site = snapshotMeta?.site;
+    if (site) return String(site).toLowerCase().replace(/[^a-z0-9._-]+/g, "-");
+    return "";
+  },
+  async enterFileMode(siteId, header) {
+    try {
+      const res = await api.snapshotFull(siteId, header.sid);
+      if (!res.ok || !res.snapshot) return false;
+      const snap = res.snapshot;
+      const views: Record<string, ProgramView> = {};
+      const rowCounts: Record<string, number> = {};
+      for (const pv of snap.program_views.programs ?? []) {
+        views[pv.catalog_key] = pv;
+        rowCounts[pv.catalog_key] = pv.row_count;
+      }
+      set({
+        coldStart: true,
+        programViews: views,
+        readKeys: new Set(Object.keys(views)),
+        rowCounts,
+        identity: snap.identity ?? null,
+        snapshotMeta: snap.meta ?? null,
+        fileMode: {
+          siteId,
+          sid: header.sid,
+          label: header.name || header.label || header.kind,
+          savedAt: header.saved_at,
+          swid: header.swid ?? snap.identity?.swid ?? null,
+        },
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  exitFileMode() {
+    const { sessionId } = get();
+    set({ fileMode: null });
+    if (sessionId) {
+      set({ coldStart: false, programViews: {}, loadingKeys: new Set() });
+      void get().refreshSessionIndex();
+    }
   },
 
   openAreas: {},

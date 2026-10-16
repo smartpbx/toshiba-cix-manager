@@ -4,6 +4,8 @@
 
 import type { UISchema } from "./schema";
 import type {
+  AnnotatedDiffResult,
+  FindResult,
   FullSnapshot,
   Health,
   JobState,
@@ -19,9 +21,9 @@ async function jget<T>(path: string): Promise<T> {
   return (await res.json()) as T;
 }
 
-async function jpost<T>(path: string, body?: unknown): Promise<T> {
+async function jbody<T>(method: string, path: string, body?: unknown): Promise<T> {
   const res = await fetch(path, {
-    method: "POST",
+    method,
     credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body ?? {}),
@@ -29,6 +31,9 @@ async function jpost<T>(path: string, body?: unknown): Promise<T> {
   if (!res.ok && res.status >= 500) throw new Error(`${res.status} ${res.statusText}`);
   return (await res.json()) as T;
 }
+
+const jpost = <T>(path: string, body?: unknown) => jbody<T>("POST", path, body);
+const s = (id: string) => encodeURIComponent(id);
 
 export const api = {
   health: () => jget<Health>("/api/health"),
@@ -55,14 +60,94 @@ export const api = {
         (refresh ? "?refresh=1" : ""),
     ),
 
+  // value index: palette value search + where-used over the working copy
+  find: (sessionId: string, q: string, refs = false) =>
+    jget<FindResult>(
+      `/api/sessions/${s(sessionId)}/find?q=${encodeURIComponent(q)}` +
+        (refs ? "&refs=1" : ""),
+    ),
+
   // cold start: browse the last snapshot with the device off
   siteSnapshots: (siteId: string) =>
     jget<{ ok: boolean; snapshots: SnapshotHeader[] }>(
-      `/api/sites/${encodeURIComponent(siteId)}/snapshots`,
+      `/api/sites/${s(siteId)}/snapshots`,
     ),
 
   siteSnapshotLatest: (siteId: string) =>
     jget<{ ok: boolean; snapshot: FullSnapshot | null }>(
-      `/api/sites/${encodeURIComponent(siteId)}/snapshots/latest`,
+      `/api/sites/${s(siteId)}/snapshots/latest`,
     ),
+
+  // -- Backups page (backups.md §4) ---------------------------------------
+  snapshotFull: (siteId: string, sid: string) =>
+    jget<{ ok: boolean; snapshot: FullSnapshot | null }>(
+      `/api/sites/${s(siteId)}/snapshots/${s(sid)}`,
+    ),
+
+  snapshotProgram: (siteId: string, sid: string, key: string) =>
+    jget<ProgramResult>(
+      `/api/sites/${s(siteId)}/snapshots/${s(sid)}/program/${s(key)}`,
+    ),
+
+  snapshotFind: (siteId: string, sid: string, q: string, refs = false) =>
+    jget<FindResult>(
+      `/api/sites/${s(siteId)}/snapshots/${s(sid)}/find?q=${encodeURIComponent(q)}` +
+        (refs ? "&refs=1" : ""),
+    ),
+
+  takeSnapshot: (
+    siteId: string,
+    body: { session?: string; scope?: string; name?: string; tags?: string[] },
+  ) => jpost<{ ok: boolean; snapshot?: SnapshotHeader; error?: string }>(
+    `/api/sites/${s(siteId)}/snapshots`,
+    body,
+  ),
+
+  patchSnapshot: (
+    siteId: string,
+    sid: string,
+    body: { name?: string; note?: string; tags?: string[]; pinned?: boolean },
+  ) => jbody<{ ok: boolean; snapshot?: SnapshotHeader; error?: string }>(
+    "PATCH",
+    `/api/sites/${s(siteId)}/snapshots/${s(sid)}`,
+    body,
+  ),
+
+  deleteSnapshot: (siteId: string, sid: string, force = false) =>
+    jbody<{ ok: boolean; reason?: string }>(
+      "DELETE",
+      `/api/sites/${s(siteId)}/snapshots/${s(sid)}` + (force ? "?force=1" : ""),
+    ),
+
+  exportUrl: (
+    siteId: string,
+    sid: string,
+    opts?: { redact?: boolean; container?: "cixbak" | "json" },
+  ) =>
+    `/api/sites/${s(siteId)}/snapshots/${s(sid)}/export?redact=${
+      opts?.redact === false ? "0" : "1"
+    }&container=${opts?.container ?? "cixbak"}`,
+
+  diffReview: (body: {
+    a: DiffSource;
+    b: DiffSource;
+    all?: boolean;
+    volatile?: boolean;
+    cross_site?: boolean;
+  }) => jpost<AnnotatedDiffResult>("/api/diff/review", body),
+
+  compareLive: (
+    siteId: string,
+    body: { snapshot?: string; session?: string; all?: boolean; volatile?: boolean },
+  ) => jpost<AnnotatedDiffResult & { b_snapshot?: SnapshotHeader }>(
+    `/api/sites/${s(siteId)}/compare-live`,
+    body,
+  ),
 };
+
+export interface DiffSource {
+  doc?: unknown;
+  site?: string;
+  snapshot?: string;
+  latest?: boolean;
+}

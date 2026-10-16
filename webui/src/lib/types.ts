@@ -105,12 +105,115 @@ export interface SnapshotHeader {
   kind: string;
   identity?: Identity;
   counts?: Record<string, number | null>;
+  // v2 timeline fields
+  name?: string | null;
+  tags?: string[];
+  note?: string | null;
+  scope?: unknown;
+  swid?: string | null;
+  content_hash?: string | null;
+  dedupe_of?: string | null;
+  bytes?: number;
+  redacted?: boolean;
+}
+
+// index.py value-search result (palette + where-used)
+export interface Occurrence {
+  program: string | null;
+  program_number: string | null;
+  index: string | null;
+  row_key: string | null;
+  field: string;
+  display_no: string;
+  menu_path: string | null;
+  value: string;
+  ref_kind: string | null;
+}
+
+export interface FindResult {
+  ok: boolean;
+  query: string;
+  count: number;
+  groups?: Array<{
+    program: string;
+    program_number: string | null;
+    menu_path: string | null;
+    occurrences: Occurrence[];
+  }>;
+  occurrences?: Occurrence[]; // when ?refs=1
+}
+
+// diff_view.py annotated diff (what the diff pane renders)
+export interface DiffLine {
+  kind:
+    | "field_changed"
+    | "field_added"
+    | "field_removed"
+    | "row_added"
+    | "row_removed";
+  program: string;
+  index: string | null;
+  row_key: string | null;
+  field?: string;
+  display_no?: string;
+  title?: string;
+  sensitive?: boolean;
+  old_display?: string;
+  new_display?: string;
+  fields?: Array<{ field: string; display: string; sensitive: boolean }>;
+  attribution?: { by?: string; at?: string; changeset?: string; outside?: boolean };
+}
+
+export interface DiffGroup {
+  program: string;
+  number: string | null;
+  name: string | null;
+  menu_area: string | null;
+  menu_path: string | null;
+  label: string;
+  rows_changed: number;
+  fields_changed: number;
+  lines: DiffLine[];
+}
+
+export interface DiffSummary {
+  programs_added: number;
+  programs_removed: number;
+  rows_added: number;
+  rows_removed: number;
+  fields_changed: number;
+  fields_added: number;
+  fields_removed: number;
+  ignored_readonly: number;
+  volatile_hidden: number;
+}
+
+export interface AnnotatedDiff {
+  a_meta: SnapshotMeta;
+  b_meta: SnapshotMeta;
+  summary: DiffSummary;
+  match_rows_on: string;
+  excluded_programs: string[];
+  excluded_fields: string[];
+  programs_added: string[];
+  programs_removed: string[];
+  groups: DiffGroup[];
+}
+
+export interface AnnotatedDiffResult {
+  ok: boolean;
+  summary?: DiffSummary;
+  annotated?: AnnotatedDiff;
+  error?: string;
 }
 
 export interface FullSnapshot {
   sid: string;
   site_id: string;
   saved_at: string;
+  label?: string | null;
+  kind?: string;
+  pinned?: boolean;
   identity?: Identity;
   meta?: SnapshotMeta;
   program_views: {

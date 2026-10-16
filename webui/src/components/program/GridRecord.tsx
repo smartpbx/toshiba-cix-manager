@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { enumCaption, fieldByName, type SchemaField, type SchemaProgram } from "@/lib/schema";
 import type { Cell, ProgramView, Row } from "@/lib/types";
 import { RecordForm } from "./RecordForm";
+import { WhereUsedChip } from "@/components/backup/WhereUsedChip";
 
 function cellText(field: SchemaField | undefined, cell: Cell | undefined): string {
   if (!cell) return "";
@@ -122,6 +123,7 @@ export function GridRecord({
                   {selectedRow.key || selectedRow.index}
                 </div>
                 <div className="truncate text-2xs text-fg-3">{program.label}</div>
+                <WhereUsedChip rowKey={selectedRow.key || selectedRow.index} />
               </div>
               <button
                 onClick={() => setSelected(null)}
