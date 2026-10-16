@@ -176,15 +176,22 @@ def test_field_key_disambiguates_differing_oids():
     assert all(k.startswith("dup#") for k in keys)
 
 
-def test_enum_label_hook():
-    cat = load_catalog()
+def test_enum_label_bundled_and_override():
+    # Labels now ship bundled: a known enum resolves out of the box, with no
+    # setup. Construct a fresh catalog so the override below cannot leak into
+    # the shared singleton that other modules' tests reuse.
+    cat = Catalog(C.load_catalog_text())
     enum_fld = next(f for p in cat.programs.values() for f in p.fields
                     if f.get("syntax") == "EnumeratedINTEGER")
-    assert cat.enum_label(enum_fld, 1) is None        # no labels ship yet
-    cat.set_enum_labels({enum_fld["oid"]: {1: "Enabled", "2": "Disabled"}})
-    assert cat.enum_label(enum_fld, 1) == "Enabled"
-    assert cat.enum_label(enum_fld, 2) == "Disabled"  # str/int both accepted
-    assert cat.enum_label(enum_fld, 99) is None
+    assert cat.enum_label(enum_fld, 1) is not None     # bundled label present
+    assert cat.enum_values(enum_fld)                   # full value map available
+    # A per-OID override wins over the bundle; other raw values still fall back.
+    bundled_1 = cat.enum_label(enum_fld, 1)
+    cat.set_enum_labels({enum_fld["oid"]: {1: "Custom"}})
+    assert cat.enum_label(enum_fld, 1) == "Custom"     # override wins
+    assert cat.enum_label(enum_fld, 1) != bundled_1
+    # a raw value with no label anywhere is still None
+    assert cat.enum_label(enum_fld, 999) is None
 
 
 def test_field_by_column_ambiguous_returns_none():

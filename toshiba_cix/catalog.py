@@ -58,6 +58,18 @@ from .decode import ENTERPRISE_ROOT, MISSING, decode_octet, decode_value
 from .snmp import Value, ber_integer, ber_octet
 
 CATALOG_FILENAME = "emanager_catalog.json"
+ENUM_LABELS_FILENAME = "enum_labels.json"
+PROGRAM_MENUS_FILENAME = "program_menus.json"
+
+# Menu areas as eManager groups them, in the order the UI should show them.
+# ``command_to_menu.json`` supplies the first ten; the last three are our
+# buckets for the handful of internal MIB tables eManager never surfaced as a
+# program (null-number entries: licensing, SNMP/FTP middleware, status trees).
+MENU_AREA_ORDER = (
+    "System", "Station", "Trunk", "IP-Telephony", "Networking", "LCR/DR",
+    "External Devices", "Attendant", "Utilities", "Miscellaneous",
+    "Licensing", "Maintenance", "Advanced",
+)
 
 # On-wire encoding families (the MOF ``enc``) → how a restore SETs the value.
 _INTEGER_ENCS = frozenset({"INTEGER", "Gauge32"})
@@ -69,17 +81,46 @@ _CATALOG_CACHE: "Catalog | None" = None
 # --------------------------------------------------------------------------
 # loading (mirrors webapp.load_html: embedded → PyInstaller bundle → package)
 # --------------------------------------------------------------------------
-def _candidate_paths() -> list[str]:
+def _data_candidate_paths(filename: str) -> list[str]:
+    """Where a vendored ``data/<filename>`` may live, across every build.
+
+    PyInstaller one-file (``sys._MEIPASS``) first, then the packaged ``data/``
+    dir of a dev checkout. Same order as :func:`load_catalog_text`.
+    """
     paths: list[str] = []
     meipass = getattr(sys, "_MEIPASS", None)          # PyInstaller one-file
     if meipass:
-        paths.append(os.path.join(meipass, "toshiba_cix", "data",
-                                  CATALOG_FILENAME))
-        paths.append(os.path.join(meipass, "data", CATALOG_FILENAME))
-        paths.append(os.path.join(meipass, CATALOG_FILENAME))
+        paths.append(os.path.join(meipass, "toshiba_cix", "data", filename))
+        paths.append(os.path.join(meipass, "data", filename))
+        paths.append(os.path.join(meipass, filename))
     here = os.path.dirname(os.path.abspath(__file__))
-    paths.append(os.path.join(here, "data", CATALOG_FILENAME))
+    paths.append(os.path.join(here, "data", filename))
     return paths
+
+
+def _candidate_paths() -> list[str]:
+    return _data_candidate_paths(CATALOG_FILENAME)
+
+
+def _load_data_text(filename: str, embedded_global: str) -> str | None:
+    """Return a vendored data file's text, or ``None`` if it is unavailable.
+
+    Mirrors :func:`load_catalog_text` (embedded global → PyInstaller bundle →
+    packaged ``data/``) but **degrades gracefully**: a build that forgot to
+    bundle the enum-label / menu sidecar still runs — just without those
+    annotations — instead of crashing.
+    """
+    embedded = globals().get(embedded_global)
+    if embedded:
+        return embedded
+    for path in _data_candidate_paths(filename):
+        if os.path.exists(path):
+            try:
+                with open(path, encoding="utf-8") as fh:
+                    return fh.read()
+            except OSError:
+                return None
+    return None
 
 
 def load_catalog_text() -> str:
@@ -226,7 +267,46 @@ class Catalog:
                     # First writer wins on the rare exact-OID collision; the
                     # overlap set is tiny and in an obscure sub-tree.
                     self.by_oid.setdefault(oid, (key, f))
+        # Per-call override hook (set_enum_labels); empty until a caller installs
+        # one. The bundled labels below are the always-on base layer.
         self._enum_labels: dict[str, dict[int, str]] = {}
+        self._bundled_enum_labels: dict[str, dict[int, str]] = \
+            self._load_bundled_enum_labels()
+        self._menu_by_number: dict[str, dict] = self._load_bundled_menus()
+
+    # -- bundled annotations (enum labels + eManager menu areas) -----------
+    @staticmethod
+    def _load_bundled_enum_labels() -> dict[str, dict[int, str]]:
+        text = _load_data_text(ENUM_LABELS_FILENAME, "EMBEDDED_ENUM_LABELS_JSON")
+        if not text:
+            return {}
+        try:
+            raw = json.loads(text)
+        except ValueError:
+            return {}
+        out: dict[str, dict[int, str]] = {}
+        for oid, mapping in raw.items():
+            sub: dict[int, str] = {}
+            for k, label in (mapping or {}).items():
+                try:
+                    sub[int(k)] = label
+                except (TypeError, ValueError):
+                    continue
+            if sub:
+                out[str(oid)] = sub
+        return out
+
+    @staticmethod
+    def _load_bundled_menus() -> dict[str, dict]:
+        text = _load_data_text(PROGRAM_MENUS_FILENAME, "EMBEDDED_PROGRAM_MENUS_JSON")
+        if not text:
+            return {}
+        try:
+            raw = json.loads(text)
+        except ValueError:
+            return {}
+        by_number = raw.get("by_number") if isinstance(raw, dict) else None
+        return by_number if isinstance(by_number, dict) else {}
 
     # -- counts ------------------------------------------------------------
     @property
@@ -370,11 +450,12 @@ class Catalog:
 
     # -- enum labels (hook; populated by a later UX-RE deliverable) --------
     def set_enum_labels(self, labels: dict) -> None:
-        """Install an ``{oid: {raw_int: label}}`` map (keys may be str OIDs).
+        """Install an ``{oid: {raw_int: label}}`` **override** map.
 
-        No labels ship with the catalog yet; this is the seam the UX-RE effort
-        plugs into. Keys are normalised so an ``{raw: label}`` sub-map accepts
-        int or str raw values.
+        The reverse-engineered labels already ship bundled (see
+        :meth:`enum_label`); this installs per-OID overrides that win over the
+        bundle — for a site that renames a value, or a future catalog revision.
+        Keys are normalised so an ``{raw: label}`` sub-map accepts int or str.
         """
         norm: dict[str, dict[int, str]] = {}
         for oid, mapping in (labels or {}).items():
@@ -388,20 +469,92 @@ class Catalog:
         self._enum_labels = norm
 
     def enum_label(self, fld: dict, raw) -> str | None:
-        """Human label for an EnumeratedINTEGER raw value, or ``None`` until the
-        labels are loaded (then renderers show ``raw (label)``)."""
-        if not self._enum_labels:
-            return None
-        sub = self._enum_labels.get(fld.get("oid"))
-        if not sub:
-            return None
+        """Human label for an EnumeratedINTEGER raw value, or ``None``.
+
+        A per-call override installed with :meth:`set_enum_labels` wins; the
+        bundled labels reverse-engineered from the MOF are the base layer, so
+        787 enumerated fields resolve out of the box with no setup.
+        """
+        oid = fld.get("oid")
         try:
-            return sub.get(int(raw))
+            r = int(raw)
         except (TypeError, ValueError):
             return None
+        sub = self._enum_labels.get(oid)
+        if sub and r in sub:
+            return sub[r]
+        sub = self._bundled_enum_labels.get(oid)
+        if sub and r in sub:
+            return sub[r]
+        return None
+
+    def enum_values(self, fld: dict) -> dict[int, str] | None:
+        """The full ``{raw: label}`` map for an enumerated field, else ``None``.
+
+        Override entries (if any) shadow the bundled map; the frontend uses this
+        to render a dropdown of the allowed values for a writable enum field.
+        """
+        oid = fld.get("oid")
+        merged: dict[int, str] = {}
+        base = self._bundled_enum_labels.get(oid)
+        if base:
+            merged.update(base)
+        over = self._enum_labels.get(oid)
+        if over:
+            merged.update(over)
+        return merged or None
+
+    # -- menu area (eManager grouping) -------------------------------------
+    def menu_info(self, program_ident) -> dict:
+        """eManager menu placement for a program: ``{area, menu_path, label}``.
+
+        Resolved from the vendored ``program_menus.json`` by program number.
+        The 31 internal MIB tables eManager never exposed as a program (null
+        number — licensing, SNMP/FTP middleware, status trees) get a derived
+        area so they are still reachable and grouped rather than orphaned.
+        """
+        prog = self.program(program_ident)
+        if prog is None:
+            return {"area": "Advanced", "menu_path": "", "label": str(program_ident)}
+        if prog.number and prog.number in self._menu_by_number:
+            info = self._menu_by_number[prog.number]
+            return {"area": info.get("area") or "Advanced",
+                    "menu_path": info.get("menu_path") or "",
+                    "label": info.get("label") or prog.name or prog.number}
+        return {"area": self._derived_area(prog),
+                "menu_path": "", "label": prog.name or prog.key}
+
+    def menu_area(self, program_ident) -> str:
+        return self.menu_info(program_ident)["area"]
+
+    @staticmethod
+    def _derived_area(prog: "Program") -> str:
+        """Area for a program the eManager menu map does not name (null number).
+
+        Keyed off the field OID subtree so licensing, middleware and the status
+        trees land somewhere sensible instead of a generic bucket.
+        """
+        g = prog.group_oid or ""
+        root = ENTERPRISE_ROOT + "."
+        if g.startswith(root):
+            tail = g[len(root):]
+            top = tail.split(".", 1)[0]
+            if top == "10":
+                return "Licensing"
+            if top in ("2", "5", "6", "8"):
+                return "Maintenance"
+            if top in ("4",):
+                return "System"
+        key = (prog.key or "").lower()
+        if "ftp" in key or "community" in key or "middleware" in key:
+            return "Networking"
+        if "license" in key:
+            return "Licensing"
+        return "Advanced"
 
 
 __all__ = [
-    "CATALOG_FILENAME", "Catalog", "Program",
+    "CATALOG_FILENAME", "ENUM_LABELS_FILENAME", "PROGRAM_MENUS_FILENAME",
+    "MENU_AREA_ORDER", "Catalog", "Program",
     "load_catalog", "load_catalog_text",
 ]
