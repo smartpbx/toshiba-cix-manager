@@ -2,6 +2,7 @@ import { CircleHelp, History, ListChecks, Search } from "lucide-react";
 import { ConnectionPill } from "./ConnectionPill";
 import { ModeBadge } from "./ModeBadge";
 import { ThemeToggle } from "./ThemeToggle";
+import { UpdateButton } from "./Updates";
 import { useStore } from "@/store/useStore";
 import { useShallow } from "zustand/react/shallow";
 
@@ -76,6 +77,7 @@ export function TopBar() {
       >
         <CircleHelp className="h-4 w-4" />
       </button>
+      <UpdateButton />
       <ModeBadge />
       <ThemeToggle />
     </header>

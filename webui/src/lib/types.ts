@@ -9,6 +9,40 @@ export interface Health {
   schema?: { schema_available?: boolean; catalog_version?: string };
 }
 
+// GET /api/update — a GitHub-release check enriched by the backend with the
+// plan (toshiba_cix/update.py :: check_for_update + plan_update). `can_apply`
+// is the signal the UI keys off (true for AppImage/.exe self-replace AND for
+// the .deb/.msi installer hand-off); `replaceable` alone would hide the
+// installer builds.
+export interface UpdateInfo {
+  ok: boolean;
+  current?: string | null;
+  latest?: string | null;
+  latest_tag?: string | null;
+  newer?: boolean;
+  asset_url?: string | null;
+  asset_name?: string | null;
+  packaging?: string;
+  replaceable?: boolean;
+  install_method?: "self_replace" | "installer" | "none" | null;
+  can_apply?: boolean;
+  plan_reason?: string | null;
+  target_path?: string | null;
+  html_url?: string | null;
+  error?: string | null;
+}
+
+// POST /api/update {confirm:true} — the apply result.
+export interface UpdateApplyResult {
+  ok: boolean;
+  action?: string; // replaced | staged | downloaded | download_failed | none | …
+  message?: string;
+  path?: string;
+  needs_restart?: boolean;
+  launched?: boolean;
+  error?: string;
+}
+
 // enrich.py per-cell contract: the five required keys + additive metadata.
 export interface Cell {
   col: number | null;

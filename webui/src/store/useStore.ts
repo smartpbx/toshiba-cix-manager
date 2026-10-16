@@ -12,6 +12,8 @@ import type {
   ProgramView,
   SnapshotHeader,
   SnapshotMeta,
+  UpdateApplyResult,
+  UpdateInfo,
   Validation,
   VmStatus,
 } from "@/lib/types";
@@ -151,6 +153,18 @@ interface AppState {
   setPaletteOpen: (open: boolean) => void;
   theme: Theme;
   setTheme: (t: Theme) => void;
+
+  // self-updater (toshiba_cix/update.py via /api/update) -------------------
+  updateInfo: UpdateInfo | null;
+  updateChecking: boolean;
+  updateApplying: boolean;
+  updateResult: UpdateApplyResult | null;
+  updateDialogOpen: boolean;
+  updateToastDismissed: boolean;
+  checkUpdate: () => Promise<void>;
+  applyUpdate: () => Promise<void>;
+  setUpdateDialogOpen: (open: boolean) => void;
+  dismissUpdateToast: () => void;
 }
 
 function readStoredTheme(): Theme {
@@ -689,4 +703,38 @@ export const useStore = create<AppState>((set, get) => ({
     }
     set({ theme });
   },
+
+  updateInfo: null,
+  updateChecking: false,
+  updateApplying: false,
+  updateResult: null,
+  updateDialogOpen: false,
+  updateToastDismissed: false,
+  async checkUpdate() {
+    if (get().updateChecking) return;
+    set({ updateChecking: true });
+    try {
+      const info = await api.checkUpdate();
+      set({ updateInfo: info });
+    } catch {
+      // Offline, or the dev proxy / daemon is down: degrade silently. The
+      // on-launch check must never block startup or surface a scary error.
+    } finally {
+      set({ updateChecking: false });
+    }
+  },
+  async applyUpdate() {
+    if (get().updateApplying) return;
+    set({ updateApplying: true, updateResult: null });
+    try {
+      const res = await api.applyUpdate();
+      set({ updateResult: res });
+    } catch (e) {
+      set({ updateResult: { ok: false, error: (e as Error).message } });
+    } finally {
+      set({ updateApplying: false });
+    }
+  },
+  setUpdateDialogOpen: (updateDialogOpen) => set({ updateDialogOpen }),
+  dismissUpdateToast: () => set({ updateToastDismissed: true }),
 }));

@@ -5,6 +5,7 @@ import { TabStrip } from "@/components/shell/TabStrip";
 import { StatusBar } from "@/components/shell/StatusBar";
 import { CommandPalette } from "@/components/shell/CommandPalette";
 import { ConnectDrawer } from "@/components/shell/ConnectDrawer";
+import { UpdatesDialog, UpdateToast } from "@/components/shell/Updates";
 import { EmptyState } from "@/components/PageHeader";
 import { HomeView } from "@/views/HomeView";
 import { ProgramPage } from "@/views/ProgramPage";
@@ -59,9 +60,16 @@ export default function App() {
   useTheme();
   useEventStream();
   const loadSchema = useStore((s) => s.loadSchema);
+  const checkUpdate = useStore((s) => s.checkUpdate);
   React.useEffect(() => {
     void loadSchema();
   }, [loadSchema]);
+  // One-time, non-blocking "is there a newer release?" check on launch. It
+  // degrades silently offline (store swallows the error) and never blocks the
+  // UI from mounting — it only surfaces the dismissible UpdateToast if newer.
+  React.useEffect(() => {
+    void checkUpdate();
+  }, [checkUpdate]);
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden">
@@ -81,6 +89,8 @@ export default function App() {
       <CommandPalette />
       <ConnectDrawer />
       <ReviewWriteDialog />
+      <UpdatesDialog />
+      <UpdateToast />
     </div>
   );
 }

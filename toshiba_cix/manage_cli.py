@@ -120,10 +120,14 @@ def build_parser() -> argparse.ArgumentParser:
     u = sub.add_parser("update",
                        help="check for / install the latest release")
     u.add_argument("--check", action="store_true",
-                   help="report only; never download or install")
-    u.add_argument("--confirm", action="store_true",
-                   help="download and install the update (in-place; "
-                        "AppImage / .exe builds only)")
+                   help="report current/latest only; never download or install")
+    u.add_argument("--apply", action="store_true",
+                   help="download and install the update (AppImage / raw .exe "
+                        "in place; the Tauri .deb / .msi hand off to the system "
+                        "installer). This is also the default when neither "
+                        "--check nor --apply is given.")
+    # Back-compat alias for --apply (the pre-React flag).
+    u.add_argument("--confirm", action="store_true", help=argparse.SUPPRESS)
     u.add_argument("--timeout", type=float, default=15.0)
     return p
 
@@ -307,22 +311,30 @@ def _cmd_update(args) -> int:
 
     print(f"A newer version is available: v{check['latest']}")
     plan = plan_update(check)
-    if not plan["replaceable"]:
-        # Running from a git/pip checkout — we never self-replace those.
+    if not plan["can_apply"]:
+        # A git/pip source checkout (install_method "none"), or no asset for
+        # this platform. Either way we can't install it for them — point at the
+        # release page. Source is informational (0); a missing asset is an
+        # actionable failure (1).
         print(plan["reason"])
         print(f"  release notes: {check['html_url']}")
-        return 0
-    if not plan["can_apply"]:
-        print(f"Cannot apply automatically: {plan['reason']}")
-        print(f"  download it from: {check['html_url']}")
-        return 1
-    if args.check or not args.confirm:
-        print(f"Would replace : {plan['target_path']}")
-        print(f"  with asset  : {plan['asset_name']}")
-        print("Re-run with --confirm to download and install.")
+        return 0 if plan.get("install_method") == "none" else 1
+
+    installer = plan.get("install_method") == "installer"
+    # --check reports only; bare `update` and `--apply` (and the legacy
+    # --confirm alias) download and install.
+    if args.check:
+        if installer:
+            where = "dpkg/apt" if plan["packaging"] == "deb" else "msiexec"
+            print(f"Would download : {plan['asset_name']}")
+            print(f"  and hand off to the system installer ({where}).")
+        else:
+            print(f"Would replace : {plan['target_path']}")
+            print(f"  with asset  : {plan['asset_name']}")
+        print("Re-run with --apply (or bare 'update') to download and install.")
         return 0
 
-    print("Downloading and installing the update...", file=sys.stderr)
+    print("Downloading the update...", file=sys.stderr)
     result = apply_update(check, confirm=True, timeout=max(args.timeout, 120.0))
     print(result["message"])
     return 0 if result["ok"] else 1
