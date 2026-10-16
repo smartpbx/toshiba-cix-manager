@@ -27,7 +27,7 @@ APP_NAME = "Switchroom"            # product name (DESIGN_PLAN decision #7)
 APP_DIR_POSIX = "switchroom"       # lowercase for the XDG path
 
 
-def _home(env: dict) -> str:
+def _home_dir(env: dict) -> str:
     return env.get("HOME") or env.get("USERPROFILE") or os.path.expanduser("~")
 
 
@@ -36,11 +36,11 @@ def default_root(*, env=None, platform=None) -> str:
     env = os.environ if env is None else env
     platform = sys.platform if platform is None else platform
     if platform.startswith("win"):
-        base = env.get("APPDATA") or os.path.join(_home(env), "AppData", "Roaming")
+        base = env.get("APPDATA") or os.path.join(_home_dir(env), "AppData", "Roaming")
         return os.path.join(base, APP_NAME)
     if platform == "darwin":
-        return os.path.join(_home(env), "Library", "Application Support", APP_NAME)
-    base = env.get("XDG_DATA_HOME") or os.path.join(_home(env), ".local", "share")
+        return os.path.join(_home_dir(env), "Library", "Application Support", APP_NAME)
+    base = env.get("XDG_DATA_HOME") or os.path.join(_home_dir(env), ".local", "share")
     return os.path.join(base, APP_DIR_POSIX)
 
 
@@ -92,7 +92,7 @@ class AppDirs:
         return os.path.join(self.root, "settings.json")
 
     def pending_file(self, site_id: str) -> str:
-        return os.path.join(self.root, f"pending-{_safe(site_id)}.json")
+        return os.path.join(self.root, f"pending-{_safe_component(site_id)}.json")
 
     # -- sub-directories ---------------------------------------------------
     @property
@@ -100,7 +100,7 @@ class AppDirs:
         return os.path.join(self.root, "backups")
 
     def site_backups_dir(self, site_id: str) -> str:
-        return os.path.join(self.backups_dir, _safe(site_id))
+        return os.path.join(self.backups_dir, _safe_component(site_id))
 
     @property
     def logs_dir(self) -> str:
@@ -115,7 +115,7 @@ class AppDirs:
         """Create the root, ``backups/`` and ``logs/`` (mode 0700). Idempotent."""
         for d in (self.root, self.backups_dir, self.logs_dir):
             os.makedirs(d, exist_ok=True)
-            _chmod_private(d)
+            _chmod_private_dir(d)
         return self
 
     def ensure_site_backups(self, site_id: str) -> str:
@@ -137,14 +137,14 @@ def from_args(*, portable=False, override=None, env=None, platform=None,
 # --------------------------------------------------------------------------
 # helpers
 # --------------------------------------------------------------------------
-def _safe(name: str) -> str:
+def _safe_component(name: str) -> str:
     """A filename-safe slug for a site id used in a path component."""
     keep = "-_."
     s = "".join(c if (c.isalnum() or c in keep) else "-" for c in str(name))
     return s.strip("-") or "site"
 
 
-def _chmod_private(path: str) -> None:
+def _chmod_private_dir(path: str) -> None:
     """Best-effort 0700 on POSIX; a no-op where chmod is meaningless (Windows)."""
     try:
         if not sys.platform.startswith("win"):

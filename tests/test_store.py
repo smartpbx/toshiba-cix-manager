@@ -76,7 +76,7 @@ def test_slugify_and_new_site():
 
 def test_sitebook_roundtrip_upsert_delete():
     with tempfile.TemporaryDirectory() as tmp:
-        book = sites.from_root(tmp)
+        book = sites.sitebook_from_root(tmp)
         assert book.load() == []                 # missing file -> empty
         book.upsert(sites.new_site("Alpha"))
         book.upsert(sites.new_site("Bravo"))
@@ -94,7 +94,7 @@ def test_sitebook_roundtrip_upsert_delete():
 
 def test_sitebook_file_is_private():
     with tempfile.TemporaryDirectory() as tmp:
-        book = sites.from_root(tmp)
+        book = sites.sitebook_from_root(tmp)
         book.upsert(sites.new_site("Alpha"))
         assert os.path.exists(book.path)
         if not sys.platform.startswith("win"):
@@ -138,7 +138,7 @@ def test_journal_commit_and_ops_roundtrip():
 
 def test_journal_preview_mode_and_changes_log():
     with tempfile.TemporaryDirectory() as tmp:
-        j = journal.from_root(tmp)
+        j = journal.journal_from_root(tmp)
         cid = j.start_commit(site="bravo", mode="preview")
         j.finish_commit(cid, ok=False)
         c = j.get_commit(cid)

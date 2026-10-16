@@ -43,7 +43,7 @@ def slugify_id(name: str) -> str:
 def new_site(name: str, *, id=None, pbx=None, vm=None, notes="",
              conduit_component_id=None) -> dict:
     """Build a normalised site record (does not persist it)."""
-    return normalize({
+    return normalize_site({
         "id": id or slugify_id(name),
         "name": name,
         "pbx": pbx or {},
@@ -53,7 +53,7 @@ def new_site(name: str, *, id=None, pbx=None, vm=None, notes="",
     })
 
 
-def normalize(site: dict) -> dict:
+def normalize_site(site: dict) -> dict:
     """Return a copy with every expected key present and legs shaped.
 
     Lenient on input (unknown keys are preserved); only fills defaults and
@@ -104,7 +104,7 @@ class SiteBook:
         sites = raw.get("sites") if isinstance(raw, dict) else raw
         if not isinstance(sites, list):
             return []
-        return [normalize(s) for s in sites if isinstance(s, dict)]
+        return [normalize_site(s) for s in sites if isinstance(s, dict)]
 
     def get(self, site_id: str):
         for s in self.load():
@@ -115,13 +115,13 @@ class SiteBook:
     # -- write -------------------------------------------------------------
     def save_all(self, sites) -> list[dict]:
         """Replace the whole book (normalising each) and persist atomically."""
-        out = [normalize(s) for s in sites]
+        out = [normalize_site(s) for s in sites]
         self._write(out)
         return out
 
     def upsert(self, site: dict) -> dict:
         """Insert or replace a site by id; returns the normalised record."""
-        s = normalize(site)
+        s = normalize_site(site)
         sites = self.load()
         for i, existing in enumerate(sites):
             if existing["id"] == s["id"]:
@@ -149,21 +149,21 @@ class SiteBook:
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as fh:
                 fh.write(payload)
-            _chmod_private(tmp)
+            _chmod_private_file(tmp)
             os.replace(tmp, self.path)
         finally:
             if os.path.exists(tmp):
                 os.unlink(tmp)
 
 
-def from_root(root) -> SiteBook:
+def sitebook_from_root(root) -> SiteBook:
     """A :class:`SiteBook` at ``<root>/sites.json`` (``root`` is a path or AppDirs)."""
     path = root.sites_file if hasattr(root, "sites_file") \
         else os.path.join(str(root), "sites.json")
     return SiteBook(path)
 
 
-def _chmod_private(path: str) -> None:
+def _chmod_private_file(path: str) -> None:
     try:
         if not sys.platform.startswith("win"):
             os.chmod(path, 0o600)
@@ -171,4 +171,4 @@ def _chmod_private(path: str) -> None:
         pass
 
 
-__all__ = ["SiteBook", "slugify_id", "new_site", "normalize", "from_root"]
+__all__ = ["SiteBook", "slugify_id", "new_site", "normalize_site", "sitebook_from_root"]

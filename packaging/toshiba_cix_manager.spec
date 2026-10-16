@@ -28,6 +28,9 @@ a = Analysis(
          os.path.join("toshiba_cix", "data")),
         (os.path.join(ROOT, "toshiba_cix", "data", "program_menus.json"),
          os.path.join("toshiba_cix", "data")),
+        # generated UI schema served at /api/schema (found via sys._MEIPASS)
+        (os.path.join(ROOT, "toshiba_cix", "data", "ui_schema.json"),
+         os.path.join("toshiba_cix", "data")),
     ],
     hiddenimports=[
         "toshiba_cix", "toshiba_cix.launcher", "toshiba_cix.webapp",
@@ -35,7 +38,12 @@ a = Analysis(
         "toshiba_cix.decode", "toshiba_cix.report", "toshiba_cix.snmp",
         "toshiba_cix.catalog", "toshiba_cix.backup", "toshiba_cix.enrich",
         "toshiba_cix.diff", "toshiba_cix.restore", "toshiba_cix.manage_cli",
-        "toshiba_cix.update",
+        "toshiba_cix.update", "toshiba_cix.appdirs", "toshiba_cix.sites",
+        "toshiba_cix.journal", "toshiba_cix.server", "toshiba_cix.server.app",
+        "toshiba_cix.server.auth", "toshiba_cix.server.events",
+        "toshiba_cix.server.http", "toshiba_cix.server.jobs",
+        "toshiba_cix.server.router", "toshiba_cix.server.schema",
+        "toshiba_cix.server.sessions",
     ],
     hookspath=[],
     runtime_hooks=[],

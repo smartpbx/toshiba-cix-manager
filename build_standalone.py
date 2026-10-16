@@ -88,6 +88,11 @@ def _embedded_program_menus() -> str:
                           "bundled eManager menu-area map")
 
 
+def _embedded_ui_schema() -> str:
+    return _embedded_data("ui_schema.json", "EMBEDDED_UI_SCHEMA_JSON",
+                          "bundled generated UI schema")
+
+
 def build(order, out_name, *, title, with_web, tail):
     """Amalgamate ``order`` (module filenames) into ``out_name``."""
     version = _version()
@@ -105,6 +110,9 @@ def build(order, out_name, *, title, with_web, tail):
         # first, before any bundled-file lookup).
         aliases["catalog.py"] = [_embedded_catalog(), _embedded_enum_labels(),
                                  _embedded_program_menus()]
+        # The generated UI schema rides with the schema module (same embed →
+        # _MEIPASS → packaged-data resolution as the catalog).
+        aliases["server/schema.py"] = [_embedded_ui_schema()]
         aliases["webapp.py"] = [_embedded_html()]
 
     parts = [
@@ -161,7 +169,14 @@ def main() -> None:
     build(
         ["snmp.py", "decode.py", "scan.py", "catalog.py", "write.py",
          "backup.py", "enrich.py", "diff.py", "restore.py", "discover.py",
-         "report.py", "cli.py", "update.py", "webapp.py"],
+         "report.py", "cli.py", "update.py",
+         # disk-state layer, then the server package (dependency order: a
+         # module is listed after everything it references, because the
+         # amalgam flattens them into one namespace and strips the imports).
+         "appdirs.py", "sites.py", "journal.py",
+         "server/events.py", "server/auth.py", "server/router.py",
+         "server/jobs.py", "server/sessions.py", "server/schema.py",
+         "server/http.py", "server/app.py", "webapp.py"],
         "toshiba_cix_manager.py",
         title="Toshiba CIX Manager — standalone web app (generated).",
         with_web=True,

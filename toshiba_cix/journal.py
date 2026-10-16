@@ -50,11 +50,11 @@ CREATE INDEX IF NOT EXISTS ix_ops_commit ON ops(commit_id);
 """
 
 
-def _now() -> str:
+def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
-def _s(v):
+def _json_scalar(v):
     """Store non-scalars as JSON so old/new/read_back survive a list or dict."""
     if v is None or isinstance(v, (str, int, float)):
         return v
@@ -82,7 +82,7 @@ class Journal:
         cur = self._conn.execute(
             "INSERT INTO commits (site, device_identity, started, mode, "
             "transport, user, snapshot_path, ok) VALUES (?,?,?,?,?,?,?,?)",
-            (site, device_identity, _now(), mode, transport, user,
+            (site, device_identity, _utc_now(), mode, transport, user,
              snapshot_path, None))
         self._conn.commit()
         return int(cur.lastrowid)
@@ -93,7 +93,7 @@ class Journal:
             "INSERT INTO ops (commit_id, program, idx, field, oid, old, new, "
             "read_back, match) VALUES (?,?,?,?,?,?,?,?,?)",
             (commit_id, program, (None if index is None else str(index)), field,
-             oid, _s(old), _s(new), _s(read_back),
+             oid, _json_scalar(old), _json_scalar(new), _json_scalar(read_back),
              (None if match is None else int(bool(match)))))
         self._conn.commit()
 
@@ -105,7 +105,7 @@ class Journal:
                       finished: str | None = None) -> None:
         self._conn.execute(
             "UPDATE commits SET finished=?, ok=? WHERE id=?",
-            (finished or _now(), int(bool(ok)), commit_id))
+            (finished or _utc_now(), int(bool(ok)), commit_id))
         self._conn.commit()
 
     def log_line(self, text: str) -> None:
@@ -116,7 +116,7 @@ class Journal:
             d = os.path.dirname(os.path.abspath(self.changes_log)) or "."
             os.makedirs(d, exist_ok=True)
             with open(self.changes_log, "a", encoding="utf-8") as fh:
-                fh.write(f"{_now()}  {text}\n")
+                fh.write(f"{_utc_now()}  {text}\n")
         except OSError:  # pragma: no cover
             pass
 
@@ -160,7 +160,7 @@ class Journal:
         return d
 
 
-def from_root(root) -> Journal:
+def journal_from_root(root) -> Journal:
     """A :class:`Journal` at ``<root>/journal.sqlite`` + ``<root>/changes.log``."""
     if hasattr(root, "journal_db"):
         return Journal(root.journal_db, root.changes_log)
@@ -169,4 +169,4 @@ def from_root(root) -> Journal:
                    os.path.join(base, "changes.log"))
 
 
-__all__ = ["Journal", "from_root"]
+__all__ = ["Journal", "journal_from_root"]
