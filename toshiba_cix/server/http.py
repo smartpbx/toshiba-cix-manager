@@ -121,6 +121,10 @@ def build_handler(ctx):
             if self._guard():
                 self._dispatch("PUT")
 
+        def do_PATCH(self):  # noqa: N802
+            if self._guard():
+                self._dispatch("PATCH")
+
         def do_DELETE(self):  # noqa: N802
             if self._guard():
                 self._dispatch("DELETE")

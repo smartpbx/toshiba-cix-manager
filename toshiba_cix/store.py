@@ -268,6 +268,14 @@ class SnapshotStore:
                                            "trigger": snap.get("trigger")})
             return entry
 
+        # Keep a real snapshot even when its content (hence its <stamp>-<hash6>
+        # id) equals an existing row's — a named keep taken the same second as
+        # the auto connect-snapshot must coexist, not overwrite it.
+        if any(e.get("id") == sid for e in entries):
+            import uuid
+            sid = f"{sid}.{uuid.uuid4().hex[:4]}"
+            snap["id"] = sid
+            entry["id"] = sid
         path = self._snap_path(site_id, sid, container)
         if container == "cixbak":
             data = pack_cixbak(doc, catalog=self._catalog, report=report,

@@ -33,6 +33,9 @@ class Router:
     def delete(self, pattern, handler):
         self.add("DELETE", pattern, handler)
 
+    def patch(self, pattern, handler):
+        self.add("PATCH", pattern, handler)
+
     def match(self, method: str, path: str):
         """Return ``(handler, params)`` or ``None``.
 

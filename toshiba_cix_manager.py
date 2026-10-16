@@ -5641,6 +5641,14 @@ class SnapshotStore:
                                            "trigger": snap.get("trigger")})
             return entry
 
+        # Keep a real snapshot even when its content (hence its <stamp>-<hash6>
+        # id) equals an existing row's — a named keep taken the same second as
+        # the auto connect-snapshot must coexist, not overwrite it.
+        if any(e.get("id") == sid for e in entries):
+            import uuid
+            sid = f"{sid}.{uuid.uuid4().hex[:4]}"
+            snap["id"] = sid
+            entry["id"] = sid
         path = self._snap_path(site_id, sid, container)
         if container == "cixbak":
             data = pack_cixbak(doc, catalog=self._catalog, report=report,
@@ -7017,6 +7025,9 @@ class Router:
     def delete(self, pattern, handler):
         self.add("DELETE", pattern, handler)
 
+    def patch(self, pattern, handler):
+        self.add("PATCH", pattern, handler)
+
     def match(self, method: str, path: str):
         """Return ``(handler, params)`` or ``None``.
 
@@ -7542,6 +7553,10 @@ def build_handler(ctx):
         def do_PUT(self):  # noqa: N802
             if self._guard():
                 self._dispatch("PUT")
+
+        def do_PATCH(self):  # noqa: N802
+            if self._guard():
+                self._dispatch("PATCH")
 
         def do_DELETE(self):  # noqa: N802
             if self._guard():
@@ -8586,6 +8601,239 @@ def route_site_snapshot_get(ctx, req):
 
 
 # --------------------------------------------------------------------------
+# Backups page: take / rename / delete / export / import / program / diff
+# --------------------------------------------------------------------------
+def _reader_for(ctx, params):
+    """A live (read-only) SNMP client from a connected session or adhoc params.
+
+    ``{"session": id}`` reuses the client the snapshot-on-connect attached (no
+    reconnect); otherwise ``{"ip", "community", ...}`` opens a fresh read."""
+    sid = params.get("session")
+    if sid:
+        s = ctx.sessions.get(sid)
+        if s is not None and s.client is not None:
+            return s.client, (s.transport or "direct")
+    reader = _reader(params, keep_raw_walk=False)
+    transport = "overlay" if params.get("reach") == "remote" else "direct"
+    return reader.client, transport
+
+
+def route_site_snapshot_take(ctx, req):
+    """POST /api/sites/{id}/snapshots — take a snapshot now (read-only).
+
+    ``{scope: all|core, name?, tags?, session?|ip?}``; stores a v2 .cixbak and
+    prunes. This is the Backups page *New snapshot* button."""
+    site_id = req.params["id"]
+    params = req.body() or {}
+    try:
+        cat = load_catalog()
+        client, transport = _reader_for(ctx, params)
+    except ValueError as exc:
+        req.send_json({"ok": False, "error": str(exc)}, 400)
+        return
+    scope = params.get("scope", "all")
+    programs = None
+    if scope == "core":
+        programs = core_program_keys(cat)
+    try:
+        store = ctx.snapshots()
+        entry = store.take(client, site_id=site_id, catalog=cat, scope=scope,
+                           programs=programs, site=params.get("site"),
+                           name=params.get("name"), tags=params.get("tags"),
+                           kind="named" if params.get("name") else "manual",
+                           transport=transport)
+        store.prune(site_id)
+    except SnmpError as exc:
+        req.send_json({"ok": False, "error": str(exc)})
+        return
+    req.send_json({"ok": True, "snapshot": _snapshot_header(entry)})
+
+
+def route_site_snapshot_patch(ctx, req):
+    """PATCH /api/sites/{id}/snapshots/{sid} — name / note / tags / pin."""
+    body = req.body() or {}
+    kw = {}
+    if "name" in body:
+        entry = ctx.snapshots().name(req.params["id"], req.params["sid"], body["name"])
+    else:
+        if "note" in body:
+            kw["note"] = body["note"]
+        if "tags" in body:
+            kw["tags"] = body["tags"]
+        if "pinned" in body:
+            kw["pinned"] = bool(body["pinned"])
+        entry = ctx.snapshots().set_meta(req.params["id"], req.params["sid"], **kw)
+    if entry is None:
+        req.send_json({"ok": False, "error": "no such snapshot"}, 404)
+        return
+    req.send_json({"ok": True, "snapshot": _snapshot_header(entry)})
+
+
+def route_site_snapshot_delete(ctx, req):
+    """DELETE /api/sites/{id}/snapshots/{sid} — refuses a protected one unless
+    ``?force=1`` (pinned / named / newest-full / referenced)."""
+    ok, reason = ctx.snapshots().delete(req.params["id"], req.params["sid"],
+                                        force=bool(req.query.get("force")))
+    req.send_json({"ok": ok, "reason": reason}, 200 if ok else 409)
+
+
+def route_site_snapshot_export(ctx, req):
+    """GET /api/sites/{id}/snapshots/{sid}/export?redact=1&container=cixbak."""
+    redact = req.query.get("redact", "1") not in ("0", "false", "no")
+    container = req.query.get("container", "cixbak")
+    out = ctx.snapshots().export(req.params["id"], req.params["sid"],
+                                 redact_secrets=redact, container=container)
+    if out is None:
+        req.send_json({"ok": False, "error": "no such snapshot"}, 404)
+        return
+    filename, data = out
+    ctype = "application/zip" if container == "cixbak" else "application/json"
+    req.send_bytes(data, ctype, filename=filename)
+
+
+def route_site_snapshot_import(ctx, req):
+    """POST /api/sites/{id}/snapshots/import — {doc} → an imported snapshot."""
+    body = req.body() or {}
+    doc = body.get("doc")
+    if not isinstance(doc, dict):
+        req.send_json({"ok": False, "error": "missing backup doc"}, 400)
+        return
+    try:
+        entry = ctx.snapshots().import_doc(req.params["id"], doc,
+                                           name=body.get("name"))
+    except ValueError as exc:
+        req.send_json({"ok": False, "error": str(exc)}, 400)
+        return
+    req.send_json({"ok": True, "snapshot": _snapshot_header(entry)})
+
+
+def route_site_snapshot_program(ctx, req):
+    """GET /api/sites/{id}/snapshots/{sid}/program/{key} — one program in file
+    mode (so the viewer fetches per program, not the whole document)."""
+    doc = ctx.snapshots().get(req.params["id"], req.params["sid"])
+    if doc is None:
+        req.send_json({"ok": False, "error": "no such snapshot"}, 404)
+        return
+    cat = load_catalog()
+    prog = cat.program(req.params["key"])
+    if prog is None:
+        req.send_json({"ok": False, "error": "unknown program"}, 404)
+        return
+    views = program_views_from_backup(doc, cat)
+    pv = next((p for p in views["programs"] if p["catalog_key"] == prog.key), None)
+    if pv is None:
+        pv = empty_program_view(cat, prog.key)
+        req.send_json({"ok": True, "program": pv, "source": "absent"})
+        return
+    req.send_json({"ok": True, "program": pv, "source": "file"})
+
+
+# -- diff / compare-with-live ----------------------------------------------
+def _resolve_backup_source(ctx, spec):
+    """A backup doc from a diff source spec: ``{doc}`` | ``{site, snapshot}`` |
+    ``{site, latest: true}``."""
+    if not isinstance(spec, dict):
+        return None
+    if isinstance(spec.get("doc"), dict):
+        return spec["doc"]
+    site = spec.get("site")
+    if site and spec.get("snapshot"):
+        return ctx.snapshots().get(site, spec["snapshot"])
+    if site and spec.get("latest"):
+        return ctx.snapshots().latest(site)
+    return None
+
+
+def _annotated_diff(ctx, a_doc, b_doc, params, *, site_for_blame=None):
+    cat = load_catalog()
+    kw = {"catalog": cat, "ignore_readonly": not params.get("all")}
+    if not params.get("volatile"):
+        kw["volatile"] = load_volatile_oids()
+    if params.get("cross_site"):
+        ident = set((a_doc.get("meta", {}).get("identity_programs") or [])) | \
+            set((b_doc.get("meta", {}).get("identity_programs") or []))
+        kw["exclude_programs"] = ident
+        kw["exclude_fields"] = CROSS_SITE_EXCLUDE_FIELDS
+        kw["match_rows_on"] = "key"
+    d = diff_backups(a_doc, b_doc, **kw)
+    ann = diff_annotate(d, cat)
+    if site_for_blame:
+        diff_attribute(ann, ctx.snapshots().read_activity(site_for_blame))
+    return d, ann, cat
+
+
+def route_annotated_diff(ctx, req):
+    """POST /api/diff/review — annotated diff between two states (backups.md §4).
+
+    The Backups-page diff pane / the P2 review dialog. ``{a, b, all?, volatile?,
+    cross_site?, export?}``; ``a``/``b`` are source specs (``{doc}`` | ``{site,
+    snapshot}`` | ``{site, latest}``). With ``export`` ∈ ``markdown|csv|text|
+    json`` returns that masked rendering. (The legacy ``/api/diff`` — full docs
+    in, ``{diff, report}`` out — is kept for the old UI.)"""
+    params = req.body() or {}
+    a_doc = _resolve_backup_source(ctx, params.get("a"))
+    b_doc = _resolve_backup_source(ctx, params.get("b"))
+    if a_doc is None or b_doc is None:
+        req.send_json({"ok": False, "error": "need two resolvable sources (a, b)"}, 400)
+        return
+    site = (params.get("a") or {}).get("site") or (params.get("b") or {}).get("site")
+    d, ann, cat = _annotated_diff(ctx, a_doc, b_doc, params, site_for_blame=site)
+    export = params.get("export")
+    if export:
+        if export == "markdown":
+            req.send_text(to_markdown(d, cat), content_type="text/markdown; charset=utf-8")
+        elif export == "csv":
+            req.send_text(to_csv(d, cat), content_type="text/csv; charset=utf-8")
+        elif export == "json":
+            req.send_json(to_json(d, cat))
+        else:
+            req.send_text(to_text(d, cat))
+        return
+    req.send_json({"ok": True, "summary": d["summary"], "annotated": ann})
+
+
+def route_site_compare_live(ctx, req):
+    """POST /api/sites/{id}/compare-live — diff a snapshot against a fresh live
+    read scoped to its programs (backups.md §4.1). Needs a connected session
+    (``session``) or adhoc connection params; stores the read as ``compare-live``."""
+    site_id = req.params["id"]
+    params = req.body() or {}
+    a_doc = ctx.snapshots().get(site_id, params.get("snapshot")) \
+        if params.get("snapshot") else ctx.snapshots().latest(site_id)
+    if a_doc is None:
+        req.send_json({"ok": False, "error": "no snapshot to compare"}, 404)
+        return
+    try:
+        cat = load_catalog()
+        client, transport = _reader_for(ctx, params)
+    except ValueError as exc:
+        req.send_json({"ok": False, "error": str(exc)}, 400)
+        return
+    programs = list((a_doc.get("programs") or {}).keys())
+    try:
+        store = ctx.snapshots()
+        b_entry = store.take(client, site_id=site_id, catalog=cat, scope=programs,
+                             programs=programs, kind="compare-live",
+                             transport=transport, trigger="compare-live")
+    except SnmpError as exc:
+        req.send_json({"ok": False, "error": str(exc)})
+        return
+    b_doc = store.get(site_id, b_entry["id"])
+    d, ann, _ = _annotated_diff(ctx, a_doc, b_doc, params, site_for_blame=site_id)
+    req.send_json({"ok": True, "summary": d["summary"], "annotated": ann,
+                   "b_snapshot": _snapshot_header(b_entry)})
+
+
+# A small set of per-row identity fields excluded on a cross-site diff
+# (backups.md §4.4) — a station's own name / equipment number / MAC differ
+# between systems by definition and are not "drift".
+CROSS_SITE_EXCLUDE_FIELDS = {
+    "stationStationName", "ipStationStationName", "stationEquipmentNumber",
+    "stationMacAddress", "ipStationMacAddress", "stationIpAddress",
+}
+
+
+# --------------------------------------------------------------------------
 # wiring
 # --------------------------------------------------------------------------
 def register_browse_routes(ctx: ServerContext) -> None:
@@ -8598,9 +8846,17 @@ def register_browse_routes(ctx: ServerContext) -> None:
     r.get("/api/sessions/{id}/program/{key}/{index}", route_session_program_row)
     r.get("/api/sessions/{id}/find", route_session_find)
     r.get("/api/sites/{id}/snapshots", route_site_snapshots)
+    r.post("/api/sites/{id}/snapshots", route_site_snapshot_take)
+    r.post("/api/sites/{id}/snapshots/import", route_site_snapshot_import)
     r.get("/api/sites/{id}/snapshots/latest", route_site_snapshot_latest)
     r.get("/api/sites/{id}/snapshots/{sid}/find", route_snapshot_find)
+    r.get("/api/sites/{id}/snapshots/{sid}/export", route_site_snapshot_export)
+    r.get("/api/sites/{id}/snapshots/{sid}/program/{key}", route_site_snapshot_program)
     r.get("/api/sites/{id}/snapshots/{sid}", route_site_snapshot_get)
+    r.patch("/api/sites/{id}/snapshots/{sid}", route_site_snapshot_patch)
+    r.delete("/api/sites/{id}/snapshots/{sid}", route_site_snapshot_delete)
+    r.post("/api/sites/{id}/compare-live", route_site_compare_live)
+    r.post("/api/diff/review", route_annotated_diff)
 
 
 def register_legacy_routes(ctx: ServerContext) -> None:

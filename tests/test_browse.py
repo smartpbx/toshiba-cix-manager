@@ -211,6 +211,17 @@ class _Harness:
         with urllib.request.urlopen(req, timeout=10) as r:
             return r.status, json.loads(r.read().decode())
 
+    def request(self, method, path, body=None):
+        data = json.dumps(body).encode() if body is not None else None
+        req = urllib.request.Request(
+            self.base + path, data=data, method=method,
+            headers={"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=10) as r:
+                return r.status, r.read()
+        except urllib.error.HTTPError as e:   # 4xx/5xx carry a JSON body too
+            return e.code, e.read()
+
     def wait_job(self, job_id, timeout=10.0):
         deadline = time.time() + timeout
         while time.time() < deadline:
@@ -272,6 +283,64 @@ def test_http_snapshot_connect_browse_and_coldstart():
         _, found = h.get(f"/api/sessions/{sid}/find?q=Front%20Desk")
         assert found["ok"] and found["count"] >= 1
         assert any(g["program"] == "200StationAssign" for g in found["groups"])
+    finally:
+        h.close()
+
+
+def test_http_backups_take_rename_diff_export_compare():
+    h = _Harness()
+    try:
+        # connect (so a session with a live client exists for take / compare)
+        _, res = h.post("/api/snapshot", {"ip": "192.168.254.253",
+                                          "site_id": "kellys", "site": "Kellys"})
+        sid = res["session"]
+        h.wait_job(res["job"])
+
+        # the snapshot-on-connect already saved one; take a named one too
+        _, taken = h.post("/api/sites/kellys/snapshots",
+                          {"session": sid, "scope": "all", "name": "Pre-cutover"})
+        assert taken["ok"]
+        snap = taken["snapshot"]
+        assert snap["name"] == "Pre-cutover" and snap["kind"] == "named"
+
+        # it is deduped against the connect snapshot (identical content), so it
+        # points at a file; either way the timeline lists at least two rows
+        _, listed = h.get("/api/sites/kellys/snapshots")
+        assert listed["ok"] and len(listed["snapshots"]) >= 2
+
+        # rename/pin via PATCH
+        status, raw = h.request("PATCH", f"/api/sites/kellys/snapshots/{snap['sid']}",
+                                {"pinned": True})
+        patched = json.loads(raw.decode())
+        assert patched["ok"] and patched["snapshot"]["pinned"] is True
+
+        # a named+pinned snapshot refuses deletion without force
+        status, raw = h.request("DELETE", f"/api/sites/kellys/snapshots/{snap['sid']}")
+        assert status == 409 and json.loads(raw.decode())["reason"] in ("named", "pinned")
+
+        # annotated diff: latest vs the named one (same content -> no changes)
+        _, diff = h.post("/api/diff/review",
+                         {"a": {"site": "kellys", "snapshot": snap["sid"]},
+                          "b": {"site": "kellys", "latest": True}})
+        assert diff["ok"] and "groups" in diff["annotated"]
+        assert diff["summary"]["fields_changed"] == 0
+
+        # export is redacted by default and comes back as a .cixbak (zip)
+        status, raw = h.request("GET",
+                                f"/api/sites/kellys/snapshots/{snap['sid']}/export")
+        assert status == 200 and raw[:2] == b"PK"
+
+        # compare-with-live: a fresh read scoped to the snapshot's programs
+        _, cmp = h.post("/api/sites/kellys/compare-live", {"session": sid})
+        assert cmp["ok"] and "summary" in cmp
+
+        # file-mode per-program read
+        _, prog = h.get(f"/api/sites/kellys/snapshots/{snap['sid']}/program/200")
+        assert prog["ok"] and prog["program"]["catalog_key"] == "200StationAssign"
+
+        # value search in file mode
+        _, found = h.get(f"/api/sites/kellys/snapshots/{snap['sid']}/find?q=Front%20Desk")
+        assert found["ok"] and found["count"] >= 1
     finally:
         h.close()
 
