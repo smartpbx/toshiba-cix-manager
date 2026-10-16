@@ -62,6 +62,10 @@ from .snapshot import read_snapshot
 from .snmp import SnmpError, SnmpV1
 from .update import apply_update, check_for_update, finalize_pending_update, plan_update
 from .write import WRITES_ENABLED, CIXWriter, WriteError
+# Voicemail leg (DESIGN_PLAN §8). Bare names so the single-file build resolves
+# them as globals after it flattens the package.
+from . import vm_catalog, vm_reports, vm_serial
+from .vm_session import VmSession, VmSessionManager, VmNotConnected
 
 log = logging.getLogger("toshiba_cix.webapp")
 
@@ -935,6 +939,145 @@ CROSS_SITE_EXCLUDE_FIELDS = {
 # --------------------------------------------------------------------------
 # wiring
 # --------------------------------------------------------------------------
+# --------------------------------------------------------------------------
+# Voice Mail routes (DESIGN_PLAN §8.2, voicemail-map §7) — read-only in P1
+# --------------------------------------------------------------------------
+def _vm(ctx) -> VmSession:
+    """The one exclusive VM session, created lazily and stashed on the ctx."""
+    mgr = getattr(ctx, "_vm_manager", None)
+    if mgr is None:
+        mgr = VmSessionManager()
+        ctx._vm_manager = mgr
+    return mgr.session
+
+
+def _vm_guard(ctx, req, fn):
+    """Run ``fn(vm)`` translating a not-connected session into a clean 409."""
+    try:
+        return fn(_vm(ctx))
+    except VmNotConnected as exc:
+        req.send_json({"ok": False, "error": str(exc)}, 409)
+        return None
+
+
+def route_vm_ports(ctx, req):
+    req.send_json({"ok": True, "ports": vm_serial.discover_ports()})
+
+
+def route_vm_connect(ctx, req):
+    spec = req.body() or {}
+    try:
+        status = _vm(ctx).connect(spec)
+    except Exception as exc:  # noqa: BLE001 — surface the exe-style error text
+        req.send_json({"ok": False, "error": str(exc)}, 400)
+        return
+    req.send_json({"ok": True, "status": status})
+
+
+def route_vm_disconnect(ctx, req):
+    _vm(ctx).disconnect()
+    req.send_json({"ok": True})
+
+
+def route_vm_status(ctx, req):
+    req.send_json({"ok": True, "status": _vm(ctx).status()})
+
+
+def route_vm_boxes(ctx, req):
+    refresh = bool(req.query.get("refresh"))
+    res = _vm_guard(ctx, req, lambda vm: vm.boxes(refresh=refresh))
+    if res is not None:
+        req.send_json({"ok": True, "boxes": res})
+
+
+def route_vm_box(ctx, req):
+    box = req.params["id"]
+    refresh = bool(req.query.get("refresh"))
+    res = _vm_guard(ctx, req, lambda vm: vm.box(box, refresh=refresh))
+    if res is not None:
+        req.send_json({"ok": True, **res})
+
+
+def route_vm_box_save(ctx, req):
+    """Plan-only preview (two-phase contract, Simulate). Never writes in P1."""
+    box = req.params["id"]
+    body = req.body() or {}
+    res = _vm_guard(ctx, req, lambda vm: vm.plan_save(box, body.get("changes") or {}))
+    if res is not None:
+        req.send_json({"ok": True, "plan": res})
+
+
+def route_vm_sysparams(ctx, req):
+    refresh = bool(req.query.get("refresh"))
+    res = _vm_guard(ctx, req, lambda vm: vm.sysparams(refresh=refresh))
+    if res is not None:
+        req.send_json({"ok": True, "sysparams": res})
+
+
+def route_vm_pbxdb(ctx, req):
+    refresh = bool(req.query.get("refresh"))
+    compare = bool(req.query.get("compare"))
+    res = _vm_guard(ctx, req, lambda vm: vm.pbxdb(refresh=refresh, compare=compare))
+    if res is not None:
+        req.send_json({"ok": True, "pbxdb": res})
+
+
+def route_vm_catalog(ctx, req):
+    req.send_json({"ok": True, "editor": vm_catalog.editor_model()})
+
+
+def route_vm_backup_json(ctx, req):
+    body = req.body() or {}
+    download = bool(body.get("download"))
+    res = _vm_guard(ctx, req, lambda vm: vm.backup_json(site=body.get("site")))
+    if res is None:
+        return
+    if download:
+        fw = (res.get("meta") or {}).get("firmware", "vm")
+        req.send_bytes(json.dumps(res, indent=2, default=str).encode("utf-8"),
+                       "application/json", filename="voicemail-backup.json")
+        return
+    req.send_json({"ok": True, "backup": res})
+
+
+def route_vm_reports_templates(ctx, req):
+    req.send_json({"ok": True, "templates": vm_reports.default_templates()})
+
+
+def route_vm_reports_run(ctx, req):
+    body = req.body() or {}
+    tid = body.get("template") or "directory"
+    res = _vm_guard(ctx, req, lambda vm: vm.run_report(
+        tid, first=body.get("first"), last=body.get("last")))
+    if res is not None:
+        req.send_json({"ok": True, "report": res})
+
+
+def route_vm_trace(ctx, req):
+    text = _vm_guard(ctx, req, lambda vm: vm.trace_text())
+    if text is not None:
+        req.send_text(text, content_type="text/plain; charset=utf-8")
+
+
+def register_vm_routes(ctx: ServerContext) -> None:
+    """Voice Mail leg — read-only screens + plan-only save (DESIGN_PLAN §8)."""
+    r = ctx.router
+    r.post("/api/vm/ports", route_vm_ports)
+    r.post("/api/vm/connect", route_vm_connect)
+    r.post("/api/vm/disconnect", route_vm_disconnect)
+    r.get("/api/vm/status", route_vm_status)
+    r.get("/api/vm/catalog", route_vm_catalog)
+    r.get("/api/vm/boxes", route_vm_boxes)
+    r.get("/api/vm/boxes/{id}", route_vm_box)
+    r.post("/api/vm/boxes/{id}/save", route_vm_box_save)
+    r.get("/api/vm/sysparams", route_vm_sysparams)
+    r.get("/api/vm/pbxdb", route_vm_pbxdb)
+    r.post("/api/vm/backup/json", route_vm_backup_json)
+    r.get("/api/vm/reports/templates", route_vm_reports_templates)
+    r.post("/api/vm/reports/run", route_vm_reports_run)
+    r.get("/api/vm/trace", route_vm_trace)
+
+
 def register_browse_routes(ctx: ServerContext) -> None:
     """P1 browse routes: snapshot-on-connect, session working copy, cold start."""
     r = ctx.router
@@ -983,6 +1126,7 @@ def make_context(*, token=None, appdirs=None) -> ServerContext:
     ctx = ServerContext(token=token, appdirs=appdirs)
     register_core_routes(ctx)
     register_browse_routes(ctx)
+    register_vm_routes(ctx)
     register_legacy_routes(ctx)
     return ctx
 

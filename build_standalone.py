@@ -103,6 +103,16 @@ def _embedded_ui_schema() -> str:
                           "bundled generated UI schema")
 
 
+# Flatten-namespace aliases for the voicemail modules: each ``vm_X.py`` is
+# referenced as ``vm_X.func`` by its siblings, so after the amalgam strips the
+# intra-package imports we bind ``vm_X`` back to the single flattened module.
+def _vm_aliases():
+    names = ["vm_data", "vm_serial", "vm_records", "vm_link", "vm_sysparams",
+             "vm_pbxdb", "vm_catalog", "vm_reports", "vm_backup", "vm_session"]
+    return {f"{n}.py": [f"{n} = sys.modules[__name__]  # flatten alias"]
+            for n in names}
+
+
 def build(order, out_name, *, title, with_web, tail):
     """Amalgamate ``order`` (module filenames) into ``out_name``."""
     version = _version()
@@ -126,6 +136,19 @@ def build(order, out_name, *, title, with_web, tail):
         # _MEIPASS → packaged-data resolution as the catalog).
         aliases["server/schema.py"] = [_embedded_ui_schema()]
         aliases["webapp.py"] = [_embedded_html()]
+        # Voicemail modules: flatten aliases + embed their vendored data so the
+        # single-file build reads the catalog/help/PBX-defaults offline.
+        aliases.update(_vm_aliases())
+        aliases["vm_data.py"] = aliases["vm_data.py"] + [
+            _embedded_data("stratagy_vm_catalog.json",
+                           "EMBEDDED_VM_CATALOG_JSON", "bundled VM field catalog"),
+            _embedded_data("stratagy_sysparams_help.json",
+                           "EMBEDDED_VM_SYSPARAMS_HELP_JSON",
+                           "bundled Stratagy sysparam help"),
+            _embedded_data("stratagy_pbx_defaults.json",
+                           "EMBEDDED_VM_PBX_DEFAULTS_JSON",
+                           "bundled Stratagy PBX dial-code/integration defaults"),
+        ]
 
     parts = [
         "#!/usr/bin/env python3",
@@ -185,6 +208,12 @@ def main() -> None:
          # generic single-program read + snapshot engine (depend on backup /
          # enrich / catalog above), the snapshot store and the value index.
          "programs.py", "snapshot.py", "store.py", "index.py",
+         # voicemail leg (DESIGN_PLAN §8): byte pipe -> framing/link -> decoders
+         # -> sysparams/pbxdb/catalog -> reports/backup -> the exclusive session.
+         # Listed before webapp.py, which registers their routes.
+         "vm_data.py", "vm_serial.py", "vm_records.py", "vm_link.py",
+         "vm_sysparams.py", "vm_pbxdb.py", "vm_catalog.py", "vm_reports.py",
+         "vm_backup.py", "vm_session.py",
          # disk-state layer, then the server package (dependency order: a
          # module is listed after everything it references, because the
          # amalgam flattens them into one namespace and strips the imports).

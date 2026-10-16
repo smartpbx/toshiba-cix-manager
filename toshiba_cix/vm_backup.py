@@ -12,7 +12,7 @@ only; this never writes to a card.
 
 from __future__ import annotations
 
-import datetime
+from datetime import datetime
 from typing import Dict, List, Optional
 
 from . import __version__
@@ -76,7 +76,7 @@ def build_json_backup(link, *, site: Optional[str] = None, progress=None) -> dic
             "kind": BACKUP_KIND,
             "backup_version": BACKUP_VERSION,
             "tool_version": __version__,
-            "taken_at": datetime.datetime.utcnow().isoformat() + "Z",
+            "taken_at": datetime.utcnow().isoformat() + "Z",
             "site": site,
             "firmware": model.get("firmware", ""),
             "box_count": len(model.get("boxes", {})),

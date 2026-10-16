@@ -6256,6 +6256,2132 @@ def _group(occurrences: list, query: str) -> dict:
 __all__ = ["Index", "build_index", "build_index_from_views", "search",
            "load_references", "REFERENCES_FILENAME"]
 
+# ===== vm_data.py ==================================================
+"""Vendored data loader for the voicemail modules.
+
+Mirrors ``catalog._load_data_text`` (base64-embedded global in the single-file
+build → PyInstaller ``_MEIPASS`` bundle → packaged ``data/``), degrading
+gracefully: a build that forgot a sidecar still runs, just without it. The
+embedded-global names (``EMBEDDED_VM_CATALOG_JSON`` etc.) are injected by
+``build_standalone.py`` so the amalgam is self-contained offline.
+"""
+
+
+import os
+import sys
+from typing import Optional
+
+
+def _candidate_paths(filename: str):
+    paths = []
+    meipass = getattr(sys, "_MEIPASS", None)
+    if meipass:
+        paths.append(os.path.join(meipass, "toshiba_cix", "data", filename))
+        paths.append(os.path.join(meipass, "data", filename))
+        paths.append(os.path.join(meipass, filename))
+    here = os.path.dirname(os.path.abspath(__file__))
+    paths.append(os.path.join(here, "data", filename))
+    return paths
+
+
+def load_vm_data_text(filename: str, embedded_global: str) -> Optional[str]:
+    """Return a vendored ``data/<filename>`` text, or ``None`` if unavailable."""
+    embedded = globals().get(embedded_global)
+    if embedded:
+        return embedded
+    for path in _candidate_paths(filename):
+        if os.path.exists(path):
+            try:
+                with open(path, encoding="utf-8") as fh:
+                    return fh.read()
+            except OSError:
+                return None
+    return None
+
+
+__all__ = ["load_vm_data_text"]
+vm_data = sys.modules[__name__]  # flatten alias
+EMBEDDED_VM_CATALOG_JSON = base64.b64decode("ewogICJfbWV0YSI6IHsKICAgICJwdXJwb3NlIjogIlRoZSBTdHJhdGFneSBtYWlsYm94IChVc2VyIEFnZW50KSBmaWVsZCBjYXRhbG9nIOKAlCB0aGUgVk0gdHdpbiBvZiB0aGUgZU1hbmFnZXIgcHJvZ3JhbSBjYXRhbG9nICh2b2ljZW1haWwtbWFwLm1kIMKnMikuIERyaXZlcyB0aGUgcmVhZC1vbmx5IFVzZXIgRWRpdG9yOiB0YWIsIGxhYmVsLCB0b29sdGlwIChWTSBNYW5hZ2VyJ3Mgd29yZGluZyksIHR5cGUsIHJhbmdlLCB3aXJlIGxvY2F0aW9uIGFuZCBTVEFUVVMuIHN0YXR1cyA9IGNvbmZpcm1lZCB8IGluZmVycmVkIHwgdW5rbm93bi4gT25seSBgY29uZmlybWVkYCBmaWVsZHMgYXJlIGV2ZXIgZWRpdGFibGUsIGFuZCBvbmx5IG9uY2UgdGhlIFZNIHdyaXRlIHBhdGggaXMgZW5hYmxlZCAoUDMpOyBldmVyeXRoaW5nIGVsc2UgcmVuZGVycyByZWFkLW9ubHkgd2l0aCBhIHN0YXR1cyBkb3QgYW5kIGEgcmVhc29uLiBPZmZzZXRzIGZvciBpbmZlcnJlZC91bmtub3duIGZpZWxkcyBhcmUgZGVsaWJlcmF0ZWx5IGFic2VudCDigJQgdGhleSBhcmUgVW5rbm93biBBICh2b2ljZW1haWwtbWFwIMKnOSkgYW5kIGFyZSBub3QgZ3Vlc3NlZC4iLAogICAgInN0YXR1c19sZWdlbmQiOiB7CiAgICAgICJjb25maXJtZWQiOiAicmVhZCBieXRlLWV4YWN0IGZyb20gdGhlIGNhcHR1cmU7IGdyZWVuIGRvdDsgZWRpdGFibGUgd2hlbiB3cml0ZXMgYXJlIGVuYWJsZWQiLAogICAgICAiaW5mZXJyZWQiOiAic2hhcGUga25vd24sIGV4YWN0IHdpcmUgb2Zmc2V0IHVudmVyaWZpZWQ7IGFtYmVyIGRvdDsgcmVhZC1vbmx5IiwKICAgICAgInVua25vd24iOiAibm90IHlldCByZWFkYWJsZSBmcm9tIHRoZSB3aXJlOyBncmV5IGRvdDsgc2hvd24gc28gdGhlIHRhYiBpcyBjb21wbGV0ZSIKICAgIH0KICB9LAogICJ0YWJzIjogWwogICAgIkhlYWRlciIsICJVc2VyIE1vZGUgT3B0aW9ucyIsICJBdXRvIEF0dGVuZGFudCBPcHRpb25zIiwKICAgICJDaGFpbnMvR3JvdXBzIiwgIk1lbnVzIiwgIkluZm8iLCAiTm90aWZ5IiwgIkF1dG8iCiAgXSwKICAiZmllbGRzIjogWwogICAgeyJuYW1lIjogInVzZXJfaWQiLCAidGFiIjogIkhlYWRlciIsICJsYWJlbCI6ICJVc2VyIElEIiwgInRvb2x0aXAiOiAiTWFpbGJveCAoVXNlciBJRCkgbnVtYmVyIiwgInR5cGUiOiAiaW50IiwgIndpcmUiOiAiTEUzMiBhdCBwcm9wZXJ0aWVzIG9mZnNldCAxNCIsICJzdGF0dXMiOiAiY29uZmlybWVkIn0sCiAgICB7Im5hbWUiOiAiY29tbWVudCIsICJ0YWIiOiAiSGVhZGVyIiwgImxhYmVsIjogIkNvbW1lbnQiLCAidG9vbHRpcCI6ICJGcmVlLXRleHQgZGVzY3JpcHRpb24sIGUuZy4gRVhURU5TSU9OIG9yIFNodXREb3duIEJveCMxIiwgInR5cGUiOiAic3RyaW5nIiwgIndpcmUiOiAicHJvcGVydGllcyBzZWdtZW50LCBmaXhlZC13aWR0aCBOVUwtcGFkZGVkIiwgInN0YXR1cyI6ICJjb25maXJtZWQifSwKICAgIHsibmFtZSI6ICJleHRlbnNpb24iLCAidGFiIjogIkhlYWRlciIsICJsYWJlbCI6ICJFeHRlbnNpb24iLCAidG9vbHRpcCI6ICJEaWFsIHN0cmluZyBpbiBUb2tlbiBsYW5ndWFnZSAoZS5nLiAyNDFIOyBIID0gaGFuZyB1cCBhZnRlciB0cmFuc2ZlcikiLCAidHlwZSI6ICJzdHJpbmciLCAid2lyZSI6ICJwcm9wZXJ0aWVzIHNlZ21lbnQsIGZpeGVkLXdpZHRoIiwgInN0YXR1cyI6ICJjb25maXJtZWQifSwKICAgIHsibmFtZSI6ICJuYW1lMSIsICJ0YWIiOiAiSGVhZGVyIiwgImxhYmVsIjogIk5hbWUgMSIsICJ0b29sdGlwIjogIkRpcmVjdG9yeSBuYW1lIChmaXJzdCkiLCAidHlwZSI6ICJzdHJpbmciLCAid2lyZSI6ICJwcm9wZXJ0aWVzIHNlZ21lbnQiLCAic3RhdHVzIjogImNvbmZpcm1lZCJ9LAogICAgeyJuYW1lIjogIm5hbWUyIiwgInRhYiI6ICJIZWFkZXIiLCAibGFiZWwiOiAiTmFtZSAyIiwgInRvb2x0aXAiOiAiRGlyZWN0b3J5IG5hbWUgKHNlY29uZCkiLCAidHlwZSI6ICJzdHJpbmciLCAid2lyZSI6ICJwcm9wZXJ0aWVzIHNlZ21lbnQiLCAic3RhdHVzIjogImluZmVycmVkIn0sCiAgICB7Im5hbWUiOiAic2VjdXJpdHlfY29kZSIsICJ0YWIiOiAiSGVhZGVyIiwgImxhYmVsIjogIlNlY3VyaXR5IGNvZGUiLCAidG9vbHRpcCI6ICJOdW1lcmljIHNlY3VyaXR5IGNvZGUgKGxlbmd0aCBiZXR3ZWVuIHNlY3VyaXR5X21pbl9sZW5ndGggYW5kIHNlY3VyaXR5X21heF9sZW5ndGgpIiwgInR5cGUiOiAic2VjcmV0IiwgIndpcmUiOiAiVUEgc2VnbWVudCwgQVNDSUkgYWZ0ZXIgMDAgMDAgMDAgZmYgbWFya2VyIiwgInN0YXR1cyI6ICJjb25maXJtZWQifSwKICAgIHsibmFtZSI6ICJyZWNvcmRfbmFtZSIsICJ0YWIiOiAiVXNlciBNb2RlIE9wdGlvbnMiLCAibGFiZWwiOiAiUmVjb3JkIG5hbWUiLCAidG9vbHRpcCI6ICJBbGxvdyB0aGUgdXNlciB0byByZWNvcmQgaGlzIG5hbWUgYW5kIGV4dGVuc2lvbj8iLCAidHlwZSI6ICJib29sIiwgInN0YXR1cyI6ICJpbmZlcnJlZCJ9LAogICAgeyJuYW1lIjogInNsb3dfbWVudSIsICJ0YWIiOiAiVXNlciBNb2RlIE9wdGlvbnMiLCAibGFiZWwiOiAiU2xvdyBtZW51IiwgInRvb2x0aXAiOiAiUHJlc2VudCBtZW51cyB3aXRoIGV4dHJhIHRpbWUgYmV0d2VlbiBjaG9pY2VzIiwgInR5cGUiOiAiYm9vbCIsICJzdGF0dXMiOiAiaW5mZXJyZWQifSwKICAgIHsibmFtZSI6ICJwbGF5X2RhdGV0aW1lIiwgInRhYiI6ICJVc2VyIE1vZGUgT3B0aW9ucyIsICJsYWJlbCI6ICJQbGF5IGRhdGUvdGltZSIsICJ0b29sdGlwIjogIlBsYXkgdGhlIGRhdGUgYW5kIHRpbWUgd2hlbiBwbGF5aW5nIGEgbWVzc2FnZT8iLCAidHlwZSI6ICJib29sIiwgInN0YXR1cyI6ICJpbmZlcnJlZCJ9LAogICAgeyJuYW1lIjogInNhdmVkX21lc3NhZ2VfcXVldWUiLCAidGFiIjogIlVzZXIgTW9kZSBPcHRpb25zIiwgImxhYmVsIjogIlNhdmVkIG1lc3NhZ2UgcXVldWUiLCAidG9vbHRpcCI6ICJVc2Ugc2VwYXJhdGUgbWVzc2FnZSBsaXN0cyBmb3IgbmV3IGFuZCBzYXZlZCBtZXNzYWdlcyIsICJ0eXBlIjogImJvb2wiLCAic3RhdHVzIjogImluZmVycmVkIn0sCiAgICB7Im5hbWUiOiAibXNnX3BlbmRpbmciLCAidGFiIjogIlVzZXIgTW9kZSBPcHRpb25zIiwgImxhYmVsIjogIk1lc3NhZ2UgcGVuZGluZyIsICJ0b29sdGlwIjogIk1lc3NhZ2UgUGVuZGluZyBlbmFibGVkPyIsICJ0eXBlIjogImJvb2wiLCAic3RhdHVzIjogImluZmVycmVkIn0sCiAgICB7Im5hbWUiOiAiZ3Vlc3RzIiwgInRhYiI6ICJVc2VyIE1vZGUgT3B0aW9ucyIsICJsYWJlbCI6ICJHdWVzdHMiLCAidG9vbHRpcCI6ICJJZiAtMSwgZ3Vlc3QgSUQgaXMgZGlzYWJsZWQ7IGVsc2UgMC4uOTkiLCAidHlwZSI6ICJpbnQiLCAicmFuZ2UiOiAiLTEuLjk5IiwgInN0YXR1cyI6ICJpbmZlcnJlZCJ9LAogICAgeyJuYW1lIjogImNvcHlfbWVzc2FnZV90byIsICJ0YWIiOiAiVXNlciBNb2RlIE9wdGlvbnMiLCAibGFiZWwiOiAiQ29weSBtZXNzYWdlIHRvIiwgInRvb2x0aXAiOiAiSWYgZGVmaW5lZCwgY29weSBlYWNoIG1lc3NhZ2UgZm9yIHVzZXIgdG8gdGhpcyBtYWlsYm94IiwgInR5cGUiOiAiYm94IiwgInN0YXR1cyI6ICJpbmZlcnJlZCJ9LAogICAgeyJuYW1lIjogIm1lc3NhZ2Vfb3JkZXIiLCAidGFiIjogIlVzZXIgTW9kZSBPcHRpb25zIiwgImxhYmVsIjogIk1lc3NhZ2Ugb3JkZXIiLCAidG9vbHRpcCI6ICJQbGF5IG1vc3QgcmVjZW50IG1lc3NhZ2UgZmlyc3QgKExJRk8pIG9yIG9sZGVzdCBmaXJzdCAoRklGTykiLCAidHlwZSI6ICJlbnVtIiwgImVudW0iOiBbIkxJRk8iLCAiRklGTyJdLCAic3RhdHVzIjogImluZmVycmVkIn0sCiAgICB7Im5hbWUiOiAic3RvcmVfbWVzc2FnZXMiLCAidGFiIjogIlVzZXIgTW9kZSBPcHRpb25zIiwgImxhYmVsIjogIlN0b3JlIG1lc3NhZ2VzIiwgInRvb2x0aXAiOiAiTWF5IHRoaXMgVXNlciBzdG9yZSBtZXNzYWdlcz8iLCAidHlwZSI6ICJib29sIiwgInN0YXR1cyI6ICJpbmZlcnJlZCJ9LAogICAgeyJuYW1lIjogIm1heF9tc2dfbGVuZ3RoIiwgInRhYiI6ICJVc2VyIE1vZGUgT3B0aW9ucyIsICJsYWJlbCI6ICJNYXggbWVzc2FnZSBsZW5ndGgiLCAidG9vbHRpcCI6ICJNYXhpbXVtIGxlbmd0aCBvZiBlYWNoIG1lc3NhZ2UgKHNlY29uZHM7IDAgPSB1bmxpbWl0ZWQpIiwgInR5cGUiOiAiaW50IiwgInN0YXR1cyI6ICJpbmZlcnJlZCJ9LAogICAgeyJuYW1lIjogInZvbHVtZSIsICJ0YWIiOiAiVXNlciBNb2RlIE9wdGlvbnMiLCAibGFiZWwiOiAiVm9sdW1lIiwgInRvb2x0aXAiOiAiQ3VycmVudCBtZXNzYWdlIHZvbHVtZSBmcm9tIC04IChzb2Z0ZXN0KSB0byA4IChsb3VkZXN0KSIsICJ0eXBlIjogImludCIsICJyYW5nZSI6ICItOC4uOCIsICJzdGF0dXMiOiAiaW5mZXJyZWQifSwKICAgIHsibmFtZSI6ICJhbHRlcm5hdGVfcmF0ZSIsICJ0YWIiOiAiVXNlciBNb2RlIE9wdGlvbnMiLCAibGFiZWwiOiAiQWx0ZXJuYXRlIHJhdGUiLCAidG9vbHRpcCI6ICJBbHRlcm5hdGUgc3BlZWQ7IGhpZ2hlciBpcyBmYXN0ZXIiLCAidHlwZSI6ICJpbnQiLCAicmFuZ2UiOiAiMC4uNCIsICJzdGF0dXMiOiAiaW5mZXJyZWQifSwKICAgIHsibmFtZSI6ICJ1c2VfYWx0X3JhdGVfYXRfbG9naW4iLCAidGFiIjogIlVzZXIgTW9kZSBPcHRpb25zIiwgImxhYmVsIjogIlVzZSBhbHQgcmF0ZSBhdCBsb2dpbiIsICJ0b29sdGlwIjogIldoZW4gWUVTLCB0aGUgYWx0ZXJuYXRlIHNwZWVkIGlzIHVzZWQgd2hlbiB0aGUgdXNlciBsb2dzIGluIiwgInR5cGUiOiAiYm9vbCIsICJzdGF0dXMiOiAiaW5mZXJyZWQifSwKICAgIHsibmFtZSI6ICJhbWlzX2dhdGV3YXkiLCAidGFiIjogIlVzZXIgTW9kZSBPcHRpb25zIiwgImxhYmVsIjogIkFNSVMgZ2F0ZXdheSIsICJ0b29sdGlwIjogIlNldCB0aGlzIGJveCBhcyBhbiBBTUlTIGdhdGV3YXkiLCAidHlwZSI6ICJib29sIiwgInN0YXR1cyI6ICJpbmZlcnJlZCJ9LAogICAgeyJuYW1lIjogImFtaXNfc3lzX251bWJlciIsICJ0YWIiOiAiVXNlciBNb2RlIE9wdGlvbnMiLCAibGFiZWwiOiAiQU1JUyBzeXN0ZW0gbnVtYmVyIiwgInRvb2x0aXAiOiAiVGhlIHJlbW90ZSB0ZWxlcGhvbmUgbnVtYmVyIChlLmcuIDEjNzE0IzU1NTEyMTIjKSIsICJ0eXBlIjogInN0cmluZyIsICJzdGF0dXMiOiAiaW5mZXJyZWQifSwKICAgIHsibmFtZSI6ICJtYXhfcmluZ3MiLCAidGFiIjogIkF1dG8gQXR0ZW5kYW50IE9wdGlvbnMiLCAibGFiZWwiOiAiTWF4IHJpbmdzIiwgInRvb2x0aXAiOiAiUmluZyBleHRlbnNpb24gdGhpcyBtYW55IHRpbWVzICgwID0gc3lzdGVtIGRlZmF1bHQpIiwgInR5cGUiOiAiaW50IiwgInN0YXR1cyI6ICJpbmZlcnJlZCJ9LAogICAgeyJuYW1lIjogImRvX25vdF9kaXN0dXJiIiwgInRhYiI6ICJBdXRvIEF0dGVuZGFudCBPcHRpb25zIiwgImxhYmVsIjogIkRvIE5vdCBEaXN0dXJiIiwgInRvb2x0aXAiOiAiRW5hYmxlIERvIE5vdCBEaXN0dXJiLiBSaWdodC1jbGljayB0byBMb2NrL1VubG9jayIsICJ0eXBlIjogImJvb2wiLCAibG9jayI6IHRydWUsICJzdGF0dXMiOiAiaW5mZXJyZWQifSwKICAgIHsibmFtZSI6ICJzY3JlZW5fY2FsbHMiLCAidGFiIjogIkF1dG8gQXR0ZW5kYW50IE9wdGlvbnMiLCAibGFiZWwiOiAiU2NyZWVuIGNhbGxzIiwgInRvb2x0aXAiOiAiU2NyZWVuIGNhbGxzIHRvIHRoaXMgdXNlci4gUmlnaHQtY2xpY2sgdG8gTG9jay9VbmxvY2siLCAidHlwZSI6ICJib29sIiwgImxvY2siOiB0cnVlLCAic3RhdHVzIjogImluZmVycmVkIn0sCiAgICB7Im5hbWUiOiAiYnVzeV9ob2xkIiwgInRhYiI6ICJBdXRvIEF0dGVuZGFudCBPcHRpb25zIiwgImxhYmVsIjogIkJ1c3kgaG9sZCIsICJ0b29sdGlwIjogIkFsbG93IGEgY2FsbGVyIHRvIHByZXNzICogdG8gaG9sZCIsICJ0eXBlIjogImJvb2wiLCAic3RhdHVzIjogImluZmVycmVkIn0sCiAgICB7Im5hbWUiOiAiaWRfY2FsbCIsICJ0YWIiOiAiQXV0byBBdHRlbmRhbnQgT3B0aW9ucyIsICJsYWJlbCI6ICJJRCBjYWxsIiwgInRvb2x0aXAiOiAiUGxheSB0aGUgdXNlciBJRCB3aGVuIGNvbm5lY3RpbmcgdG8gYSBjYWxsIiwgInR5cGUiOiAiYm9vbCIsICJzdGF0dXMiOiAiaW5mZXJyZWQifSwKICAgIHsibmFtZSI6ICJjYWxsZXJfbWVudSIsICJ0YWIiOiAiQXV0byBBdHRlbmRhbnQgT3B0aW9ucyIsICJsYWJlbCI6ICJDYWxsZXIgbWVudSIsICJ0b29sdGlwIjogIlByZXNlbnQgYSBtZXNzYWdlIG1lbnUgdG8gb3V0c2lkZSBjYWxsZXJzIiwgInR5cGUiOiAiYm9vbCIsICJzdGF0dXMiOiAiaW5mZXJyZWQifSwKICAgIHsibmFtZSI6ICJjdXJyZW50X2dyZWV0aW5nIiwgInRhYiI6ICJBdXRvIEF0dGVuZGFudCBPcHRpb25zIiwgImxhYmVsIjogIkN1cnJlbnQgZ3JlZXRpbmciLCAidG9vbHRpcCI6ICJDdXN0b20gZ3JlZXRpbmcgKDEuLjcpIG9yIHN5c3RlbSBncmVldGluZyAoMCkiLCAidHlwZSI6ICJpbnQiLCAicmFuZ2UiOiAiMC4uNyIsICJzdGF0dXMiOiAiaW5mZXJyZWQifSwKICAgIHsibmFtZSI6ICJtYXhfZ3JlZXRpbmdfbGVuZ3RoIiwgInRhYiI6ICJBdXRvIEF0dGVuZGFudCBPcHRpb25zIiwgImxhYmVsIjogIk1heCBncmVldGluZyBsZW5ndGgiLCAidG9vbHRpcCI6ICJNYXhpbXVtIGxlbmd0aCBvZiBlYWNoIGdyZWV0aW5nIChzZWNvbmRzOyB1c2UgMCB0byBsb2NrKSIsICJ0eXBlIjogImludCIsICJzdGF0dXMiOiAiaW5mZXJyZWQifSwKICAgIHsibmFtZSI6ICJidXN5X2dyZWV0aW5nIiwgInRhYiI6ICJBdXRvIEF0dGVuZGFudCBPcHRpb25zIiwgImxhYmVsIjogIkJ1c3kgZ3JlZXRpbmciLCAidG9vbHRpcCI6ICJDdXJyZW50IGJ1c3kgZ3JlZXRpbmciLCAidHlwZSI6ICJlbnVtIiwgImVudW0iOiBbIlN5c3RlbSIsICJDdXN0b20iXSwgInN0YXR1cyI6ICJpbmZlcnJlZCJ9LAogICAgeyJuYW1lIjogIm1heF9idXN5X2xlbmd0aCIsICJ0YWIiOiAiQXV0byBBdHRlbmRhbnQgT3B0aW9ucyIsICJsYWJlbCI6ICJNYXggYnVzeSBsZW5ndGgiLCAidG9vbHRpcCI6ICJNYXhpbXVtIGxlbmd0aCBvZiBidXN5IGdyZWV0aW5nIChzZWNvbmRzOyAwID0gbG9jaykiLCAidHlwZSI6ICJpbnQiLCAic3RhdHVzIjogImluZmVycmVkIn0sCiAgICB7Im5hbWUiOiAiY2hhaW5fZG9uZSIsICJ0YWIiOiAiQ2hhaW5zL0dyb3VwcyIsICJsYWJlbCI6ICJDaGFpbiAoZG9uZSkiLCAidG9vbHRpcCI6ICJJZiBkZWZpbmVkLCBjaGFpbiBoZXJlIHdoZW4gdGhlIGdyZWV0aW5nIGlzIGRvbmUiLCAidHlwZSI6ICJib3giLCAic3RhdHVzIjogImluZmVycmVkIn0sCiAgICB7Im5hbWUiOiAiY2hhaW5fcm5hIiwgInRhYiI6ICJDaGFpbnMvR3JvdXBzIiwgImxhYmVsIjogIkNoYWluIChSTkEpIiwgInRvb2x0aXAiOiAiSWYgZGVmaW5lZCwgY2hhaW4gaGVyZSBvbiBSaW5nIE5vIEFuc3dlciIsICJ0eXBlIjogImJveCIsICJzdGF0dXMiOiAiaW5mZXJyZWQifSwKICAgIHsibmFtZSI6ICJjaGFpbl9idXN5IiwgInRhYiI6ICJDaGFpbnMvR3JvdXBzIiwgImxhYmVsIjogIkNoYWluIChidXN5KSIsICJ0b29sdGlwIjogIklmIGRlZmluZWQsIGNoYWluIGhlcmUgd2hlbiBidXN5IiwgInR5cGUiOiAiYm94IiwgInN0YXR1cyI6ICJpbmZlcnJlZCJ9LAogICAgeyJuYW1lIjogImNoYWluX2RlbGF5IiwgInRhYiI6ICJDaGFpbnMvR3JvdXBzIiwgImxhYmVsIjogIkNoYWluIGRlbGF5IiwgInRvb2x0aXAiOiAiVGVudGhzIG9mIGEgc2Vjb25kIGFmdGVyIHRoZSBncmVldGluZyBiZWZvcmUgY2hhaW5pbmciLCAidHlwZSI6ICJpbnQiLCAic3RhdHVzIjogImluZmVycmVkIn0sCiAgICB7Im5hbWUiOiAiZ3JvdXAxIiwgInRhYiI6ICJDaGFpbnMvR3JvdXBzIiwgImxhYmVsIjogIkdyb3VwIDEiLCAidG9vbHRpcCI6ICJJZiBub24temVybywgdGhlIHVzZXIgaXMgYSBtZW1iZXIgb2YgdGhpcyBncm91cCIsICJ0eXBlIjogImludCIsICJzdGF0dXMiOiAiaW5mZXJyZWQifSwKICAgIHsibmFtZSI6ICJncm91cDIiLCAidGFiIjogIkNoYWlucy9Hcm91cHMiLCAibGFiZWwiOiAiR3JvdXAgMiIsICJ0b29sdGlwIjogIklmIG5vbi16ZXJvLCB0aGUgdXNlciBpcyBhIG1lbWJlciBvZiB0aGlzIGdyb3VwIiwgInR5cGUiOiAiaW50IiwgInN0YXR1cyI6ICJpbmZlcnJlZCJ9LAogICAgeyJuYW1lIjogImdyb3VwMyIsICJ0YWIiOiAiQ2hhaW5zL0dyb3VwcyIsICJsYWJlbCI6ICJHcm91cCAzIiwgInRvb2x0aXAiOiAiSWYgbm9uLXplcm8sIHRoZSB1c2VyIGlzIGEgbWVtYmVyIG9mIHRoaXMgZ3JvdXAiLCAidHlwZSI6ICJpbnQiLCAic3RhdHVzIjogImluZmVycmVkIn0sCiAgICB7Im5hbWUiOiAiZ3JvdXA0IiwgInRhYiI6ICJDaGFpbnMvR3JvdXBzIiwgImxhYmVsIjogIkdyb3VwIDQiLCAidG9vbHRpcCI6ICJJZiBub24temVybywgdGhlIHVzZXIgaXMgYSBtZW1iZXIgb2YgdGhpcyBncm91cCIsICJ0eXBlIjogImludCIsICJzdGF0dXMiOiAiaW5mZXJyZWQifSwKICAgIHsibmFtZSI6ICJtZW51MCIsICJ0YWIiOiAiTWVudXMiLCAibGFiZWwiOiAiTWVudSAwIiwgInRvb2x0aXAiOiAiSWYgZGVmaW5lZCwgY2hhaW4gaGVyZSB3aGVuIG1lbnUga2V5IDAgaXMgc2VsZWN0ZWQiLCAidHlwZSI6ICJib3giLCAic3RhdHVzIjogImluZmVycmVkIn0sCiAgICB7Im5hbWUiOiAibWVudTEiLCAidGFiIjogIk1lbnVzIiwgImxhYmVsIjogIk1lbnUgMSIsICJ0b29sdGlwIjogIklmIGRlZmluZWQsIGNoYWluIGhlcmUgd2hlbiBtZW51IGtleSAxIGlzIHNlbGVjdGVkIiwgInR5cGUiOiAiYm94IiwgInN0YXR1cyI6ICJpbmZlcnJlZCJ9LAogICAgeyJuYW1lIjogIm1lbnUyIiwgInRhYiI6ICJNZW51cyIsICJsYWJlbCI6ICJNZW51IDIiLCAidG9vbHRpcCI6ICJJZiBkZWZpbmVkLCBjaGFpbiBoZXJlIHdoZW4gbWVudSBrZXkgMiBpcyBzZWxlY3RlZCIsICJ0eXBlIjogImJveCIsICJzdGF0dXMiOiAiaW5mZXJyZWQifSwKICAgIHsibmFtZSI6ICJtZW51MyIsICJ0YWIiOiAiTWVudXMiLCAibGFiZWwiOiAiTWVudSAzIiwgInRvb2x0aXAiOiAiSWYgZGVmaW5lZCwgY2hhaW4gaGVyZSB3aGVuIG1lbnUga2V5IDMgaXMgc2VsZWN0ZWQiLCAidHlwZSI6ICJib3giLCAic3RhdHVzIjogImluZmVycmVkIn0sCiAgICB7Im5hbWUiOiAibWVudTQiLCAidGFiIjogIk1lbnVzIiwgImxhYmVsIjogIk1lbnUgNCIsICJ0b29sdGlwIjogIklmIGRlZmluZWQsIGNoYWluIGhlcmUgd2hlbiBtZW51IGtleSA0IGlzIHNlbGVjdGVkIiwgInR5cGUiOiAiYm94IiwgInN0YXR1cyI6ICJpbmZlcnJlZCJ9LAogICAgeyJuYW1lIjogIm1lbnU1IiwgInRhYiI6ICJNZW51cyIsICJsYWJlbCI6ICJNZW51IDUiLCAidG9vbHRpcCI6ICJJZiBkZWZpbmVkLCBjaGFpbiBoZXJlIHdoZW4gbWVudSBrZXkgNSBpcyBzZWxlY3RlZCIsICJ0eXBlIjogImJveCIsICJzdGF0dXMiOiAiaW5mZXJyZWQifSwKICAgIHsibmFtZSI6ICJtZW51NiIsICJ0YWIiOiAiTWVudXMiLCAibGFiZWwiOiAiTWVudSA2IiwgInRvb2x0aXAiOiAiSWYgZGVmaW5lZCwgY2hhaW4gaGVyZSB3aGVuIG1lbnUga2V5IDYgaXMgc2VsZWN0ZWQiLCAidHlwZSI6ICJib3giLCAic3RhdHVzIjogImluZmVycmVkIn0sCiAgICB7Im5hbWUiOiAibWVudTciLCAidGFiIjogIk1lbnVzIiwgImxhYmVsIjogIk1lbnUgNyIsICJ0b29sdGlwIjogIklmIGRlZmluZWQsIGNoYWluIGhlcmUgd2hlbiBtZW51IGtleSA3IGlzIHNlbGVjdGVkIiwgInR5cGUiOiAiYm94IiwgInN0YXR1cyI6ICJpbmZlcnJlZCJ9LAogICAgeyJuYW1lIjogIm1lbnU4IiwgInRhYiI6ICJNZW51cyIsICJsYWJlbCI6ICJNZW51IDgiLCAidG9vbHRpcCI6ICJJZiBkZWZpbmVkLCBjaGFpbiBoZXJlIHdoZW4gbWVudSBrZXkgOCBpcyBzZWxlY3RlZCIsICJ0eXBlIjogImJveCIsICJzdGF0dXMiOiAiaW5mZXJyZWQifSwKICAgIHsibmFtZSI6ICJtZW51OSIsICJ0YWIiOiAiTWVudXMiLCAibGFiZWwiOiAiTWVudSA5IiwgInRvb2x0aXAiOiAiSWYgZGVmaW5lZCwgY2hhaW4gaGVyZSB3aGVuIG1lbnUga2V5IDkgaXMgc2VsZWN0ZWQiLCAidHlwZSI6ICJib3giLCAic3RhdHVzIjogImluZmVycmVkIn0sCiAgICB7Im5hbWUiOiAiYm94X2NyZWF0ZWQiLCAidGFiIjogIkluZm8iLCAibGFiZWwiOiAiQm94IGNyZWF0ZWQiLCAidG9vbHRpcCI6ICJEYXRlL3RpbWUgdGhlIG1haWxib3ggd2FzIGNyZWF0ZWQiLCAidHlwZSI6ICJkYXRldGltZSIsICJ3aXJlIjogIkxFMzIgdW5peCB0aW1lc3RhbXAgaW4gVUEgc2VnbWVudCIsICJzdGF0dXMiOiAiY29uZmlybWVkIn0sCiAgICB7Im5hbWUiOiAiYm94X3NhdmVkIiwgInRhYiI6ICJJbmZvIiwgImxhYmVsIjogIkJveCBzYXZlZCIsICJ0b29sdGlwIjogIkRhdGUvdGltZSB0aGUgbWFpbGJveCB3YXMgbGFzdCBzYXZlZCIsICJ0eXBlIjogImRhdGV0aW1lIiwgIndpcmUiOiAiTEUzMiB1bml4IHRpbWVzdGFtcCBpbiBVQSBzZWdtZW50IiwgInN0YXR1cyI6ICJjb25maXJtZWQifSwKICAgIHsibmFtZSI6ICJtZXNzYWdlc19jdXJyZW50IiwgInRhYiI6ICJJbmZvIiwgImxhYmVsIjogIk1lc3NhZ2VzIChjdXJyZW50KSIsICJ0b29sdGlwIjogIkN1cnJlbnQgbWVzc2FnZSBjb3VudCIsICJ0eXBlIjogImludCIsICJzdGF0dXMiOiAiaW5mZXJyZWQifSwKICAgIHsibmFtZSI6ICJtZXNzYWdlc19uZXciLCAidGFiIjogIkluZm8iLCAibGFiZWwiOiAiTWVzc2FnZXMgKG5ldykiLCAidG9vbHRpcCI6ICJOZXcgbWVzc2FnZSBjb3VudCIsICJ0eXBlIjogImludCIsICJzdGF0dXMiOiAiaW5mZXJyZWQifSwKICAgIHsibmFtZSI6ICJsb2dpbnMiLCAidGFiIjogIkluZm8iLCAibGFiZWwiOiAiTG9naW5zIiwgInRvb2x0aXAiOiAiVG90YWwgbWFpbGJveCBsb2dpbnMiLCAidHlwZSI6ICJpbnQiLCAic3RhdHVzIjogImluZmVycmVkIn0sCiAgICB7Im5hbWUiOiAibGFzdF9sb2dpbiIsICJ0YWIiOiAiSW5mbyIsICJsYWJlbCI6ICJMYXN0IGxvZ2luIiwgInRvb2x0aXAiOiAiRGF0ZS90aW1lIG9mIHRoZSBsYXN0IGxvZ2luIiwgInR5cGUiOiAiZGF0ZXRpbWUiLCAic3RhdHVzIjogImluZmVycmVkIn0sCiAgICB7Im5hbWUiOiAibm90aWZ5X2VuYWJsZWQiLCAidGFiIjogIk5vdGlmeSIsICJsYWJlbCI6ICJFbmFibGVkIiwgInRvb2x0aXAiOiAiTm90aWZ5IHJlY29yZCBhY3RpdmU/IiwgInR5cGUiOiAiYm9vbCIsICJzdGF0dXMiOiAidW5rbm93biJ9LAogICAgeyJuYW1lIjogIm5vdGlmeV90eXBlIiwgInRhYiI6ICJOb3RpZnkiLCAibGFiZWwiOiAiVHlwZSIsICJ0b29sdGlwIjogIk5PUk1BTCB8IFJFTEFZIHwgUElDS1VQIHwgRElTSyB8IFVSR0VOVCIsICJ0eXBlIjogImVudW0iLCAiZW51bSI6IFsiTk9STUFMIiwgIlJFTEFZIiwgIlBJQ0tVUCIsICJESVNLIiwgIlVSR0VOVCJdLCAic3RhdHVzIjogInVua25vd24ifSwKICAgIHsibmFtZSI6ICJub3RpZnlfdGVtcGxhdGUiLCAidGFiIjogIk5vdGlmeSIsICJsYWJlbCI6ICJUZW1wbGF0ZSIsICJ0b29sdGlwIjogIlN5c3RlbS13aWRlIG5vdGlmeSB0ZW1wbGF0ZSAoZS5nLiBQQUdFUiAvIFZPSUNFKSIsICJ0eXBlIjogInN0cmluZyIsICJzdGF0dXMiOiAidW5rbm93biJ9LAogICAgeyJuYW1lIjogIm5vdGlmeV9tZXRob2QiLCAidGFiIjogIk5vdGlmeSIsICJsYWJlbCI6ICJNZXRob2QiLCAidG9vbHRpcCI6ICJEaWFsIHN0cmluZyB3aXRoICVWIGV4cGFuc2lvbiIsICJ0eXBlIjogInN0cmluZyIsICJzdGF0dXMiOiAidW5rbm93biJ9LAogICAgeyJuYW1lIjogIm5vdGlmeV9hY3RpdmVfZGF5cyIsICJ0YWIiOiAiTm90aWZ5IiwgImxhYmVsIjogIkFjdGl2ZSBkYXlzIiwgInRvb2x0aXAiOiAiNy1jaGFyIFNNVFdURlMgbWFzayIsICJ0eXBlIjogInN0cmluZyIsICJzdGF0dXMiOiAidW5rbm93biJ9LAogICAgeyJuYW1lIjogIm5vdGlmeV9yZXBlYXRfY291bnQiLCAidGFiIjogIk5vdGlmeSIsICJsYWJlbCI6ICJNYXggdGltZXMiLCAidG9vbHRpcCI6ICJNYXhpbXVtIG51bWJlciBvZiBub3RpZnkgYXR0ZW1wdHMiLCAidHlwZSI6ICJpbnQiLCAic3RhdHVzIjogInVua25vd24ifSwKICAgIHsibmFtZSI6ICJhdXRvX2VuYWJsZWQiLCAidGFiIjogIkF1dG8iLCAibGFiZWwiOiAiUmVjb3JkIGFjdGl2ZT8iLCAidG9vbHRpcCI6ICJBdXRvLXNjaGVkdWxlIHJlY29yZCBhY3RpdmU/IiwgInR5cGUiOiAiYm9vbCIsICJzdGF0dXMiOiAidW5rbm93biJ9LAogICAgeyJuYW1lIjogImF1dG9fZmlyc3RfZGF0ZXRpbWUiLCAidGFiIjogIkF1dG8iLCAibGFiZWwiOiAiRmlyc3QgZGF0ZS90aW1lIiwgInRvb2x0aXAiOiAiRmlyc3QgZGF0ZS90aW1lIG9uIHdoaWNoIHRoZSBjaGFuZ2Ugc2hvdWxkIG9jY3VyIiwgInR5cGUiOiAiZGF0ZXRpbWUiLCAic3RhdHVzIjogInVua25vd24ifSwKICAgIHsibmFtZSI6ICJhdXRvX2FjdGl2ZV9kYXlzIiwgInRhYiI6ICJBdXRvIiwgImxhYmVsIjogIkFjdGl2ZSBkYXlzIiwgInRvb2x0aXAiOiAiNy1jaGFyIFNNVFdURlMgbWFzayIsICJ0eXBlIjogInN0cmluZyIsICJzdGF0dXMiOiAidW5rbm93biJ9LAogICAgeyJuYW1lIjogImF1dG9fZG5kIiwgInRhYiI6ICJBdXRvIiwgImxhYmVsIjogIlNldCBETkQiLCAidG9vbHRpcCI6ICJEbyBOb3QgRGlzdHVyYiBhZnRlciByZWNvcmQgZXhlY3V0ZXM/IiwgInR5cGUiOiAiYm9vbCIsICJzdGF0dXMiOiAidW5rbm93biJ9LAogICAgeyJuYW1lIjogImF1dG9fZ3JlZXRpbmciLCAidGFiIjogIkF1dG8iLCAibGFiZWwiOiAiTmV3IGdyZWV0aW5nIiwgInRvb2x0aXAiOiAiTmV3IGdyZWV0aW5nIG51bWJlciBhZnRlciByZWNvcmQgZXhlY3V0ZXMiLCAidHlwZSI6ICJpbnQiLCAic3RhdHVzIjogInVua25vd24ifQogIF0KfQo=").decode("utf-8")  # bundled VM field catalog
+EMBEDDED_VM_SYSPARAMS_HELP_JSON = base64.b64decode("ewogICJfbWV0YSI6IHsKICAgICJzb3VyY2UiOiAiY3VyYXRlZCBzdGFydGVyIHN1YnNldCDigJQgdGhlIGZ1bGwgMTg3LWVudHJ5IGhlbHAgc2hpcHMgaW4gVk0gTWFuYWdlcidzIEluc3RhbGwuZGhwIGFuZCBpcyBub3QgYnVuZGxlZCBoZXJlLiBQYXJhbWV0ZXJzIHdpdGhvdXQgYW4gZW50cnkgcmVuZGVyIHdpdGggbm8gaW5saW5lIGhlbHAgKG5ldmVyIGEgZmFicmljYXRlZCBkZXNjcmlwdGlvbikuIiwKICAgICJzdGF0dXMiOiAicGFydGlhbCIKICB9LAogICJwYXJhbXMiOiB7CiAgICAicGJ4X3R5cGUiOiB7ImRlc2NyaXB0aW9uIjogIlRoZSBQQlggbW9kZWwgdGhpcyBTdHJhdGFneSBpcyBpbnRlZ3JhdGVkIHdpdGggKHNlbGVjdHMgdGhlIGRpYWwtY29kZS9pbnRlZ3JhdGlvbiB0ZW1wbGF0ZSkuIiwgImRlZmF1bHQiOiAiIiwgImdyb3VwIjogIlN5c3RlbSJ9LAogICAgInBhc3N3b3JkIjogeyJkZXNjcmlwdGlvbiI6ICJTeXN0ZW0gYWRtaW5pc3RyYXRpb24gcGFzc3dvcmQgKG1heCA4IGNoYXJzLCBjYXNlLXNlbnNpdGl2ZSkuIFRoZSBzaGlwcGVkIGRlZmF1bHQgJ1N0cmF0YWd5JyBpcyBhIHNlY3VyaXR5IGZpbmRpbmcuIiwgImRlZmF1bHQiOiAiU3RyYXRhZ3kiLCAiZ3JvdXAiOiAiU3lzdGVtIn0sCiAgICAiaG90X2JveCI6IHsiZGVzY3JpcHRpb24iOiAiTWFpbGJveCBhIGNhbGxlciByZWFjaGVzIGltbWVkaWF0ZWx5IG9uIGNvbm5lY3QgKHRoZSAnaG90JyBib3gpLiIsICJkZWZhdWx0IjogIjk5NCIsICJncm91cCI6ICJSZXNlcnZlZCBib3hlcyJ9LAogICAgImVycm9yX2JveCI6IHsiZGVzY3JpcHRpb24iOiAiTWFpbGJveCB0aGF0IGhhbmRsZXMgY2FsbGVycyB3aG8gbWFrZSByZXBlYXRlZCBlcnJvcnMuIiwgImRlZmF1bHQiOiAiOTk5IiwgImdyb3VwIjogIlJlc2VydmVkIGJveGVzIn0sCiAgICAiYm94X3NuZCI6IHsiZGVzY3JpcHRpb24iOiAiU3lzdGVtLXNlbmQgbWFpbGJveCB1c2VkIGZvciBicm9hZGNhc3QgLyBmdXR1cmUgZGVsaXZlcnkuIiwgImRlZmF1bHQiOiAiOTk4IiwgImdyb3VwIjogIlJlc2VydmVkIGJveGVzIn0sCiAgICAiYm94X2lkeCI6IHsiZGVzY3JpcHRpb24iOiAiRGlyZWN0b3J5LWluZm9ybWF0aW9uIG1haWxib3ggKGRpYWwtYnktbmFtZSkuIiwgImRlZmF1bHQiOiAiNDExIiwgImdyb3VwIjogIlJlc2VydmVkIGJveGVzIn0sCiAgICAiZGVmYXVsdHNfYm94IjogeyJkZXNjcmlwdGlvbiI6ICJUZW1wbGF0ZSBtYWlsYm94ICg5OTcpIGNvcGllZCBpbnRvIGV2ZXJ5IG5ld2x5IGNyZWF0ZWQgVXNlciBJRC4iLCAiZGVmYXVsdCI6ICI5OTciLCAiZ3JvdXAiOiAiUmVzZXJ2ZWQgYm94ZXMifSwKICAgICJndWVzdF9kZWZhdWx0cyI6IHsiZGVzY3JpcHRpb24iOiAiVGVtcGxhdGUgbWFpbGJveCBmb3IgZ3Vlc3QgSURzLiIsICJkZWZhdWx0IjogIjk5NiIsICJncm91cCI6ICJSZXNlcnZlZCBib3hlcyJ9LAogICAgImZ1dHVyZV9kZWxpdmVyeSI6IHsiZGVzY3JpcHRpb24iOiAiTWFpbGJveCB0aGF0IGhvbGRzIGZ1dHVyZS1kZWxpdmVyeSBtZXNzYWdlcy4iLCAiZGVmYXVsdCI6ICI5OTUiLCAiZ3JvdXAiOiAiUmVzZXJ2ZWQgYm94ZXMifSwKICAgICJzZWN1cml0eV9tYXhfbGVuZ3RoIjogeyJkZXNjcmlwdGlvbiI6ICJNYXhpbXVtIG51bWJlciBvZiBkaWdpdHMgYSBtYWlsYm94IHNlY3VyaXR5IGNvZGUgbWF5IGhhdmUuIiwgInBvc3NpYmxlIjogIjEtMTYiLCAiZGVmYXVsdCI6ICIxNiIsICJncm91cCI6ICJTZWN1cml0eSJ9LAogICAgInNlY3VyaXR5X21pbl9sZW5ndGgiOiB7ImRlc2NyaXB0aW9uIjogIk1pbmltdW0gbnVtYmVyIG9mIGRpZ2l0cyBhIG1haWxib3ggc2VjdXJpdHkgY29kZSBtdXN0IGhhdmUuIiwgInBvc3NpYmxlIjogIjEtMTYiLCAiZGVmYXVsdCI6ICIxIiwgImdyb3VwIjogIlNlY3VyaXR5In0sCiAgICAiYmF1ZDEiOiB7ImRlc2NyaXB0aW9uIjogIkJhdWQgcmF0ZSBvZiBzZXJpYWwgcG9ydCAxICh0aGUgbWFpbnRlbmFuY2UgcG9ydCkuIiwgInBvc3NpYmxlIjogIjk2MDAgLyAxOTIwMCAvIDM4NDAwIC8gNTc2MDAiLCAiZGVmYXVsdCI6ICI5NjAwIiwgImdyb3VwIjogIlNlcmlhbCJ9LAogICAgInNlcmlhbF9wb3J0MSI6IHsiZGVzY3JpcHRpb24iOiAiV2hpY2ggcGh5c2ljYWwgc2VyaWFsIHBvcnQgaXMgcG9ydCAxLiIsICJkZWZhdWx0IjogIjIiLCAiZ3JvdXAiOiAiU2VyaWFsIn0sCiAgICAibG9nbmFtIjogeyJkZXNjcmlwdGlvbiI6ICJGaWxlbmFtZSBvZiB0aGUgU3RyYXRhZ3kgYWN0aXZpdHkgbG9nIG9uIHRoZSBjYXJkLiIsICJkZWZhdWx0IjogIlN0cmF0YWd5LkxPRyIsICJncm91cCI6ICJTeXN0ZW0ifSwKICAgICJzaHV0ZG93biI6IHsiZGVzY3JpcHRpb24iOiAiU2NoZWR1bGVkIGF1dG9tYXRpYyBzaHV0ZG93bi9yZXN0YXJ0IHRpbWUsIGFzICdEQVkgSEhNTScgKGRheSAwPVN1bmRheSkuIiwgImRlZmF1bHQiOiAiIiwgImdyb3VwIjogIlN5c3RlbSJ9LAogICAgImZpeGVkX2xlbjAiOiB7ImRlc2NyaXB0aW9uIjogIkZpeGVkIFVzZXIgSUQgZGlnaXQgbGVuZ3RoIGZvciBib3hlcyB3aG9zZSBmaXJzdCBkaWdpdCBpcyAwLiIsICJkZWZhdWx0IjogIjMiLCAiZ3JvdXAiOiAiTnVtYmVyaW5nIn0sCiAgICAiZml4ZWRfbGVuMSI6IHsiZGVzY3JpcHRpb24iOiAiRml4ZWQgVXNlciBJRCBkaWdpdCBsZW5ndGggZm9yIGJveGVzIHdob3NlIGZpcnN0IGRpZ2l0IGlzIDEuIiwgImRlZmF1bHQiOiAiMyIsICJncm91cCI6ICJOdW1iZXJpbmcifSwKICAgICJmaXhlZF9sZW4yIjogeyJkZXNjcmlwdGlvbiI6ICJGaXhlZCBVc2VyIElEIGRpZ2l0IGxlbmd0aCBmb3IgYm94ZXMgd2hvc2UgZmlyc3QgZGlnaXQgaXMgMi4iLCAiZGVmYXVsdCI6ICIzIiwgImdyb3VwIjogIk51bWJlcmluZyJ9LAogICAgIm1heF9wcm9tcHQiOiB7ImRlc2NyaXB0aW9uIjogIk1heGltdW0gbnVtYmVyIG9mIHRpbWVzIGEgcHJvbXB0IGlzIHJlcGxheWVkIGJlZm9yZSB0aW1lb3V0LiIsICJkZWZhdWx0IjogIjMiLCAiZ3JvdXAiOiAiVGltZXJzIn0sCiAgICAidG1vX2lkbGUiOiB7ImRlc2NyaXB0aW9uIjogIklkbGUgdGltZW91dCAoc2Vjb25kcykgYmVmb3JlIHRoZSBzeXN0ZW0gaGFuZ3MgdXAgYSBxdWlldCBjYWxsZXIgKDAgPSBub25lKS4iLCAiZGVmYXVsdCI6ICIwIiwgImdyb3VwIjogIlRpbWVycyJ9LAogICAgInRtb19tZW51IjogeyJkZXNjcmlwdGlvbiI6ICJTZWNvbmRzIHRvIHdhaXQgZm9yIGEgbWVudSBzZWxlY3Rpb24gYmVmb3JlIHRpbWluZyBvdXQuIiwgImRlZmF1bHQiOiAiMjAiLCAiZ3JvdXAiOiAiVGltZXJzIn0sCiAgICAidGFwZV9sZW5ndGgiOiB7ImRlc2NyaXB0aW9uIjogIk1heGltdW0gdG90YWwgcmVjb3JkaW5nIHRpbWUgKG1pbnV0ZXMpIGFjcm9zcyBhbGwgbWFpbGJveGVzLiIsICJkZWZhdWx0IjogIjMwIiwgImdyb3VwIjogIlN5c3RlbSJ9LAogICAgInBsYXlfY2FsbGVyX2lkIjogeyJkZXNjcmlwdGlvbiI6ICJBbm5vdW5jZSB0aGUgY2FsbGVyIElEIHdoZW4gcGxheWluZyBhIG1lc3NhZ2UuIiwgInBvc3NpYmxlIjogInRydWUgLyBmYWxzZSIsICJkZWZhdWx0IjogInRydWUiLCAiZ3JvdXAiOiAiT3B0aW9ucyJ9LAogICAgImFjdGl2ZV9ob2xkIjogeyJkZXNjcmlwdGlvbiI6ICJBbGxvdyBjYWxsZXJzIHRvIGJlIHBsYWNlZCBvbiBhY3RpdmUgaG9sZC4iLCAicG9zc2libGUiOiAidHJ1ZSAvIGZhbHNlIiwgImRlZmF1bHQiOiAidHJ1ZSIsICJncm91cCI6ICJPcHRpb25zIn0sCiAgICAiY291bnRyeV9jb2RlIjogeyJkZXNjcmlwdGlvbiI6ICJDb3VudHJ5IGNvZGUgdXNlZCB3aGVuIGV4cGFuZGluZyBub3RpZnkvQU1JUyBwaG9uZSBudW1iZXJzLiIsICJkZWZhdWx0IjogIjEiLCAiZ3JvdXAiOiAiQU1JUyJ9CiAgfQp9Cg==").decode("utf-8")  # bundled Stratagy sysparam help
+EMBEDDED_VM_PBX_DEFAULTS_JSON = base64.b64decode("ewogICJfbWV0YSI6IHsKICAgICJwdXJwb3NlIjogIlZlbmRvciBkaWFsLWNvZGUgLyBTTURJLWludGVncmF0aW9uIHRlbXBsYXRlcyBwZXIgUEJYIG1vZGVsICh0aGUgU3RyYXRhZ3kgRkwuUEJYIHNldCkuIE1vZGVsLWdlbmVyaWMsIE5PVCBjdXN0b21lciBkYXRhLiBCYWNrcyAnQ29tcGFyZSB3aXRoIFRvc2hpYmEgZGVmYXVsdCcgKHZvaWNlbWFpbC1tYXAgwqc1LjQpLiBTdGFydGVyIHNldDogQ0lYMTAwUywgdHJhbnNjcmliZWQgZnJvbSBhIGxpdmUgY2FyZCdzIEM6XFxTdHJhdGFneVxcUEJYLkRCXFxDSVgxMDBTLlBCWC4gVGhlIGZ1bGwgNDAtbW9kZWwgc2V0IHNoaXBzIHdpdGggVk0gTWFuYWdlciBhbmQgaXMgYWRkZWQgYXMgZWFjaCBpcyB0cmFuc2NyaWJlZC4iLAogICAgInN0YXR1cyI6ICJwYXJ0aWFsIgogIH0sCiAgIm1vZGVscyI6IHsKICAgICJDSVgxMDBTIjogInBieF9uYW1lICdTdHJhdGEgQ0lYIDEwMCB3L1NNREknXHJcbmRsX2luaXQgICMgV2hhdCB0byBkaWFsIHdoZW4gdGhlIHN5c3RlbSBmaXJzdCBzdGFydHMgdXBcclxuZGxfZHR3YWl0IEYtICMgRGlhbCBjb2RlIHRvIHB1dCBhIGNhbGxlciBvbiB0cmFuc2ZlciBob2xkXHJcbmRsX25kdHJldCBGLSAjIERpYWwgY29kZSB0byB1c2Ugd2hlbiB0aGVyZSBpcyBubyB0cmFuc2ZlciBkaWFsdG9uZVxyXG5kbF9ybmFyZXQgRi0gIyBEaWFsIGNvZGUgdG8gcmV0dXJuIHRvIGNhbGxlciBhZnRlciBSaW5nIE5vIEFuc3dlclxyXG5kbF9ic3lyZXQgRi0gIyBEaWFsIGNvZGUgdG8gcmV0dXJuIHRvIGNhbGxlciB3aGVuIHRoZXJlIGlzIGEgQnVzeVxyXG5kbF9odXByZXQgRi0gIyBEaWFsIGNvZGUgdG8gdXNlIGFmdGVyIGEgY2FsbCBzY3JlZW5pbmcgcmVqZWN0XHJcbmRsX2Nvbm5lY3QgSCAjIERpYWwgY29kZSB0byBjb25uZWN0IHRoZSBjYWxsZXIgdG8gdGhlIGV4dGVuc2lvblxyXG5kbF9wcmVmaXggICMgV2hhdCB0byBkaWFsIEJFRk9SRSBkaWFsaW5nIHRoZSBVc2VyIElEIGV4dGVuc2lvblxyXG5kbF9zdWZmaXggICMgV2hhdCB0byBkaWFsIEFGVEVSIGRpYWxpbmcgdGhlIFVzZXIgSUQgZXh0ZW5zaW9uXHJcbmRsX3N0b3AgICMgV2hhdCB0byBkaWFsIHdoZW4gdGhlIHN5c3RlbSBwZXJmb3JtcyBhIHNodXRkb3duXHJcbmRsX3BpY2t1cCAgIyBXaGF0IHRvIGRpYWwgd2hlbiBhIHBvcnQgZ29lcyBvZmYtaG9va1xyXG5pbnRlZ3JhdGlvbiAzMCAnQXh4eHh4eHJycnIwMDAwMDAwMDAwJ1xyXG5pbnRlZ3JhdGlvbiAzMCAnQnh4eHh4eGJiYmIwMDAwMDAwMDAwJ1xyXG5pbnRlZ3JhdGlvbiAzMCAnTnh4eHh4eHJycnIwMDAwMDAwMDAwJ1xyXG5pbnRlZ3JhdGlvbiAzMCAnRHh4eHh4eHh4eHhjY2NjY2NlZWVlJ1xyXG5pbnRlZ3JhdGlvbiAzMCAnU2lpaWlpaWlpaWknXHJcbiIKICB9Cn0K").decode("utf-8")  # bundled Stratagy PBX dial-code/integration defaults
+
+# ===== vm_serial.py ================================================
+"""Serial transports for the Stratagy LVMU voicemail leg — pure stdlib.
+
+The voicemail card speaks a binary record protocol over RS-232 (``vm_link.py``
+frames it). This module is only the *byte pipe* underneath that: one tiny
+interface — ``read(n, timeout) -> bytes`` / ``write(b) -> int`` / ``close()`` —
+with three backends, so no third-party ``pyserial`` is pulled in (project rule:
+stdlib only, the app ships as a single AppImage/.exe).
+
+| backend            | how                                              | when |
+|--------------------|--------------------------------------------------|------|
+| :class:`PosixSerial` | ``os.open`` + ``termios`` cfmakeraw B9600 CS8  | Linux/macOS USB-serial dongle |
+| :class:`TcpSerial`   | ``socket`` to ``host:port`` (raw)              | REMOTE: a serial bridge on the RSM Pi |
+| ``FakeLVMU`` (vm_link) | an in-process protocol twin                   | offline tests + the capture-replay demo |
+
+STATUS / "say what is unproven" (DESIGN_PLAN §1.2 rule 7): the POSIX and TCP
+backends are written to the confirmed link parameters (9600 8N1, no flow
+control — ``STRATAGY_LVMU_SERIAL_PROTOCOL.md`` §0, confirmed by capture) but
+**have not been exercised against live hardware from this codebase**. They are
+marked accordingly and are never reached by the offline test suite, which runs
+entirely through the ``FakeLVMU`` twin. Nothing here writes to a card.
+"""
+
+
+import glob
+import os
+import sys
+from typing import List, Optional
+
+# Confirmed link parameters (STRATAGY_LVMU_SERIAL_PROTOCOL.md §0).
+BAUD_DEFAULT = 9600
+
+
+class SerialError(RuntimeError):
+    """A transport-level failure (open/read/write)."""
+
+
+class Transport:
+    """The byte-pipe interface ``vm_link.VMLink`` drives.
+
+    Implementations must be half-duplex-safe: ``read`` returns whatever bytes
+    have arrived (up to ``n``) within ``timeout`` seconds, possibly fewer, and
+    never blocks past the timeout. ``write`` sends all of ``b``.
+    """
+
+    name = "transport"
+
+    def read(self, n: int, timeout: float = 2.0) -> bytes:  # pragma: no cover - interface
+        raise NotImplementedError
+
+    def write(self, b: bytes) -> int:  # pragma: no cover - interface
+        raise NotImplementedError
+
+    def close(self) -> None:  # pragma: no cover - interface
+        raise NotImplementedError
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
+
+
+class PosixSerial(Transport):
+    """``termios``-based serial on Linux/macOS. **Not hardware-verified here.**"""
+
+    def __init__(self, port: str, baud: int = BAUD_DEFAULT):
+        self.name = port
+        self.baud = baud
+        try:
+            import termios  # noqa: F401 - probe availability early
+        except ImportError as exc:  # pragma: no cover - Windows
+            raise SerialError("termios unavailable on this platform") from exc
+        try:
+            self._fd = os.open(port, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK)
+        except OSError as exc:
+            raise SerialError(f"cannot open {port}: {exc}") from exc
+        self._configure()
+
+    def _configure(self) -> None:  # pragma: no cover - needs a tty
+        import termios
+
+        baud_const = getattr(termios, f"B{self.baud}", termios.B9600)
+        attrs = termios.tcgetattr(self._fd)
+        # cfmakeraw-equivalent: no canonical processing, 8N1, no flow control.
+        iflag, oflag, cflag, lflag, ispeed, ospeed, cc = attrs
+        iflag = 0
+        oflag = 0
+        lflag = 0
+        cflag = (cflag & ~termios.CSIZE & ~termios.PARENB & ~termios.CSTOPB
+                 & ~getattr(termios, "CRTSCTS", 0))
+        cflag |= termios.CS8 | termios.CLOCAL | termios.CREAD
+        cc[termios.VMIN] = 0
+        cc[termios.VTIME] = 0
+        termios.tcsetattr(
+            self._fd, termios.TCSANOW,
+            [iflag, oflag, cflag, lflag, baud_const, baud_const, cc])
+
+    def read(self, n: int, timeout: float = 2.0) -> bytes:  # pragma: no cover
+        import select
+
+        out = bytearray()
+        deadline = _monotonic() + timeout
+        while len(out) < n:
+            remaining = deadline - _monotonic()
+            if remaining <= 0:
+                break
+            r, _, _ = select.select([self._fd], [], [], remaining)
+            if not r:
+                break
+            try:
+                chunk = os.read(self._fd, n - len(out))
+            except BlockingIOError:
+                continue
+            if not chunk:
+                break
+            out += chunk
+        return bytes(out)
+
+    def write(self, b: bytes) -> int:  # pragma: no cover
+        return os.write(self._fd, b)
+
+    def close(self) -> None:  # pragma: no cover
+        try:
+            os.close(self._fd)
+        except OSError:
+            pass
+
+
+class TcpSerial(Transport):
+    """Raw-TCP transport for a serial bridge on the RSM Pi (REMOTE leg).
+
+    The framing is self-synchronising (SOH + checksum) and half-duplex with
+    explicit tokens, so a plain raw socket (``ser2net``/``socat`` on the Pi) is
+    enough — no RFC2217 control channel. **Not hardware-verified here.**
+    """
+
+    def __init__(self, host: str, port: int, connect_timeout: float = 5.0):
+        import socket
+
+        self.name = f"{host}:{port}"
+        try:
+            self._sock = socket.create_connection((host, port), connect_timeout)
+        except OSError as exc:
+            raise SerialError(f"cannot reach {host}:{port}: {exc}") from exc
+        self._sock.setblocking(False)
+
+    def read(self, n: int, timeout: float = 2.0) -> bytes:  # pragma: no cover
+        import select
+
+        out = bytearray()
+        deadline = _monotonic() + timeout
+        while len(out) < n:
+            remaining = deadline - _monotonic()
+            if remaining <= 0:
+                break
+            r, _, _ = select.select([self._sock], [], [], remaining)
+            if not r:
+                break
+            try:
+                chunk = self._sock.recv(n - len(out))
+            except (BlockingIOError, InterruptedError):
+                continue
+            if not chunk:
+                break
+            out += chunk
+        return bytes(out)
+
+    def write(self, b: bytes) -> int:  # pragma: no cover
+        self._sock.sendall(b)
+        return len(b)
+
+    def close(self) -> None:  # pragma: no cover
+        try:
+            self._sock.close()
+        except OSError:
+            pass
+
+
+def _monotonic() -> float:
+    import time
+    return time.monotonic()
+
+
+def discover_ports() -> List[str]:
+    """Best-effort list of candidate serial ports, same idea as the old
+    "Connect Using: COM1" dropdown. Pure stdlib; never raises."""
+    ports: List[str] = []
+    if sys.platform.startswith("win"):  # pragma: no cover - Windows only
+        try:
+            import winreg
+            key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                                 r"HARDWARE\DEVICEMAP\SERIALCOMM")
+            i = 0
+            while True:
+                try:
+                    _name, value, _type = winreg.EnumValue(key, i)
+                    ports.append(value)
+                    i += 1
+                except OSError:
+                    break
+        except OSError:
+            pass
+        return ports
+    # POSIX: by-id first (stable names), then the usual device nodes.
+    for pattern in ("/dev/serial/by-id/*", "/dev/ttyUSB*", "/dev/ttyACM*",
+                    "/dev/tty.usbserial*", "/dev/tty.usbmodem*", "/dev/cu.*"):
+        ports.extend(sorted(glob.glob(pattern)))
+    # de-dupe, preserve order
+    seen = set()
+    uniq = []
+    for p in ports:
+        if p not in seen:
+            seen.add(p)
+            uniq.append(p)
+    return uniq
+
+
+def open_transport(spec: dict) -> Transport:
+    """Open a transport from a connect spec.
+
+    ``{"transport": "serial", "port": "/dev/ttyUSB0", "baud": 9600}``
+    ``{"transport": "tcp", "host": "10.0.0.5", "port": 2001}``
+    The ``"fake"`` transport is handled by the server (it needs a card image),
+    not here, so an unknown/fake spec raises.
+    """
+    kind = (spec or {}).get("transport") or "serial"
+    if kind == "serial":
+        return PosixSerial(spec["port"], int(spec.get("baud") or BAUD_DEFAULT))
+    if kind == "tcp":
+        return TcpSerial(spec["host"], int(spec["port"]))
+    raise SerialError(f"unknown transport {kind!r}")
+
+
+__all__ = ["Transport", "PosixSerial", "TcpSerial", "SerialError",
+           "discover_ports", "open_transport", "BAUD_DEFAULT"]
+vm_serial = sys.modules[__name__]  # flatten alias
+
+# ===== vm_records.py ===============================================
+"""Stratagy mailbox record + directory decoders, and the mailbox model.
+
+The confirmed facts (``STRATAGY_LVMU_SERIAL_PROTOCOL.md`` §4, test-backed in the
+RE prototype) are decoded here byte-for-byte:
+
+* the box directory, entries ``<NNN>H\\0<name>\\0`` (``parse_directory``);
+* the mailbox **properties** segment — box number is a little-endian uint32 at
+  record offset 14 (**confirmed**); extension (``"NNNH"``), directory name and
+  comment are NUL-padded strings recovered by scanning;
+* the **security code** — an ASCII digit field after the ``00 00 00 ff`` marker
+  in the user-agent segment (**confirmed**; a ``241997 -> 9876`` write
+  transition is captured in the RE data).
+
+Everything whose offset is **not** byte-proven carries an explicit
+``unproven`` note on the decoded object (DESIGN_PLAN §1.2 rule 7). The ~30 flag/
+word fields of User Mode / Auto Attendant / Chains / Menus (voicemail-map §2.2–
+2.5) are **not** decoded — their offsets are unmapped (Unknown A), so the model
+reports them as not-yet-readable rather than guessing.
+
+The ``build_*_segment`` helpers synthesise records for :class:`FakeLVMU` and the
+tests; they emit the confirmed layout so the decoders round-trip, and contain
+no customer bytes.
+"""
+
+
+from datetime import datetime
+import re
+import struct
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Tuple
+
+# --------------------------------------------------------------------------
+# Directory
+# --------------------------------------------------------------------------
+_DIR_RE = re.compile(rb"(\d{3,4})H\x00([A-Za-z][A-Za-z0-9 ]{0,13})?\x00")
+
+
+def parse_directory(blob: bytes) -> Dict[str, str]:
+    """Extract the ``box -> name`` directory from a reassembled dir/DB stream."""
+    out: Dict[str, str] = {}
+    for m in _DIR_RE.finditer(blob):
+        box = m.group(1).decode()
+        name = (m.group(2) or b"").decode("latin-1")
+        if name and box not in out:
+            out[box] = name
+    return out
+
+
+def box_list(blob: bytes) -> List[str]:
+    """Every box id that appears as an ``NNNH`` token, in first-seen order."""
+    seen = []
+    for m in re.finditer(rb"(\d{3,4})H", blob):
+        box = m.group(1).decode()
+        if box not in seen:
+            seen.append(box)
+    return seen
+
+
+# --------------------------------------------------------------------------
+# Mailbox record
+# --------------------------------------------------------------------------
+@dataclass
+class Mailbox:
+    box: str
+    name: str = ""
+    extension: str = ""
+    comment: str = ""
+    security_code: str = ""
+    created: Optional[datetime] = None
+    modified: Optional[datetime] = None
+    raw_props: bytes = b""
+    raw_ua: bytes = b""
+    unproven: List[str] = field(default_factory=list)
+
+    def as_dict(self) -> dict:
+        return {
+            "box": self.box,
+            "name": self.name,
+            "extension": self.extension,
+            "comment": self.comment,
+            "security_code": self.security_code,
+            "created": self.created.isoformat() if self.created else None,
+            "modified": self.modified.isoformat() if self.modified else None,
+            "raw_props_hex": self.raw_props.hex(),
+            "raw_ua_hex": self.raw_ua.hex(),
+            "record_len": len(self.raw_props) + len(self.raw_ua),
+            "unproven": list(self.unproven),
+        }
+
+
+def _unix_le(b: bytes, off: int) -> Optional[datetime]:
+    if off + 4 > len(b):
+        return None
+    v = struct.unpack_from("<I", b, off)[0]
+    if 946684800 <= v <= 2524608000:  # 2000..2050 sanity window
+        return datetime.utcfromtimestamp(v)
+    return None
+
+
+def parse_mailbox_record(rec: bytes) -> Mailbox:
+    """Decode a mailbox **properties** segment (payload starting at the opcode).
+
+    Confirmed: box number = LE32 at record offset 14. Extension and name are
+    recovered by scanning (their widths are site-stable but only the box number
+    is asserted byte-exact), so the decoded object records that caveat."""
+    box = ""
+    if len(rec) >= 18:
+        box = str(struct.unpack_from("<I", rec, 14)[0])
+    ext = ""
+    scan_from = 18
+    m = re.search(rb"(\d{3,4}H)\x00", rec)
+    if m:
+        ext = m.group(1).decode()
+        scan_from = m.end()
+    # The NUL-terminated letter-initial runs AFTER the extension token are, in
+    # order, the directory name and the comment (offsets inferred; values
+    # confirmed). Require >=2 chars so a stray tail letter is not mistaken.
+    runs = []
+    for m in re.finditer(rb"([A-Za-z][A-Za-z0-9 #]{1,30})\x00", rec[scan_from:]):
+        cand = m.group(1).decode("latin-1").strip()
+        if cand and cand != (ext or ""):
+            runs.append(cand)
+    name = runs[0] if runs else ""
+    comment = runs[1] if len(runs) > 1 else ""
+    return Mailbox(box=box, name=name, extension=ext, comment=comment,
+                   raw_props=rec)
+
+
+def extract_security_code(ua_segment: bytes) -> str:
+    """Pull the numeric security code from a UserAgent/security segment.
+
+    The code is the ASCII digit run that follows the 10 greeting/message slots
+    and a ``00 00 00 ff`` marker (confirmed by the captured write transition)."""
+    m = re.search(rb"\xff(\d{3,16})\x00", ua_segment)
+    return m.group(1).decode() if m else ""
+
+
+def _ua_timestamps(ua_segment: bytes) -> List[datetime]:
+    """The LE32 unix timestamps that trail the security code (created/modified)."""
+    out: List[datetime] = []
+    m = re.search(rb"\xff(\d{3,16})\x00", ua_segment)
+    start = m.end() if m else 0
+    off = start
+    while off + 4 <= len(ua_segment) and len(out) < 3:
+        ts = _unix_le(ua_segment, off)
+        if ts is not None:
+            out.append(ts)
+        off += 1
+    return out
+
+
+def decode_mailbox(box: str, props: bytes, ua: bytes,
+                   comment: str = "", name: str = "") -> Mailbox:
+    """Decode a full mailbox from its two segments into the model."""
+    mb = parse_mailbox_record(props) if props else Mailbox(box=str(box))
+    mb.box = str(box) if box else mb.box
+    mb.raw_ua = ua
+    mb.security_code = extract_security_code(ua)
+    ts = _ua_timestamps(ua)
+    if ts:
+        mb.created = ts[0]
+    if len(ts) > 1:
+        mb.modified = ts[1]
+    if comment and not mb.comment:
+        mb.comment = comment
+    if name and not mb.name:
+        mb.name = name
+    mb.unproven = [
+        "name/extension/comment field *offsets* inferred (values confirmed, "
+        "widths site-stable)",
+        "User Mode / Auto Attendant / Chains / Menus flag-field offsets not "
+        "mapped (Unknown A) — not decoded, shown as not-yet-readable",
+    ]
+    return mb
+
+
+def read_mailbox(link, box: str) -> Mailbox:
+    """High-level: read a box over a :class:`~toshiba_cix.vm_link.VMLink`."""
+    props, ua = link.read_record(box)
+    return decode_mailbox(str(box), props, ua)
+
+
+# --------------------------------------------------------------------------
+# Patch-in-place encoder (READ-path verified; WRITE is UNCONFIRMED & gated)
+# --------------------------------------------------------------------------
+def rewrite_security_code(ua_segment: bytes, new_code: str) -> bytes:
+    """Return a copy of a captured UA segment with the security code replaced.
+
+    Length-preserving (NUL-padded). **UNCONFIRMED against hardware** — this only
+    edits a field inside a segment we already read; it never synthesises a
+    record and is not used by any read screen. The write path that would emit it
+    is P3 and gated behind the two-phase contract + a supervised lab write."""
+    m = re.search(rb"\xff(\d{3,16})\x00", ua_segment)
+    if not m:
+        raise ValueError("no security-code field found in segment")
+    start, end = m.start(1), m.end(1)
+    field_len = end - start
+    nc = new_code.encode("ascii")
+    if len(nc) > field_len:
+        raise ValueError("new code longer than captured field")
+    nc = nc + b"\x00" * (field_len - len(nc))
+    return ua_segment[:start] + nc + ua_segment[end:]
+
+
+# --------------------------------------------------------------------------
+# Segment builders for FakeLVMU / tests (confirmed layout; no customer bytes)
+# --------------------------------------------------------------------------
+def build_props_segment(box: str, ext: str = "", name: str = "",
+                        comment: str = "EXTENSION") -> bytes:
+    """Build a properties segment with the confirmed header + box@14 + strings.
+
+    The header bytes 1–13 mirror the capture's shape (length LE16 at 1–2,
+    a handle word, ``a4 00`` constant, a record handle) so a reader that keys on
+    them sees a plausible record; only the box number (offset 14) is asserted by
+    tests. Total width is padded to 500 like the real properties segment."""
+    seg = bytearray()
+    seg.append(0x42)                                   # 0: opcode (read)
+    seg += struct.pack("<H", 500)                      # 1-2: segment length
+    seg.append(0x2c)                                   # 3: seq counter (per-frame)
+    seg += b"\x00\x00"                                 # 4-5: constant
+    seg += b"\xfe\x84"                                 # 6-7: per-selection handle
+    seg += b"\xa4\x00"                                 # 8-9: constant (164)
+    seg += struct.pack("<I", int(box))                 # 10-13: record handle
+    seg += struct.pack("<I", int(box))                 # 14-17: box number (LE32)
+    # extension token (leads with a digit), then directory name, then comment —
+    # the order the capture shows, NUL-padded between.
+    seg += ext.encode("latin-1") + b"\x00\x00"
+    seg += name.encode("latin-1") + b"\x00\x00"
+    seg += comment.encode("latin-1") + b"\x00"
+    # pad to the 500-byte properties width
+    if len(seg) < 500:
+        seg += b"\x00" * (500 - len(seg))
+    return bytes(seg[:500])
+
+
+def build_ua_segment(security_code: str = "0000", n_slots: int = 10) -> bytes:
+    """Build a user-agent/security segment: 10 empty greeting slots, the
+    ``00 00 00 ff`` marker, the ASCII security code, then two LE32 timestamps.
+    Padded to 241 like the real UA segment."""
+    seg = bytearray()
+    seg += b"\xff\xff"
+    empty_slot = bytes.fromhex("00000001000000000000007fffffffff")
+    for _ in range(n_slots):
+        seg += empty_slot
+    seg += b"\x00\x00\x00\xff"                          # marker
+    code = security_code.encode("ascii")
+    seg += code + b"\x00"
+    # two sane timestamps (create = 2012 firmware build, modified = recent)
+    seg += struct.pack("<I", 1338836400)                # ~2012-06-04
+    seg += struct.pack("<I", 1760400000)                # ~2025-10
+    if len(seg) < 241:
+        seg += b"\xff" * (241 - len(seg))
+    return bytes(seg[:241])
+
+
+__all__ = [
+    "Mailbox", "parse_directory", "box_list", "parse_mailbox_record",
+    "extract_security_code", "decode_mailbox", "read_mailbox",
+    "rewrite_security_code", "build_props_segment", "build_ua_segment",
+]
+vm_records = sys.modules[__name__]  # flatten alias
+
+# ===== vm_link.py ==================================================
+"""Toshiba Stratagy LVMU serial admin protocol — framing + read-only link.
+
+Lifted from the byte-verified ``stratagy_lvmu.py`` reverse-engineering
+prototype (``toshiba-voicemail/STRATAGY_LVMU_SERIAL_PROTOCOL.md``): the frame
+layer, opcode table and encoders are reproduced here **unchanged in behaviour**
+(the same checksum rule, the same byte-exact login/ACK frames the prototype's
+tests assert). On top of them this module adds:
+
+* :class:`VMLink` — a single-threaded, **read-only** session driver over a
+  :class:`~toshiba_cix.vm_serial.Transport`: banner wait → login → session
+  preamble → file/record/directory reads, with a frame trace ring. It issues
+  **no** write/commit opcodes; the write path is P3 and gated elsewhere.
+* :class:`FakeLVMU` — an in-process protocol twin (the serial side's analogue
+  of the SNMP fake agent). It replays a *card image* frame-for-frame: the AT
+  softmodem banner, idle polls, the ``VALID`` login result, file reads
+  (``INSTALL.CFG`` / ``<pbx>.PBX``), the box directory and 741-byte mailbox
+  records — so every read screen and its tests run offline with no hardware and
+  no customer capture committed to the repo.
+
+Status markers (DESIGN_PLAN §1.2 rule 7 — "say what is unproven"): the frame
+layer, login, file read, directory and the mailbox box-number/extension/
+security-code decode are **confirmed** by capture. Record *flag*-field offsets
+and the write header are **inferred/unknown** and live in ``vm_records.py`` with
+their own labels; nothing in this module relies on them.
+"""
+
+
+import collections
+import re
+import struct
+from dataclasses import dataclass
+from typing import Dict, Iterator, List, Optional, Tuple
+
+
+# --------------------------------------------------------------------------
+# Framing primitives (byte-identical rule to the RE prototype)
+# --------------------------------------------------------------------------
+SOH = 0x01
+
+T_POLL = 0x02            # C/H idle poll / keepalive  : 01 02 00 fd
+T_LOGIN = 0x03           # H   login (payload = pw + NUL)
+T_LOGIN_RESULT = 0x04    # C   login result ('VALID')
+T_DATA_CARD = 0x08       # C   reply to a 0x0c request (echoes opcode + seq)
+T_BLOCK_START = 0x09     # C   start-of-stream preview
+T_CHUNK_SHORT = 0x0a     # C/H short / final content chunk
+T_ACK_RDY = 0x0b         # H   "ready for data" ACK during streaming
+T_REQ_HOST = 0x0c        # H   request / write (opcode, rlen, 00, seq, [val])
+T_CARD_SMALL = 0x0d      # C   small control frame (role unconfirmed)
+T_ACK_HOST = 0x10        # H   continue/ACK token (01 10 00 ef)
+T_ACK_CARD = 0x11        # C   continue/ACK token (01 11 00 ee)
+T_CHUNK_14 = 0x14        # C/H content chunk (first full chunk of a block)
+T_CHUNK_15 = 0x15        # C/H content chunk
+T_CHUNK_16 = 0x16        # C   content chunk
+T_CHUNK_17 = 0x17        # C   content chunk
+
+CONTENT_TYPES = {T_BLOCK_START, T_CHUNK_SHORT, T_CHUNK_14, T_CHUNK_15,
+                 T_CHUNK_16, T_CHUNK_17}
+ACK_TYPES = {T_ACK_HOST, T_ACK_CARD, T_POLL, T_ACK_RDY}
+
+# Request opcodes (confirmed unless noted; see STRATAGY_LVMU_SERIAL_PROTOCOL.md).
+OP_SESSION_LOGREC = 0x10   # session record (log name, pw, admin box 997)
+OP_GET_TS_12 = 0x12        # 4-byte unix-time handle               INFERRED
+OP_GET_TS_13 = 0x13        # 4-byte unix-time handle               INFERRED
+OP_GET_VERSION = 0x14      # firmware/version banner string
+OP_READ_REC_A = 0x20       # read mailbox record part A
+OP_READ_REC_B = 0x21       # read mailbox record part B
+OP_SEEK = 0x22             # seek/rewind enumeration (00 00)       INFERRED
+OP_SEL_MBOX = 0x42         # select mailbox properties record (MboxPps.cpp)
+OP_SEL_UAGENT = 0x43       # select user-agent record (UserAgent.cpp)
+OP_RECSEL_4E = 0x4e        # fast-directory record selector        INFERRED
+OP_READ_SLOT = 0x60        # read indexed greeting/msg slot 0..9
+OP_DIR_GLOB = 0x64         # open directory glob                   INFERRED
+OP_OPEN_FILE = 0x92        # open named file; reply = LE32 length
+OP_READ_BLOCK = 0x93       # read next block of open file
+
+CLASS_MBOX = b".\\MboxPps.cpp"
+CLASS_UAGENT = b".\\UserAgent.cpp"
+
+BLOCK_HEADER = b"\x93\x04\x04"  # 4-byte prefix on a block's first content chunk
+
+
+def checksum(frame_wo_cksum: bytes) -> int:
+    """Trailing checksum byte: the whole frame sums to 0 mod 256."""
+    return (-sum(frame_wo_cksum)) & 0xFF
+
+
+def build_frame(ftype: int, payload: bytes = b"") -> bytes:
+    if len(payload) > 0xFF:
+        raise ValueError("payload too long for 1-byte length field")
+    body = bytes([SOH, ftype & 0xFF, len(payload)]) + payload
+    return body + bytes([checksum(body)])
+
+
+def frame_ok(frame: bytes) -> bool:
+    return len(frame) >= 4 and frame[0] == SOH and (sum(frame) & 0xFF) == 0
+
+
+@dataclass
+class Frame:
+    ftype: int
+    length: int
+    payload: bytes
+    raw: bytes
+    cksum_ok: bool
+
+    @property
+    def opcode(self) -> Optional[int]:
+        if self.ftype in (T_REQ_HOST, T_DATA_CARD) and len(self.payload) >= 1:
+            return self.payload[0]
+        return None
+
+    @property
+    def seq(self) -> Optional[int]:
+        if self.ftype in (T_REQ_HOST, T_DATA_CARD) and len(self.payload) >= 4:
+            return self.payload[3]
+        return None
+
+    @property
+    def value(self) -> bytes:
+        if self.ftype in (T_REQ_HOST, T_DATA_CARD) and len(self.payload) >= 4:
+            return self.payload[4:]
+        return b""
+
+
+@dataclass
+class Raw:
+    data: bytes  # unframed bytes (AT modem strings, stray noise)
+
+
+def iter_frames(stream: bytes) -> Iterator[object]:
+    """Walk a one-directional byte stream, yielding Frame and Raw objects."""
+    i, n = 0, len(stream)
+    while i < n:
+        if stream[i] == SOH and i + 3 <= n:
+            ln = stream[i + 2]
+            total = 3 + ln + 1
+            if i + total <= n:
+                raw = stream[i:i + total]
+                if frame_ok(raw):
+                    yield Frame(raw[1], ln, raw[3:3 + ln], raw, True)
+                    i += total
+                    continue
+        j = stream.find(SOH, i + 1)
+        if j == -1:
+            j = n
+        yield Raw(stream[i:j])
+        i = j
+
+
+_LOGLINE = re.compile(
+    rb'^\[\s*([0-9.]+)s\]\s+(APP->CARD|CARD->APP)\s+(\d+)B\s+([0-9a-fA-F ]+?)\s+\|')
+
+
+def streams_from_log(log_path: str) -> Tuple[bytes, bytes]:
+    """Reconstruct ``(host->card, card->host)`` byte streams from a tap .log."""
+    app = bytearray()
+    card = bytearray()
+    with open(log_path, "rb") as f:
+        for line in f:
+            m = _LOGLINE.match(line)
+            if not m:
+                continue
+            chunk = bytes(int(h, 16) for h in m.group(4).split())
+            (app if m.group(2) == b"APP->CARD" else card).extend(chunk)
+    return bytes(app), bytes(card)
+
+
+def reassemble_content(card_stream: bytes) -> bytes:
+    """Concatenate the ASCII content carried in card->host content frames."""
+    out = bytearray()
+    for item in iter_frames(card_stream):
+        if isinstance(item, Frame) and item.ftype in CONTENT_TYPES:
+            data = item.payload
+            if len(data) >= 4 and data[0:3] == BLOCK_HEADER:
+                data = data[4:]
+            out += data
+    return out
+
+
+# --------------------------------------------------------------------------
+# Encoders (the confirmed, byte-exact read-path shapes)
+# --------------------------------------------------------------------------
+def build_login(password: str = "Stratagy") -> bytes:
+    """Host login frame: 01 03 <len> <password> 00 <ck>."""
+    return build_frame(T_LOGIN, password.encode("ascii") + b"\x00")
+
+
+def build_ack_host() -> bytes:
+    return build_frame(T_ACK_HOST)            # 01 10 00 ef
+
+
+def build_get(opcode: int, seq: int, value: bytes = b"") -> bytes:
+    """Host request frame (type 0x0c): payload = <op> <rlen> 00 <seq8> [val]."""
+    rlen = 4 + len(value)
+    payload = bytes([opcode & 0xFF, rlen & 0xFF, 0, seq & 0xFF]) + value
+    return build_frame(T_REQ_HOST, payload)
+
+
+def build_open_file(seq: int, path: str) -> bytes:
+    return build_get(OP_OPEN_FILE, seq, path.encode("ascii") + b"\x00")
+
+
+def build_read_block(seq: int) -> bytes:
+    return build_get(OP_READ_BLOCK, seq)
+
+
+def box_le32(box) -> bytes:
+    return struct.pack("<I", int(box))
+
+
+def encode_block(data: bytes, seq: int = 0) -> bytes:
+    """Encode ``data`` as a card content block: a first chunk carrying the
+    4-byte ``93 04 04 <seq>`` header, then 250-byte chunks, then a 0x0a tail.
+
+    The inverse of :func:`reassemble_content` — the shape the LVMU streams a
+    file/record back in. Used by :class:`FakeLVMU` and the capture-parse test."""
+    out = bytearray()
+    chunk = 250
+    first = True
+    i, n = 0, len(data)
+    if n == 0:
+        return bytes(build_frame(T_CHUNK_SHORT, b""))
+    while i < n:
+        piece = data[i:i + (chunk - 4 if first else chunk)]
+        i += len(piece)
+        last = i >= n
+        if first:
+            payload = BLOCK_HEADER + bytes([seq & 0xFF]) + piece
+            ftype = T_CHUNK_SHORT if last else T_CHUNK_14
+            first = False
+        else:
+            payload = piece
+            ftype = T_CHUNK_SHORT if last else T_CHUNK_15
+        out += build_frame(ftype, payload)
+    return bytes(out)
+
+
+# --------------------------------------------------------------------------
+# Read-only link driver
+# --------------------------------------------------------------------------
+class VMLinkError(RuntimeError):
+    pass
+
+
+class VMLink:
+    """A read-only Stratagy session over a byte transport.
+
+    Owns one port; half-duplex. Every read method issues confirmed opcodes only
+    and ACK-paces streamed content. No frame this class emits mutates the card.
+    """
+
+    def __init__(self, transport: Transport, password: str = "Stratagy",
+                 trace_limit: int = 4000):
+        self._t = transport
+        self._password = password
+        self._seq = 0
+        self._rbuf = bytearray()
+        self.trace: "collections.deque" = collections.deque(maxlen=trace_limit)
+        self.firmware: str = ""
+        self.admin_box: str = ""
+        self.log_name: str = ""
+        self.connected = False
+
+    # -- low level --------------------------------------------------------
+    def _next_seq(self) -> int:
+        self._seq = (self._seq + 1) & 0xFF
+        return self._seq
+
+    def _write(self, frame: bytes) -> None:
+        self.trace.append(("TX", frame.hex()))
+        self._t.write(frame)
+
+    def _read_frame(self, timeout: float = 2.0):
+        """Return the next Frame/Raw from the transport, or None on timeout."""
+        while True:
+            parsed, consumed = _first_unit(self._rbuf)
+            if parsed is not None:
+                del self._rbuf[:consumed]
+                if isinstance(parsed, Frame):
+                    self.trace.append(("RX", parsed.raw.hex()))
+                return parsed
+            chunk = self._t.read(512, timeout=timeout)
+            if not chunk:
+                # flush any trailing raw bytes as a Raw unit
+                if self._rbuf:
+                    data = bytes(self._rbuf)
+                    self._rbuf.clear()
+                    return Raw(data)
+                return None
+            self._rbuf += chunk
+
+    def _request(self, opcode: int, value: bytes = b"", timeout: float = 3.0) -> Frame:
+        """Send a 0x0c request and return the card's 0x08 reply frame."""
+        seq = self._next_seq()
+        self._write(build_get(opcode, seq, value))
+        deadline_reads = 40
+        for _ in range(deadline_reads):
+            fr = self._read_frame(timeout)
+            if fr is None:
+                break
+            if isinstance(fr, Frame) and fr.ftype == T_DATA_CARD:
+                return fr
+            if isinstance(fr, Frame) and fr.ftype == T_ACK_CARD:
+                continue
+        raise VMLinkError(f"no reply to opcode 0x{opcode:02x}")
+
+    def _read_stream(self, expected_len: int, timeout: float = 3.0) -> bytes:
+        """Collect streamed content frames until ``expected_len`` bytes arrive."""
+        out = bytearray()
+        guard = 0
+        while len(out) < expected_len and guard < 10000:
+            guard += 1
+            fr = self._read_frame(timeout)
+            if fr is None:
+                break
+            if isinstance(fr, Frame) and fr.ftype in CONTENT_TYPES:
+                data = fr.payload
+                if len(data) >= 4 and data[0:3] == BLOCK_HEADER:
+                    data = data[4:]
+                out += data
+                self._write(build_ack_host())   # per-chunk continue token
+            # ACK/poll frames are absorbed
+        return bytes(out[:expected_len]) if expected_len else bytes(out)
+
+    # -- session ----------------------------------------------------------
+    def wait_banner(self, timeout: float = 12.0) -> bool:
+        """Read until the softmodem AT banner or an idle poll proves the card
+        is alive at this baud. Returns True on success."""
+        import time
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            fr = self._read_frame(timeout=1.0)
+            if fr is None:
+                continue
+            if isinstance(fr, Raw) and (b"ATZ" in fr.data or b"AT&F" in fr.data):
+                return True
+            if isinstance(fr, Frame) and fr.ftype == T_POLL:
+                return True
+        return False
+
+    def login(self, timeout: float = 5.0) -> None:
+        self._write(build_login(self._password))
+        for _ in range(40):
+            fr = self._read_frame(timeout)
+            if fr is None:
+                break
+            if isinstance(fr, Frame) and fr.ftype == T_LOGIN_RESULT:
+                if fr.payload.startswith(b"VALID"):
+                    self.connected = True
+                    return
+                raise VMLinkError(
+                    "Remote password doesn't match a password of the Stratagy.")
+        raise VMLinkError(
+            "Handshake Failed. Wrong baud rate or other serial link parameter "
+            "is incorrect.")
+
+    def connect(self) -> None:
+        if not self.wait_banner():
+            raise VMLinkError(
+                "Handshake Failed. Wrong baud rate or other serial link "
+                "parameter is incorrect.")
+        self.login()
+        self.session_preamble()
+
+    def session_preamble(self) -> dict:
+        """Pull the firmware banner, admin box and log name (confirmed opcodes).
+
+        Each is best-effort: a card that does not answer one leaves it blank
+        rather than failing the whole connect."""
+        try:
+            rec = self._request(OP_SESSION_LOGREC)
+            text = _ascii(rec.value)
+            self.log_name = _first_token(text, r"[A-Za-z0-9_.]+\.LOG") or ""
+            m = re.search(r"\b(99\d)\b", text)
+            if m:
+                self.admin_box = m.group(1)
+        except VMLinkError:
+            pass
+        try:
+            ver = self._request(OP_GET_VERSION)
+            self.firmware = _ascii(ver.value).strip() or self.firmware
+        except VMLinkError:
+            pass
+        return {"firmware": self.firmware, "admin_box": self.admin_box,
+                "log_name": self.log_name}
+
+    # -- reads ------------------------------------------------------------
+    def read_file(self, path: str, timeout: float = 5.0) -> bytes:
+        """``0x92 open -> LE32 length``, then ``0x93 read-block`` streamed."""
+        reply = self._request(OP_OPEN_FILE, path.encode("ascii") + b"\x00",
+                              timeout=timeout)
+        length = struct.unpack_from("<I", reply.value, 0)[0] if len(reply.value) >= 4 else 0
+        self._write(build_read_block(self._next_seq()))
+        return self._read_stream(length, timeout=timeout)
+
+    def read_directory(self, timeout: float = 5.0) -> Dict[str, str]:
+        """Fast-dir (0x4e): the box->name directory as ``NNNH\\0name\\0``."""
+        reply = self._request(OP_RECSEL_4E, b"\x00\x00", timeout=timeout)
+        length = struct.unpack_from("<I", reply.value, 0)[0] if len(reply.value) >= 4 else 0
+        blob = self._read_stream(length, timeout=timeout)
+        return vm_records.parse_directory(blob)
+
+    def read_record(self, box, timeout: float = 5.0) -> Tuple[bytes, bytes]:
+        """Return ``(properties_segment, ua_segment)`` for a box (0x42 / 0x43)."""
+        props = self._read_selected(OP_SEL_MBOX, box, CLASS_MBOX, timeout)
+        ua = self._read_selected(OP_SEL_UAGENT, box, CLASS_UAGENT, timeout)
+        return props, ua
+
+    def _read_selected(self, opcode, box, class_tag, timeout) -> bytes:
+        value = box_le32(box) + b"\x00\x00" + class_tag + b"\x00"
+        reply = self._request(opcode, value, timeout=timeout)
+        # The reply value leads with a LE32 segment length when streamed.
+        length = (struct.unpack_from("<I", reply.value, 0)[0]
+                  if len(reply.value) >= 4 else 0)
+        if length and length < 4096:
+            return self._read_stream(length, timeout=timeout)
+        # Short records come back inline in the reply value itself.
+        return reply.value
+
+    def close(self) -> None:
+        self.connected = False
+        try:
+            self._t.close()
+        except Exception:  # noqa: BLE001
+            pass
+
+    def trace_text(self) -> str:
+        """The frame trace in the exe's own ``Packet to/received`` idiom."""
+        lines = []
+        for direction, hexs in self.trace:
+            tag = "Packet to send" if direction == "TX" else "Packet received"
+            lines.append(f"{tag} 0x{hexs}")
+        return "\n".join(lines)
+
+
+def _first_unit(buf: bytes):
+    """Parse the first complete Frame/Raw from ``buf``; return (unit, consumed).
+
+    Returns ``(None, 0)`` when more bytes are needed to decide."""
+    if not buf:
+        return None, 0
+    if buf[0] == SOH:
+        if len(buf) < 4:
+            return None, 0
+        ln = buf[2]
+        total = 3 + ln + 1
+        if len(buf) < total:
+            return None, 0
+        raw = bytes(buf[:total])
+        if frame_ok(raw):
+            return Frame(raw[1], ln, raw[3:3 + ln], raw, True), total
+        # not a valid frame: emit one raw byte and resync
+        return Raw(bytes(buf[:1])), 1
+    # accumulate raw bytes up to the next SOH we can see
+    j = buf.find(SOH, 1)
+    if j == -1:
+        return None, 0  # wait for more; the raw run may continue
+    return Raw(bytes(buf[:j])), j
+
+
+def _ascii(b: bytes) -> str:
+    return b.decode("latin-1", "replace")
+
+
+def _first_token(text: str, pattern: str) -> Optional[str]:
+    m = re.search(pattern, text)
+    return m.group(0) if m else None
+
+
+# --------------------------------------------------------------------------
+# FakeLVMU — the offline protocol twin
+# --------------------------------------------------------------------------
+@dataclass
+class CardImage:
+    """A card's observable state for the fake. Pure data; no customer bytes."""
+    firmware: str = "STRATAGY 1:A20d 2:NONE Jun 04 2012"
+    admin_box: str = "997"
+    log_name: str = "Stratagy.LOG"
+    files: Dict[str, bytes] = None          # path -> bytes (INSTALL.CFG, *.PBX)
+    directory: Dict[str, str] = None        # box -> name
+    records: Dict[str, Tuple[bytes, bytes]] = None  # box -> (props, ua)
+
+    def __post_init__(self):
+        self.files = self.files or {}
+        self.directory = self.directory or {}
+        self.records = self.records or {}
+
+
+class FakeLVMU(Transport):
+    """An in-process Stratagy card: a :class:`Transport` that answers the host.
+
+    It emits the AT banner up front, replies ``VALID`` to the login, serves the
+    session scalars, streams files/records/directory as content frames, and
+    absorbs ACK tokens — enough for every read-only screen to run offline.
+    """
+
+    name = "fake-lvmu"
+
+    def __init__(self, image: Optional[CardImage] = None,
+                 password: str = "Stratagy"):
+        self.image = image or demo_card_image()
+        self._password = password
+        self._out = bytearray()
+        self._in = bytearray()
+        self._open_file: Optional[bytes] = None
+        self._selected_box: Optional[str] = None
+        # The softmodem banner + an idle poll, exactly as a waiting card emits.
+        self._out += b"ATZ\rAT&F&C1&D2L0Q0V0X0E0&K0\r"
+        self._out += build_frame(T_POLL)
+
+    # -- Transport interface ---------------------------------------------
+    def read(self, n: int, timeout: float = 2.0) -> bytes:
+        chunk = bytes(self._out[:n])
+        del self._out[:n]
+        return chunk
+
+    def write(self, b: bytes) -> int:
+        self._in += b
+        self._drain_host_frames()
+        return len(b)
+
+    def close(self) -> None:
+        self._out.clear()
+        self._in.clear()
+
+    # -- card behaviour ---------------------------------------------------
+    def _drain_host_frames(self) -> None:
+        while True:
+            unit, consumed = _first_unit(self._in)
+            if unit is None or consumed == 0:
+                break
+            del self._in[:consumed]
+            if isinstance(unit, Frame):
+                self._handle(unit)
+
+    def _emit(self, frame: bytes) -> None:
+        self._out += frame
+
+    def _reply(self, opcode: int, seq: int, value: bytes = b"") -> None:
+        payload = bytes([opcode & 0xFF, (4 + len(value)) & 0xFF, 0, seq & 0xFF]) + value
+        self._emit(build_frame(T_DATA_CARD, payload))
+
+    def _stream(self, data: bytes, seq: int) -> None:
+        """Emit ``data`` as a block: first chunk carries the 4-byte header."""
+        self._emit(encode_block(data, seq))
+
+    def _handle(self, fr: Frame) -> None:
+        if fr.ftype == T_LOGIN:
+            pw = fr.payload.rstrip(b"\x00").decode("latin-1", "replace")
+            if pw == self._password:
+                self._emit(build_frame(T_LOGIN_RESULT, b"VALID"))
+            else:
+                self._emit(build_frame(T_LOGIN_RESULT, b"INVALID"))
+            return
+        if fr.ftype in ACK_TYPES:
+            return
+        if fr.ftype != T_REQ_HOST:
+            return
+        op = fr.opcode
+        seq = fr.seq or 0
+        if op == OP_SESSION_LOGREC:
+            val = (self.image.log_name.encode("latin-1") + b"\x00"
+                   + self.image.admin_box.encode("latin-1") + b"\x00")
+            self._reply(op, seq, val)
+        elif op == OP_GET_VERSION:
+            self._reply(op, seq, self.image.firmware.encode("latin-1"))
+        elif op in (OP_GET_TS_12, OP_GET_TS_13):
+            self._reply(op, seq, struct.pack("<I", 1339200000))
+        elif op == OP_OPEN_FILE:
+            path = fr.value.rstrip(b"\x00").decode("latin-1", "replace")
+            data = self.image.files.get(path) or self.image.files.get(
+                path.rsplit("\\", 1)[-1], b"")
+            self._open_file = data
+            self._reply(op, seq, struct.pack("<I", len(data)))
+        elif op == OP_READ_BLOCK:
+            self._stream(self._open_file or b"", seq)
+            self._open_file = None
+        elif op == OP_RECSEL_4E:
+            blob = directory_blob(self.image.directory)
+            self._reply(op, seq, struct.pack("<I", len(blob)))
+            self._stream(blob, seq)
+        elif op in (OP_SEL_MBOX, OP_SEL_UAGENT):
+            box = str(struct.unpack_from("<I", fr.value, 0)[0]) if len(fr.value) >= 4 else None
+            rec = self.image.records.get(box or "")
+            seg = b""
+            if rec is not None:
+                seg = rec[0] if op == OP_SEL_MBOX else rec[1]
+            if len(seg) >= 250:
+                self._reply(op, seq, struct.pack("<I", len(seg)))
+                self._stream(seg, seq)
+            else:
+                self._reply(op, seq, seg)
+        else:
+            # Unknown/inferred opcode: a harmless empty reply (never a write).
+            self._reply(op, seq, b"")
+
+
+def directory_blob(directory: Dict[str, str]) -> bytes:
+    """Serialise a ``box->name`` map as the on-wire ``NNNH\\0name\\0`` run."""
+    out = bytearray()
+    for box in sorted(directory, key=lambda b: (len(b), b)):
+        name = directory[box]
+        out += box.encode("ascii") + b"H\x00" + name.encode("latin-1") + b"\x00"
+        out += b"\x01\x00\x00\x00"  # a flag/pointer word, as the real blob has
+    return bytes(out)
+
+
+def demo_card_image() -> CardImage:
+    """A small, PII-free card image for offline demos and tests.
+
+    Structural strings (box numbers ``200H..``, ``set`` parameters, integration
+    pattern templates) mirror a real CIX100S capture and are **model-generic,
+    not customer data**; the mailbox *names* and *security codes* are synthetic.
+    """
+    install_cfg = (
+        "#- Stratagy Configuration\r\n"
+        "set pbx_type 'CIX100S'\r\n"
+        "set password 'Stratagy'\r\n"
+        "set hot_box 994\r\n"
+        "set error_box 999\r\n"
+        "set box_snd 998\r\n"
+        "set box_idx 411\r\n"
+        "set defaults_box 997\r\n"
+        "set security_max_length 16\r\n"
+        "set security_min_length 1\r\n"
+        "set baud1 9600\r\n"
+        "set serial_port1 2\r\n"
+        "set shutdown '2 130'\r\n"
+        "set lognam 'Stratagy.LOG'\r\n"
+        "set fixed_len0 3\r\n"
+        "#- SMDI/Serial Integration Definitions\r\n"
+        "integration 30 'Axxxxxxrrrr0000000000'\r\n"
+        "integration 30 'Bxxxxxxbbbb0000000000'\r\n"
+        "integration 30 'Nxxxxxxrrrr0000000000'\r\n"
+        "integration 30 'Dxxxxxxxxxxcccccceeee'\r\n"
+        "integration 30 'Siiiiiiiiii'\r\n"
+        "#- End of Options\r\n"
+    ).encode("latin-1")
+    pbx = (
+        "pbx_name 'Strata CIX'\r\n"
+        "dl_connect H # Dial code to connect the caller to the extension\r\n"
+        "dl_dtwait F- # Dial code to put a caller on transfer hold\r\n"
+        "dl_ndtret F- # Dial code to use when there is no transfer dialtone\r\n"
+        "dl_rnaret F- # Dial code to use when there is no answer\r\n"
+        "dl_prefix  # What to dial BEFORE dialing the User ID extension\r\n"
+        "dl_suffix  # What to dial AFTER dialing the User ID extension\r\n"
+    ).encode("latin-1")
+    names = {
+        "200": "Reception", "201": "BreakRoom", "202": "Warehouse",
+        "203": "Shipping", "204": "FrontDesk", "205": "Service",
+        "221": "StationA", "222": "StationB", "223": "StationC",
+        "241": "ScratchBox", "997": "Defaults", "999": "SystemAdmin",
+    }
+    records = {}
+    for box, name in names.items():
+        records[box] = (
+            vm_records.build_props_segment(box, ext=f"{box}H", name=name,
+                                           comment="EXTENSION"),
+            vm_records.build_ua_segment(security_code=f"{box}00"),
+        )
+    return CardImage(files={"INSTALL.CFG": install_cfg, "CIX100S.PBX": pbx},
+                     directory=names, records=records)
+
+
+__all__ = [
+    "SOH", "Frame", "Raw", "iter_frames", "streams_from_log",
+    "reassemble_content", "checksum", "build_frame", "frame_ok",
+    "build_login", "build_ack_host", "build_get", "build_open_file",
+    "build_read_block", "box_le32", "encode_block", "VMLink", "VMLinkError",
+    "FakeLVMU", "CardImage", "demo_card_image", "directory_blob",
+    "OP_SESSION_LOGREC", "OP_GET_VERSION", "OP_OPEN_FILE", "OP_READ_BLOCK",
+    "OP_RECSEL_4E", "OP_SEL_MBOX", "OP_SEL_UAGENT",
+    "T_LOGIN", "T_LOGIN_RESULT", "T_POLL", "T_ACK_HOST", "T_ACK_CARD",
+    "T_REQ_HOST", "T_DATA_CARD", "CONTENT_TYPES",
+]
+vm_link = sys.modules[__name__]  # flatten alias
+
+# ===== vm_sysparams.py =============================================
+"""INSTALL.CFG — Stratagy system parameters (read, decode, serialise).
+
+The ``set <name> <value>`` / ``#set …`` lines come back as **confirmed**
+plaintext (voicemail-map §2.9). This module parses them into the three-column
+grid the old window shows — *Parameter Names | Values | Parameter Descriptions*
+— preserving order, ``#``-disabled rows (shown as an "enabled" toggle) and the
+``#- …`` group headings, joins each to its ``Install.dhp`` help entry, decodes
+the shutdown schedule, and flags the cleartext default password. It can also
+serialise the grid back to a byte-identical file for the (P3, gated) write path;
+nothing here writes to the card.
+"""
+
+
+import json
+import re
+from typing import Dict, List, Optional
+
+
+_SET_RE = re.compile(r"^(#)?\s*set\s+(\w+)\s*(.*?)\s*$")
+_GROUP_RE = re.compile(r"^#-\s*(.*?)\s*$")
+_DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
+         "Saturday"]
+
+_HELP_CACHE: Optional[dict] = None
+
+
+def _help() -> dict:
+    global _HELP_CACHE
+    if _HELP_CACHE is None:
+        text = load_vm_data_text("stratagy_sysparams_help.json",
+                                 "EMBEDDED_VM_SYSPARAMS_HELP_JSON")
+        try:
+            _HELP_CACHE = (json.loads(text).get("params", {})) if text else {}
+        except (ValueError, AttributeError):
+            _HELP_CACHE = {}
+    return _HELP_CACHE
+
+
+def _unquote(value: str) -> str:
+    v = value.strip()
+    if len(v) >= 2 and v[0] == v[-1] and v[0] in "'\"":
+        return v[1:-1]
+    return v
+
+
+def decode_shutdown(value: str) -> str:
+    """'2 130' -> 'weekly, Tuesday 01:30' (day 0=Sunday, time HHMM)."""
+    v = _unquote(value).split()
+    if len(v) != 2 or not v[0].isdigit() or not v[1].isdigit():
+        return value
+    day = int(v[0])
+    hhmm = v[1].zfill(4)
+    day_name = _DAYS[day] if 0 <= day < 7 else f"day {day}"
+    return f"weekly, {day_name} {hhmm[:2]}:{hhmm[2:]}"
+
+
+def parse_install_cfg(text: str) -> dict:
+    """Parse INSTALL.CFG into an ordered parameter grid + findings."""
+    params: List[dict] = []
+    groups: List[str] = []
+    current_group = ""
+    findings: List[dict] = []
+    help_map = _help()
+
+    for raw in text.replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+        line = raw.rstrip()
+        if not line:
+            continue
+        gm = _GROUP_RE.match(line)
+        if gm and "set " not in line:
+            current_group = gm.group(1)
+            if current_group and current_group not in groups:
+                groups.append(current_group)
+            continue
+        m = _SET_RE.match(line)
+        if not m:
+            continue
+        disabled = bool(m.group(1))
+        name = m.group(2)
+        value = m.group(3)
+        help_entry = help_map.get(name, {})
+        params.append({
+            "name": name,
+            "value": _unquote(value),
+            "raw_value": value,
+            "enabled": not disabled,
+            "group": current_group,
+            "description": help_entry.get("description", ""),
+            "possible": help_entry.get("possible", ""),
+            "default": help_entry.get("default", ""),
+            "decoded": decode_shutdown(value) if name == "shutdown" else None,
+        })
+
+    # security finding: cleartext default password left at the shipped value
+    for p in params:
+        if p["name"] == "password" and p["enabled"] and p["value"] == "Stratagy":
+            findings.append({
+                "severity": "high",
+                "param": "password",
+                "message": "System password is the shipped default 'Stratagy' "
+                           "(stored in cleartext in INSTALL.CFG).",
+            })
+
+    return {"params": params, "groups": groups, "findings": findings,
+            "help_status": "partial"}
+
+
+def render_install_cfg(parsed: dict) -> str:
+    """Serialise a parsed grid back to INSTALL.CFG text (P3 write path, gated).
+
+    Preserves order, the `#`-disabled prefix and group headings; re-quotes a
+    value that contains spaces, as the file does."""
+    out: List[str] = []
+    seen_groups = set()
+    for p in parsed.get("params", []):
+        group = p.get("group")
+        if group and group not in seen_groups:
+            seen_groups.add(group)
+            out.append(f"#- {group}")
+        value = p.get("raw_value")
+        if value is None:
+            v = p.get("value", "")
+            value = f"'{v}'" if (" " in v) else v
+        prefix = "" if p.get("enabled", True) else "#"
+        out.append(f"{prefix}set {p['name']} {value}".rstrip())
+    return "\r\n".join(out) + "\r\n"
+
+
+def sysparams_from_blob(blob_text: str) -> dict:
+    """Convenience: parse the `set` lines out of a reassembled content blob."""
+    return parse_install_cfg(blob_text)
+
+
+__all__ = ["parse_install_cfg", "render_install_cfg", "decode_shutdown",
+           "sysparams_from_blob"]
+vm_sysparams = sys.modules[__name__]  # flatten alias
+
+# ===== vm_pbxdb.py =================================================
+"""`<pbx_type>.PBX` — dial codes + SMDI integration patterns (read + compare).
+
+The live ``C:\\Stratagy\\PBX.DB\\<model>.PBX`` comes back as **confirmed**
+plaintext (voicemail-map §2.9): ``dl_*`` dial codes (value in Token language,
+label after ``#``), ``pbx_name`` and ``integration NN '…'`` SMDI/in-band
+pattern templates. :func:`compare_with_default` diffs the live file against the
+bundled vendor template for the model — the Plug-and-Play menu's value shown as
+a diff, never a rewrite. Read-only; nothing here writes to the card.
+"""
+
+
+import json
+import re
+from typing import Dict, List, Optional
+
+
+_DL_RE = re.compile(r"^(dl_\w+)\s*([^#\r\n]*?)\s*(?:#\s*(.*?))?\s*$")
+_INT_RE = re.compile(r"^integration\s+(\d+)\s+'([^']*)'")
+_NAME_RE = re.compile(r"^pbx_name\s+'([^']*)'")
+
+_DEFAULTS_CACHE: Optional[dict] = None
+
+
+def _defaults() -> dict:
+    global _DEFAULTS_CACHE
+    if _DEFAULTS_CACHE is None:
+        text = load_vm_data_text("stratagy_pbx_defaults.json",
+                                 "EMBEDDED_VM_PBX_DEFAULTS_JSON")
+        try:
+            _DEFAULTS_CACHE = (json.loads(text).get("models", {})) if text else {}
+        except (ValueError, AttributeError):
+            _DEFAULTS_CACHE = {}
+    return _DEFAULTS_CACHE
+
+
+def parse_pbx(text: str) -> dict:
+    """Parse a .PBX file into ``{pbx_name, dial_codes[], integration[]}``."""
+    pbx_name = ""
+    dial_codes: List[dict] = []
+    integration: List[dict] = []
+    for raw in text.replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+        line = raw.rstrip()
+        if not line:
+            continue
+        nm = _NAME_RE.match(line)
+        if nm:
+            pbx_name = nm.group(1)
+            continue
+        im = _INT_RE.match(line)
+        if im:
+            integration.append({"index": im.group(1), "pattern": im.group(2)})
+            continue
+        dm = _DL_RE.match(line)
+        if dm and line.startswith("dl_"):
+            dial_codes.append({
+                "code": dm.group(1),
+                "value": (dm.group(2) or "").strip(),
+                "label": (dm.group(3) or "").strip().rstrip(":"),
+            })
+    return {"pbx_name": pbx_name, "dial_codes": dial_codes,
+            "integration": integration}
+
+
+def default_for(model: str) -> Optional[dict]:
+    """The bundled vendor template for ``model``, parsed — or ``None``."""
+    text = _defaults().get((model or "").strip())
+    if text is None:
+        # tolerate case / trailing-S variants
+        for k, v in _defaults().items():
+            if k.lower() == (model or "").strip().lower():
+                text = v
+                break
+    return parse_pbx(text) if text is not None else None
+
+
+def compare_with_default(live: dict, model: str) -> dict:
+    """Diff a parsed live .PBX against the bundled model default.
+
+    Returns per-section changes; ``available`` is False (with a reason) when no
+    default is bundled for the model, so the UI says so rather than implying
+    a clean match."""
+    default = default_for(model)
+    if default is None:
+        return {"available": False,
+                "reason": f"No bundled Toshiba default for model {model!r} yet.",
+                "dial_codes": [], "integration": []}
+
+    dl_changes = []
+    live_dl = {d["code"]: d for d in live.get("dial_codes", [])}
+    def_dl = {d["code"]: d for d in default.get("dial_codes", [])}
+    for code in sorted(set(live_dl) | set(def_dl)):
+        lv = (live_dl.get(code) or {}).get("value", "")
+        dv = (def_dl.get(code) or {}).get("value", "")
+        if code not in live_dl:
+            dl_changes.append({"code": code, "kind": "removed",
+                               "default": dv, "live": None})
+        elif code not in def_dl:
+            dl_changes.append({"code": code, "kind": "added",
+                               "default": None, "live": lv})
+        elif lv != dv:
+            dl_changes.append({"code": code, "kind": "changed",
+                               "default": dv, "live": lv,
+                               "label": live_dl[code].get("label", "")})
+
+    live_int = [i["pattern"] for i in live.get("integration", [])]
+    def_int = [i["pattern"] for i in default.get("integration", [])]
+    int_changes = []
+    for p in live_int:
+        if p not in def_int:
+            int_changes.append({"pattern": p, "kind": "added"})
+    for p in def_int:
+        if p not in live_int:
+            int_changes.append({"pattern": p, "kind": "removed"})
+
+    return {"available": True, "model": model,
+            "default_name": default.get("pbx_name", ""),
+            "dial_codes": dl_changes, "integration": int_changes,
+            "clean": not dl_changes and not int_changes}
+
+
+def pbxdb_from_blob(blob_text: str) -> dict:
+    """Parse the dial-code / integration lines out of a content blob."""
+    return parse_pbx(blob_text)
+
+
+__all__ = ["parse_pbx", "default_for", "compare_with_default", "pbxdb_from_blob"]
+vm_pbxdb = sys.modules[__name__]  # flatten alias
+
+# ===== vm_catalog.py ===============================================
+"""The Stratagy mailbox field catalog (``data/stratagy_vm_catalog.json``).
+
+The VM twin of the eManager program catalog: tab, label, tooltip, type, range,
+wire location and **status** (`confirmed | inferred | unknown`). It drives the
+read-only User Editor (status dots and inline help) and the write gate.
+
+The one invariant (DESIGN_PLAN §8.4, voicemail-map §10): a field is editable
+only when its status is ``confirmed`` **and** VM writes are enabled. P1 ships
+read-only, so :func:`field_writable` returns ``False`` for everything until the
+write path lands (P3); :func:`validate` proves no non-confirmed field could ever
+present a writable control.
+"""
+
+
+import json
+from typing import Dict, List, Optional
+
+
+# P1 master switch: voicemail writes are OFF until the supervised lab write
+# (DESIGN_PLAN §11 P3, voicemail-map §6.4). Nothing in P1 flips this.
+VM_WRITES_ENABLED = False
+
+_CACHE: Optional[dict] = None
+
+
+def load_vm_catalog() -> dict:
+    """Load + index the catalog: ``{tabs, fields, by_name, by_tab}``."""
+    global _CACHE
+    if _CACHE is not None:
+        return _CACHE
+    text = load_vm_data_text("stratagy_vm_catalog.json", "EMBEDDED_VM_CATALOG_JSON")
+    data = json.loads(text) if text else {"tabs": [], "fields": []}
+    fields = data.get("fields", [])
+    by_name = {f["name"]: f for f in fields}
+    by_tab: Dict[str, List[dict]] = {}
+    for f in fields:
+        by_tab.setdefault(f.get("tab", ""), []).append(f)
+    _CACHE = {"tabs": data.get("tabs", list(by_tab.keys())),
+              "fields": fields, "by_name": by_name, "by_tab": by_tab,
+              "meta": data.get("_meta", {})}
+    return _CACHE
+
+
+def field_writable(field: dict, writes_enabled: bool = VM_WRITES_ENABLED) -> bool:
+    """A field may be edited only if confirmed AND writes are globally on."""
+    return bool(writes_enabled) and field.get("status") == "confirmed"
+
+
+def status_dot(field: dict) -> str:
+    """green (confirmed) | amber (inferred) | grey (unknown) — the editor dot."""
+    return {"confirmed": "green", "inferred": "amber"}.get(
+        field.get("status"), "grey")
+
+
+def validate(catalog: Optional[dict] = None) -> List[str]:
+    """Return catalog errors (empty = valid). Mirrors the design's test:
+
+    every field has tab/label/type/status, and no non-``confirmed`` field is
+    marked writable (it cannot present an editable control)."""
+    cat = catalog or load_vm_catalog()
+    errors: List[str] = []
+    for f in cat.get("fields", []):
+        for key in ("name", "tab", "label", "type", "status"):
+            if not f.get(key):
+                errors.append(f"field {f.get('name', '?')!r} missing {key}")
+        if f.get("status") not in ("confirmed", "inferred", "unknown"):
+            errors.append(f"field {f.get('name')!r} bad status {f.get('status')!r}")
+        # the safety invariant: never writable unless confirmed
+        if field_writable(f, writes_enabled=True) and f.get("status") != "confirmed":
+            errors.append(f"field {f.get('name')!r} writable but not confirmed")
+    return errors
+
+
+def editor_model(writes_enabled: bool = VM_WRITES_ENABLED) -> dict:
+    """The catalog shaped for the editor: tabs, each with its fields + dots."""
+    cat = load_vm_catalog()
+    tabs = []
+    for tab in cat["tabs"]:
+        fields = []
+        for f in cat["by_tab"].get(tab, []):
+            fields.append({**f, "dot": status_dot(f),
+                           "writable": field_writable(f, writes_enabled)})
+        tabs.append({"tab": tab, "fields": fields})
+    return {"tabs": tabs, "writes_enabled": writes_enabled,
+            "meta": cat.get("meta", {})}
+
+
+__all__ = ["VM_WRITES_ENABLED", "load_vm_catalog", "field_writable",
+           "status_dot", "validate", "editor_model"]
+vm_catalog = sys.modules[__name__]  # flatten alias
+
+# ===== vm_reports.py ===============================================
+"""Mailbox reports — client-side, instant, over a read model (voicemail-map §5.6).
+
+VM Manager's report is a **template** (an ordered column list over a User ID
+range) run with optional *Reset Statistics*. Because the app holds every box in
+memory after a read, *Run Report* is client-side and instant: no serial traffic,
+no range re-read. *Reset Statistics* is the only part that needs a write and is
+gated like any write (not in P1). Security codes are masked in report output.
+"""
+
+
+from typing import Dict, List, Optional
+
+# Every column a report may list, with its display label and the mailbox-dict
+# key it reads. Security code is intentionally masked (never dumped in a report).
+COLUMNS: Dict[str, dict] = {
+    "box": {"label": "User ID", "key": "box"},
+    "comment": {"label": "Comment", "key": "comment"},
+    "extension": {"label": "Extension", "key": "extension"},
+    "name": {"label": "Name", "key": "name"},
+    "security_code": {"label": "Security code", "key": "security_code", "mask": True},
+    "created": {"label": "Box created", "key": "created"},
+    "modified": {"label": "Box saved", "key": "modified"},
+    "record_len": {"label": "Record bytes", "key": "record_len"},
+}
+
+TEMPLATES: List[dict] = [
+    {"id": "directory", "name": "Directory",
+     "columns": ["box", "name", "extension", "comment"]},
+    {"id": "audit", "name": "Security audit",
+     "columns": ["box", "name", "security_code", "modified"]},
+    {"id": "full", "name": "Full mailbox list",
+     "columns": ["box", "comment", "extension", "name", "created", "modified"]},
+]
+
+
+def default_templates() -> List[dict]:
+    return [dict(t) for t in TEMPLATES]
+
+
+def _in_range(box: str, lo: Optional[str], hi: Optional[str]) -> bool:
+    try:
+        n = int(box)
+    except (TypeError, ValueError):
+        return True
+    if lo not in (None, "") and n < int(lo):
+        return False
+    if hi not in (None, "") and n > int(hi):
+        return False
+    return True
+
+
+def run_report(template: dict, boxes: Dict[str, dict], *,
+               first: Optional[str] = None, last: Optional[str] = None) -> dict:
+    """Run a template over a read model's ``boxes`` map. Pure; no I/O."""
+    cols = [c for c in template.get("columns", []) if c in COLUMNS]
+    header = [{"name": c, "label": COLUMNS[c]["label"]} for c in cols]
+    rows: List[List[str]] = []
+    for box in sorted(boxes, key=lambda b: (len(b), b)):
+        if not _in_range(box, first, last):
+            continue
+        rec = boxes[box]
+        row = []
+        for c in cols:
+            spec = COLUMNS[c]
+            val = rec.get(spec["key"])
+            if spec.get("mask") and val:
+                val = "••••"
+            row.append("" if val is None else str(val))
+        rows.append(row)
+    return {"template": template.get("id"), "columns": header, "rows": rows,
+            "row_count": len(rows)}
+
+
+def to_csv(report: dict) -> str:
+    """CSV text for Save/download (the old report export)."""
+    import csv
+    import io
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow([c["label"] for c in report.get("columns", [])])
+    for row in report.get("rows", []):
+        w.writerow(row)
+    return buf.getvalue()
+
+
+__all__ = ["COLUMNS", "TEMPLATES", "default_templates", "run_report", "to_csv"]
+vm_reports = sys.modules[__name__]  # flatten alias
+
+# ===== vm_backup.py ================================================
+"""Backup to JSON + mailbox-level diff — the no-call-interruption read path.
+
+The native Backup/Restore Utility halts call processing and its serialization
+is not yet captured (voicemail-map §5.5, §9). This module is the app's own
+alternative: it reads every box, the system parameters and the dial-code/
+integration table over **confirmed** opcodes **without stopping calls**, into a
+plain JSON document, and diffs two of them per mailbox — decoded fields first,
+with a **raw-bytes fallback** ("record changed, N bytes differ at offsets …")
+so a changed security code is spotted before every flag offset is mapped. Read
+only; this never writes to a card.
+"""
+
+
+from datetime import datetime
+from typing import Dict, List, Optional
+
+
+BACKUP_KIND = "stratagy-vm-json"
+BACKUP_VERSION = 1
+
+
+def read_model(link, *, progress=None) -> dict:
+    """Read a full voicemail model over a :class:`~toshiba_cix.vm_link.VMLink`.
+
+    ``progress(done, total, message)`` is called as boxes stream in (the
+    determinate "Reading box N of M" bar). Returns decoded, JSON-ready data."""
+    firmware = getattr(link, "firmware", "")
+    admin_box = getattr(link, "admin_box", "")
+
+    install_text = link.read_file("INSTALL.CFG").decode("latin-1", "replace")
+    sysparams = vm_sysparams.parse_install_cfg(install_text)
+
+    pbx_type = _param(sysparams, "pbx_type") or "CIX100S"
+    pbxdb = {"pbx_name": "", "dial_codes": [], "integration": [],
+             "model": pbx_type}
+    try:
+        pbx_text = link.read_file(f"C:\\Stratagy\\PBX.DB\\{pbx_type}.PBX").decode(
+            "latin-1", "replace")
+        if not pbx_text.strip():
+            pbx_text = link.read_file(f"{pbx_type}.PBX").decode("latin-1", "replace")
+        parsed = vm_pbxdb.parse_pbx(pbx_text)
+        parsed["model"] = pbx_type
+        pbxdb = parsed
+    except Exception:  # noqa: BLE001 — a missing .PBX leaves the table empty
+        pass
+
+    directory = link.read_directory()
+    boxes: Dict[str, dict] = {}
+    total = len(directory)
+    for i, box in enumerate(sorted(directory, key=lambda b: (len(b), b)), 1):
+        if progress:
+            progress(i, total, f"Reading box {box} ({i} of {total})")
+        try:
+            mb = vm_records.read_mailbox(link, box)
+            if not mb.name:
+                mb.name = directory[box]
+            boxes[box] = mb.as_dict()
+        except Exception as exc:  # noqa: BLE001 — record a read error, keep going
+            boxes[box] = {"box": box, "name": directory.get(box, ""),
+                          "error": str(exc)}
+    return {"firmware": firmware, "admin_box": admin_box,
+            "sysparams": sysparams, "pbxdb": pbxdb,
+            "directory": directory, "boxes": boxes}
+
+
+def build_json_backup(link, *, site: Optional[str] = None, progress=None) -> dict:
+    """A full JSON backup document (meta + the read model)."""
+    model = read_model(link, progress=progress)
+    return {
+        "meta": {
+            "kind": BACKUP_KIND,
+            "backup_version": BACKUP_VERSION,
+            "tool_version": __version__,
+            "taken_at": datetime.utcnow().isoformat() + "Z",
+            "site": site,
+            "firmware": model.get("firmware", ""),
+            "box_count": len(model.get("boxes", {})),
+            "note": "read over confirmed opcodes without interrupting calls",
+        },
+        **model,
+    }
+
+
+# -- mailbox-level diff -----------------------------------------------------
+_DIFF_FIELDS = ["name", "extension", "comment", "security_code",
+                "created", "modified"]
+
+
+def _raw_byte_diff(a_hex: str, b_hex: str) -> Optional[dict]:
+    """Where two raw segments differ, for the fallback line."""
+    if not a_hex or not b_hex:
+        return None
+    a = bytes.fromhex(a_hex)
+    b = bytes.fromhex(b_hex)
+    if a == b:
+        return None
+    offsets = [i for i in range(min(len(a), len(b))) if a[i] != b[i]]
+    if len(a) != len(b):
+        offsets.append(min(len(a), len(b)))
+    return {"bytes_differ": len(offsets),
+            "offsets": offsets[:16],
+            "len_a": len(a), "len_b": len(b)}
+
+
+def diff_mailbox(a: dict, b: dict) -> dict:
+    """Per-box diff: decoded field changes first, raw-bytes fallback second."""
+    changes = []
+    for f in _DIFF_FIELDS:
+        av, bv = a.get(f), b.get(f)
+        if av != bv:
+            sensitive = f == "security_code"
+            changes.append({
+                "field": f,
+                "old": "••••" if sensitive and av else av,
+                "new": "••••" if sensitive and bv else bv,
+                "sensitive": sensitive,
+            })
+    raw = {}
+    for seg in ("raw_props_hex", "raw_ua_hex"):
+        rd = _raw_byte_diff(a.get(seg, ""), b.get(seg, ""))
+        if rd:
+            raw[seg] = rd
+    return {"changes": changes, "raw": raw,
+            "changed": bool(changes or raw)}
+
+
+def diff_backups(a: dict, b: dict) -> dict:
+    """Diff two JSON backups (or two read models) at the mailbox level."""
+    a_boxes = a.get("boxes", {})
+    b_boxes = b.get("boxes", {})
+    added = sorted(set(b_boxes) - set(a_boxes), key=lambda x: (len(x), x))
+    removed = sorted(set(a_boxes) - set(b_boxes), key=lambda x: (len(x), x))
+    changed = {}
+    for box in sorted(set(a_boxes) & set(b_boxes), key=lambda x: (len(x), x)):
+        d = diff_mailbox(a_boxes[box], b_boxes[box])
+        if d["changed"]:
+            changed[box] = d
+    sys_a = {p["name"]: p["value"] for p in a.get("sysparams", {}).get("params", [])}
+    sys_b = {p["name"]: p["value"] for p in b.get("sysparams", {}).get("params", [])}
+    sys_changed = [{"name": n, "old": sys_a.get(n), "new": sys_b.get(n)}
+                   for n in sorted(set(sys_a) | set(sys_b))
+                   if sys_a.get(n) != sys_b.get(n)]
+    return {"added": added, "removed": removed, "boxes": changed,
+            "sysparams": sys_changed,
+            "summary": {"boxes_added": len(added), "boxes_removed": len(removed),
+                        "boxes_changed": len(changed),
+                        "sysparams_changed": len(sys_changed)}}
+
+
+def _param(sysparams: dict, name: str) -> Optional[str]:
+    for p in sysparams.get("params", []):
+        if p["name"] == name and p["enabled"]:
+            return p["value"]
+    return None
+
+
+__all__ = ["read_model", "build_json_backup", "diff_backups", "diff_mailbox",
+           "BACKUP_KIND", "BACKUP_VERSION"]
+vm_backup = sys.modules[__name__]  # flatten alias
+
+# ===== vm_session.py ===============================================
+"""The one exclusive voicemail session the server owns.
+
+The LVMU serial session is **stateful and exclusive** — the card refuses a
+second admin login (voicemail-map §3.5) — so the server holds exactly one
+:class:`VmSession` per process, every VM request goes through its lock, and the
+decoded model is cached per session with a single explicit *Refresh* (never
+polling the serial line). All reads use confirmed opcodes; the save surface is
+**plan-only** (two-phase contract + Simulate) and performs no hardware write in
+P1.
+
+Offline, ``transport="fake"`` drives the :class:`~toshiba_cix.vm_link.FakeLVMU`
+protocol twin so the whole UI and its tests run with no hardware.
+"""
+
+
+import threading
+from typing import Dict, Optional
+
+
+# Map decoded-mailbox keys to catalog field names (the editor reads values here).
+_VALUE_MAP = {
+    "box": "user_id", "comment": "comment", "extension": "extension",
+    "name": "name1", "security_code": "security_code",
+    "created": "box_created", "modified": "box_saved",
+}
+
+
+class VmSession:
+    def __init__(self):
+        self._lock = threading.RLock()
+        self._link: Optional[vm_link.VMLink] = None
+        self.transport_name = ""
+        self.transport_kind = ""
+        # per-session caches
+        self._directory: Optional[Dict[str, str]] = None
+        self._boxes: Dict[str, dict] = {}
+        self._sysparams: Optional[dict] = None
+        self._pbxdb: Optional[dict] = None
+
+    # -- lifecycle --------------------------------------------------------
+    def connect(self, spec: dict) -> dict:
+        with self._lock:
+            self.disconnect()
+            kind = (spec or {}).get("transport") or "serial"
+            if kind == "fake":
+                transport = vm_link.FakeLVMU()
+            else:
+                transport = vm_serial.open_transport(spec)
+            link = vm_link.VMLink(transport, password=spec.get("password")
+                                  or "Stratagy")
+            link.connect()  # banner -> login -> preamble (raises on failure)
+            self._link = link
+            self.transport_kind = kind
+            self.transport_name = getattr(transport, "name", kind)
+            self._clear_cache()
+            return self.status()
+
+    def disconnect(self) -> None:
+        with self._lock:
+            if self._link is not None:
+                self._link.close()
+            self._link = None
+            self._clear_cache()
+
+    def _clear_cache(self) -> None:
+        self._directory = None
+        self._boxes = {}
+        self._sysparams = None
+        self._pbxdb = None
+
+    @property
+    def connected(self) -> bool:
+        return self._link is not None and self._link.connected
+
+    def _require(self) -> vm_link.VMLink:
+        if not self.connected:
+            raise VmNotConnected("no voicemail session — Connect first")
+        return self._link  # type: ignore[return-value]
+
+    # -- status -----------------------------------------------------------
+    def status(self) -> dict:
+        link = self._link
+        return {
+            "connected": self.connected,
+            "transport": self.transport_kind,
+            "port": self.transport_name,
+            "firmware": getattr(link, "firmware", "") if link else "",
+            "admin_box": getattr(link, "admin_box", "") if link else "",
+            "log_name": getattr(link, "log_name", "") if link else "",
+            "trace_frames": len(link.trace) if link else 0,
+            "shutdown": self._shutdown_text(),
+            "writes_enabled": vm_catalog.VM_WRITES_ENABLED,
+        }
+
+    def _shutdown_text(self) -> Optional[str]:
+        sp = self._sysparams
+        if not sp:
+            return None
+        for p in sp.get("params", []):
+            if p["name"] == "shutdown" and p["enabled"]:
+                return p.get("decoded") or p.get("value")
+        return None
+
+    # -- reads ------------------------------------------------------------
+    def directory(self, refresh: bool = False) -> Dict[str, str]:
+        with self._lock:
+            link = self._require()
+            if self._directory is None or refresh:
+                self._directory = link.read_directory()
+                if refresh:
+                    self._boxes = {}
+            return self._directory
+
+    def boxes(self, refresh: bool = False) -> list:
+        """The Box List: User ID | Comment | Extension | Name | Messages,
+        reserved boxes (411, 990-999) flagged muted, never hidden."""
+        directory = self.directory(refresh=refresh)
+        rows = []
+        for box in sorted(directory, key=lambda b: (len(b), b)):
+            rows.append({
+                "box": box,
+                "name": directory[box],
+                "reserved": _is_reserved(box),
+            })
+        return rows
+
+    def box(self, box_id: str, refresh: bool = False) -> dict:
+        with self._lock:
+            link = self._require()
+            if box_id not in self._boxes or refresh:
+                mb = vm_records.read_mailbox(link, box_id)
+                if not mb.name:
+                    mb.name = (self._directory or {}).get(box_id, "")
+                self._boxes[box_id] = mb.as_dict()
+            rec = self._boxes[box_id]
+            return {"mailbox": rec, "editor": self._editor_for(rec),
+                    "reserved": _is_reserved(box_id)}
+
+    def _editor_for(self, rec: dict) -> dict:
+        """The catalog editor model with this box's confirmed values filled in."""
+        model = vm_catalog.editor_model()
+        values = {}
+        for mkey, fname in _VALUE_MAP.items():
+            if rec.get(mkey) not in (None, ""):
+                values[fname] = rec.get(mkey)
+        model["values"] = values
+        return model
+
+    def sysparams(self, refresh: bool = False) -> dict:
+        with self._lock:
+            link = self._require()
+            if self._sysparams is None or refresh:
+                text = link.read_file("INSTALL.CFG").decode("latin-1", "replace")
+                self._sysparams = vm_sysparams.parse_install_cfg(text)
+            return self._sysparams
+
+    def pbxdb(self, refresh: bool = False, compare: bool = False) -> dict:
+        with self._lock:
+            link = self._require()
+            if self._pbxdb is None or refresh:
+                sp = self.sysparams()
+                model = _param(sp, "pbx_type") or "CIX100S"
+                text = ""
+                for path in (f"C:\\Stratagy\\PBX.DB\\{model}.PBX", f"{model}.PBX"):
+                    try:
+                        text = link.read_file(path).decode("latin-1", "replace")
+                    except Exception:  # noqa: BLE001
+                        text = ""
+                    if text.strip():
+                        break
+                parsed = vm_pbxdb.parse_pbx(text)
+                parsed["model"] = model
+                self._pbxdb = parsed
+            result = dict(self._pbxdb)
+            if compare:
+                result["compare"] = vm_pbxdb.compare_with_default(
+                    self._pbxdb, self._pbxdb.get("model", ""))
+            return result
+
+    def backup_json(self, *, site: Optional[str] = None, progress=None) -> dict:
+        with self._lock:
+            link = self._require()
+            doc = vm_backup.build_json_backup(link, site=site, progress=progress)
+            # warm the per-box cache from the backup read
+            self._boxes.update(doc.get("boxes", {}))
+            self._directory = doc.get("directory", self._directory)
+            self._sysparams = doc.get("sysparams", self._sysparams)
+            return doc
+
+    def run_report(self, template_id: str, *, first=None, last=None) -> dict:
+        with self._lock:
+            tmpls = {t["id"]: t for t in vm_reports.default_templates()}
+            tmpl = tmpls.get(template_id)
+            if tmpl is None:
+                raise ValueError(f"unknown report template {template_id!r}")
+            # Reports are client-side over a full read (voicemail-map §5.6): make
+            # sure every box is in the cache, not just ones opened individually.
+            directory = self.directory()
+            full = {b for b, r in self._boxes.items() if "error" not in r}
+            if not directory or not full.issuperset(directory):
+                self.backup_json()
+            return vm_reports.run_report(tmpl, self._boxes, first=first, last=last)
+
+    def trace_text(self) -> str:
+        link = self._link
+        return link.trace_text() if link else ""
+
+    # -- plan-only save (two-phase; Simulate; no hardware write in P1) ----
+    def plan_save(self, box_id: str, changes: dict) -> dict:
+        """Compute a preview of the record patch WITHOUT writing.
+
+        This is the *plan* phase of plan->review->apply. P1 never applies: the
+        write path is gated behind VM_WRITES_ENABLED (OFF) and a supervised lab
+        write (voicemail-map §6.4). Only confirmed-offset fields can even be
+        planned; everything else is refused with its reason."""
+        with self._lock:
+            info = self.box(box_id)
+            rec = info["mailbox"]
+            cat = vm_catalog.load_vm_catalog()["by_name"]
+            planned, refused = [], []
+            ua_hex = rec.get("raw_ua_hex", "")
+            for fname, new_value in (changes or {}).items():
+                field = cat.get(fname, {})
+                if field.get("status") != "confirmed":
+                    refused.append({"field": fname, "reason":
+                                    "field offset unverified — read-only in this "
+                                    "version"})
+                    continue
+                if fname == "security_code" and ua_hex:
+                    try:
+                        before = bytes.fromhex(ua_hex)
+                        after = vm_records.rewrite_security_code(
+                            before, str(new_value))
+                        planned.append({
+                            "field": fname, "old": "••••", "new": "••••",
+                            "wire": "UA segment (patch-in-place, length-preserving)",
+                            "bytes_changed": sum(1 for x, y in zip(before, after)
+                                                 if x != y),
+                            "proven": False,
+                            "note": "write UNCONFIRMED against hardware — "
+                                    "requires a supervised lab write (P3)",
+                        })
+                    except ValueError as exc:
+                        refused.append({"field": fname, "reason": str(exc)})
+                else:
+                    planned.append({"field": fname, "old": rec.get(fname),
+                                    "new": new_value, "proven": True})
+            return {
+                "box": box_id,
+                "mode": "simulate",
+                "writes_enabled": vm_catalog.VM_WRITES_ENABLED,
+                "planned": planned,
+                "refused": refused,
+                "apply_allowed": False,
+                "reason": ("Voicemail writes are disabled in this release "
+                           "(read-only). This is a preview only."),
+            }
+
+
+class VmNotConnected(RuntimeError):
+    pass
+
+
+def _is_reserved(box: str) -> bool:
+    try:
+        n = int(box)
+    except (TypeError, ValueError):
+        return True  # named system boxes (GREETING, SOFTMODEM, …)
+    return n == 411 or 990 <= n <= 999
+
+
+def _param(sysparams: dict, name: str) -> Optional[str]:
+    for p in sysparams.get("params", []):
+        if p["name"] == name and p["enabled"]:
+            return p["value"]
+    return None
+
+
+class VmSessionManager:
+    """One process-wide exclusive VM session (the card allows only one)."""
+
+    def __init__(self):
+        self.session = VmSession()
+
+
+__all__ = ["VmSession", "VmSessionManager", "VmNotConnected"]
+vm_session = sys.modules[__name__]  # flatten alias
+
 # ===== appdirs.py ==================================================
 """Per-OS store root for Switchroom — one name, ``<store root>``, everywhere.
 
@@ -7967,6 +10093,8 @@ from datetime import datetime, timezone
 # test can monkeypatch them on this module.
 # Bare names (no import aliases): the single-file build flattens the package and
 # strips intra-package imports, so an `import X as Y` alias would vanish there.
+# Voicemail leg (DESIGN_PLAN §8). Bare names so the single-file build resolves
+# them as globals after it flattens the package.
 
 log = logging.getLogger("toshiba_cix.webapp")
 
@@ -8838,6 +10966,145 @@ CROSS_SITE_EXCLUDE_FIELDS = {
 # --------------------------------------------------------------------------
 # wiring
 # --------------------------------------------------------------------------
+# --------------------------------------------------------------------------
+# Voice Mail routes (DESIGN_PLAN §8.2, voicemail-map §7) — read-only in P1
+# --------------------------------------------------------------------------
+def _vm(ctx) -> VmSession:
+    """The one exclusive VM session, created lazily and stashed on the ctx."""
+    mgr = getattr(ctx, "_vm_manager", None)
+    if mgr is None:
+        mgr = VmSessionManager()
+        ctx._vm_manager = mgr
+    return mgr.session
+
+
+def _vm_guard(ctx, req, fn):
+    """Run ``fn(vm)`` translating a not-connected session into a clean 409."""
+    try:
+        return fn(_vm(ctx))
+    except VmNotConnected as exc:
+        req.send_json({"ok": False, "error": str(exc)}, 409)
+        return None
+
+
+def route_vm_ports(ctx, req):
+    req.send_json({"ok": True, "ports": vm_serial.discover_ports()})
+
+
+def route_vm_connect(ctx, req):
+    spec = req.body() or {}
+    try:
+        status = _vm(ctx).connect(spec)
+    except Exception as exc:  # noqa: BLE001 — surface the exe-style error text
+        req.send_json({"ok": False, "error": str(exc)}, 400)
+        return
+    req.send_json({"ok": True, "status": status})
+
+
+def route_vm_disconnect(ctx, req):
+    _vm(ctx).disconnect()
+    req.send_json({"ok": True})
+
+
+def route_vm_status(ctx, req):
+    req.send_json({"ok": True, "status": _vm(ctx).status()})
+
+
+def route_vm_boxes(ctx, req):
+    refresh = bool(req.query.get("refresh"))
+    res = _vm_guard(ctx, req, lambda vm: vm.boxes(refresh=refresh))
+    if res is not None:
+        req.send_json({"ok": True, "boxes": res})
+
+
+def route_vm_box(ctx, req):
+    box = req.params["id"]
+    refresh = bool(req.query.get("refresh"))
+    res = _vm_guard(ctx, req, lambda vm: vm.box(box, refresh=refresh))
+    if res is not None:
+        req.send_json({"ok": True, **res})
+
+
+def route_vm_box_save(ctx, req):
+    """Plan-only preview (two-phase contract, Simulate). Never writes in P1."""
+    box = req.params["id"]
+    body = req.body() or {}
+    res = _vm_guard(ctx, req, lambda vm: vm.plan_save(box, body.get("changes") or {}))
+    if res is not None:
+        req.send_json({"ok": True, "plan": res})
+
+
+def route_vm_sysparams(ctx, req):
+    refresh = bool(req.query.get("refresh"))
+    res = _vm_guard(ctx, req, lambda vm: vm.sysparams(refresh=refresh))
+    if res is not None:
+        req.send_json({"ok": True, "sysparams": res})
+
+
+def route_vm_pbxdb(ctx, req):
+    refresh = bool(req.query.get("refresh"))
+    compare = bool(req.query.get("compare"))
+    res = _vm_guard(ctx, req, lambda vm: vm.pbxdb(refresh=refresh, compare=compare))
+    if res is not None:
+        req.send_json({"ok": True, "pbxdb": res})
+
+
+def route_vm_catalog(ctx, req):
+    req.send_json({"ok": True, "editor": vm_catalog.editor_model()})
+
+
+def route_vm_backup_json(ctx, req):
+    body = req.body() or {}
+    download = bool(body.get("download"))
+    res = _vm_guard(ctx, req, lambda vm: vm.backup_json(site=body.get("site")))
+    if res is None:
+        return
+    if download:
+        fw = (res.get("meta") or {}).get("firmware", "vm")
+        req.send_bytes(json.dumps(res, indent=2, default=str).encode("utf-8"),
+                       "application/json", filename="voicemail-backup.json")
+        return
+    req.send_json({"ok": True, "backup": res})
+
+
+def route_vm_reports_templates(ctx, req):
+    req.send_json({"ok": True, "templates": vm_reports.default_templates()})
+
+
+def route_vm_reports_run(ctx, req):
+    body = req.body() or {}
+    tid = body.get("template") or "directory"
+    res = _vm_guard(ctx, req, lambda vm: vm.run_report(
+        tid, first=body.get("first"), last=body.get("last")))
+    if res is not None:
+        req.send_json({"ok": True, "report": res})
+
+
+def route_vm_trace(ctx, req):
+    text = _vm_guard(ctx, req, lambda vm: vm.trace_text())
+    if text is not None:
+        req.send_text(text, content_type="text/plain; charset=utf-8")
+
+
+def register_vm_routes(ctx: ServerContext) -> None:
+    """Voice Mail leg — read-only screens + plan-only save (DESIGN_PLAN §8)."""
+    r = ctx.router
+    r.post("/api/vm/ports", route_vm_ports)
+    r.post("/api/vm/connect", route_vm_connect)
+    r.post("/api/vm/disconnect", route_vm_disconnect)
+    r.get("/api/vm/status", route_vm_status)
+    r.get("/api/vm/catalog", route_vm_catalog)
+    r.get("/api/vm/boxes", route_vm_boxes)
+    r.get("/api/vm/boxes/{id}", route_vm_box)
+    r.post("/api/vm/boxes/{id}/save", route_vm_box_save)
+    r.get("/api/vm/sysparams", route_vm_sysparams)
+    r.get("/api/vm/pbxdb", route_vm_pbxdb)
+    r.post("/api/vm/backup/json", route_vm_backup_json)
+    r.get("/api/vm/reports/templates", route_vm_reports_templates)
+    r.post("/api/vm/reports/run", route_vm_reports_run)
+    r.get("/api/vm/trace", route_vm_trace)
+
+
 def register_browse_routes(ctx: ServerContext) -> None:
     """P1 browse routes: snapshot-on-connect, session working copy, cold start."""
     r = ctx.router
@@ -8886,6 +11153,7 @@ def make_context(*, token=None, appdirs=None) -> ServerContext:
     ctx = ServerContext(token=token, appdirs=appdirs)
     register_core_routes(ctx)
     register_browse_routes(ctx)
+    register_vm_routes(ctx)
     register_legacy_routes(ctx)
     return ctx
 

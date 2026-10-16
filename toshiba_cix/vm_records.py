@@ -24,7 +24,7 @@ no customer bytes.
 
 from __future__ import annotations
 
-import datetime
+from datetime import datetime
 import re
 import struct
 from dataclasses import dataclass, field
@@ -67,8 +67,8 @@ class Mailbox:
     extension: str = ""
     comment: str = ""
     security_code: str = ""
-    created: Optional[datetime.datetime] = None
-    modified: Optional[datetime.datetime] = None
+    created: Optional[datetime] = None
+    modified: Optional[datetime] = None
     raw_props: bytes = b""
     raw_ua: bytes = b""
     unproven: List[str] = field(default_factory=list)
@@ -89,12 +89,12 @@ class Mailbox:
         }
 
 
-def _unix_le(b: bytes, off: int) -> Optional[datetime.datetime]:
+def _unix_le(b: bytes, off: int) -> Optional[datetime]:
     if off + 4 > len(b):
         return None
     v = struct.unpack_from("<I", b, off)[0]
     if 946684800 <= v <= 2524608000:  # 2000..2050 sanity window
-        return datetime.datetime.utcfromtimestamp(v)
+        return datetime.utcfromtimestamp(v)
     return None
 
 
@@ -136,9 +136,9 @@ def extract_security_code(ua_segment: bytes) -> str:
     return m.group(1).decode() if m else ""
 
 
-def _ua_timestamps(ua_segment: bytes) -> List[datetime.datetime]:
+def _ua_timestamps(ua_segment: bytes) -> List[datetime]:
     """The LE32 unix timestamps that trail the security code (created/modified)."""
-    out: List[datetime.datetime] = []
+    out: List[datetime] = []
     m = re.search(rb"\xff(\d{3,16})\x00", ua_segment)
     start = m.end() if m else 0
     off = start
