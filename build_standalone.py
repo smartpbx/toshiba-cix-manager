@@ -66,11 +66,26 @@ def _embedded_html() -> str:
             "  # bundled UI")
 
 
-def _embedded_catalog() -> str:
-    with open(os.path.join(PKG, "data", "emanager_catalog.json"), "rb") as fh:
+def _embedded_data(filename: str, global_name: str, note: str) -> str:
+    with open(os.path.join(PKG, "data", filename), "rb") as fh:
         b64 = base64.b64encode(fh.read()).decode("ascii")
-    return (f'EMBEDDED_CATALOG_JSON = base64.b64decode("{b64}").decode("utf-8")'
-            "  # bundled eManager catalog")
+    return (f'{global_name} = base64.b64decode("{b64}").decode("utf-8")'
+            f"  # {note}")
+
+
+def _embedded_catalog() -> str:
+    return _embedded_data("emanager_catalog.json", "EMBEDDED_CATALOG_JSON",
+                          "bundled eManager catalog")
+
+
+def _embedded_enum_labels() -> str:
+    return _embedded_data("enum_labels.json", "EMBEDDED_ENUM_LABELS_JSON",
+                          "bundled enum value labels")
+
+
+def _embedded_program_menus() -> str:
+    return _embedded_data("program_menus.json", "EMBEDDED_PROGRAM_MENUS_JSON",
+                          "bundled eManager menu-area map")
 
 
 def build(order, out_name, *, title, with_web, tail):
@@ -85,9 +100,11 @@ def build(order, out_name, *, title, with_web, tail):
         aliases["discover.py"] = ["DISC = sys.modules[__name__]  # 'discover as DISC' alias"]
         # Preserve the reader CLI main() before webapp.py redefines `main`.
         aliases["cli.py"] = ["reader_cli_main = main  # reader CLI entry (webapp redefines main)"]
-        # Embed the vendored eManager catalog so the single-file build is
-        # self-contained (catalog.load_catalog_text() reads this global first).
-        aliases["catalog.py"] = [_embedded_catalog()]
+        # Embed the vendored eManager catalog + enum labels + menu map so the
+        # single-file build is self-contained (catalog.py reads these globals
+        # first, before any bundled-file lookup).
+        aliases["catalog.py"] = [_embedded_catalog(), _embedded_enum_labels(),
+                                 _embedded_program_menus()]
         aliases["webapp.py"] = [_embedded_html()]
 
     parts = [
@@ -143,7 +160,7 @@ def main() -> None:
     )
     build(
         ["snmp.py", "decode.py", "scan.py", "catalog.py", "write.py",
-         "backup.py", "diff.py", "restore.py", "discover.py",
+         "backup.py", "enrich.py", "diff.py", "restore.py", "discover.py",
          "report.py", "cli.py", "update.py", "webapp.py"],
         "toshiba_cix_manager.py",
         title="Toshiba CIX Manager — standalone web app (generated).",

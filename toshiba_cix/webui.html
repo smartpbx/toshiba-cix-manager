@@ -63,7 +63,8 @@
   table{width:100%;border-collapse:collapse;font-size:13px}
   th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
   th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;
-     position:sticky;top:54px;background:var(--panel);cursor:pointer;user-select:none}
+     position:sticky;top:54px;z-index:3;background:var(--panel);cursor:pointer;user-select:none;
+     box-shadow:inset 0 -1px 0 var(--line)}
   tbody tr:hover{background:var(--panel2)}
   tr.clickable{cursor:pointer}
   .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
@@ -129,6 +130,11 @@
       <div><label>Scope</label>
         <select id="scope">
           <option value="core">core &mdash; fast (stations, system, network)</option>
+          <option value="trunks">trunks &mdash; incoming lines, CO trunks &amp; DID</option>
+          <option value="groups">groups &mdash; hunt, pilot &amp; call groups</option>
+          <option value="voicemail">voicemail &mdash; VM data &amp; VMID ports</option>
+          <option value="licensing">licensing &mdash; entitlements</option>
+          <option value="features">features &mdash; all feature areas</option>
           <option value="all">all &mdash; full backup (slow, whole MIB)</option>
         </select>
       </div>
@@ -184,7 +190,7 @@
       <div class="tab" data-view="equipment">Equipment <span class="count" id="cEquip"></span></div>
       <div class="tab" data-view="system">System</div>
       <div class="tab" data-view="network">Network / FTP</div>
-      <div class="tab" data-view="raw">Raw programs <span class="count" id="cRaw"></span></div>
+      <div class="tab" data-view="raw">Programs <span class="count" id="cRaw"></span></div>
       <div class="tab" data-view="export">Export</div>
     </div>
 
@@ -346,9 +352,11 @@ function renderAll(fromFile){
             (fromFile?" &middot; <span class='muted'>from file</span>":""));
   $("#cStations").textContent = (DOC.stations||[]).length;
   $("#cEquip").textContent = (DOC.equipment||[]).length;
-  $("#cRaw").textContent = Object.keys(DOC.raw_programs||{}).length;
+  const pv = DOC.program_views;
+  $("#cRaw").textContent = (pv && pv.programs) ? pv.programs.length
+                                              : Object.keys(DOC.raw_programs||{}).length;
   renderOverview(); renderStations(); renderEquipment(); renderSystem();
-  renderNetwork(); renderRaw(); renderExport(fromFile);
+  renderNetwork(); renderPrograms(); renderExport(fromFile);
   window.scrollTo(0,0);
 }
 
@@ -457,7 +465,59 @@ function renderNetwork(){
   $("#view-network").innerHTML = html;
 }
 
-function renderRaw(){
+/* Programs tab: catalog-named, menu-grouped (from DOC.program_views).
+   Falls back to the legacy raw passthrough for backups made before naming. */
+function renderPrograms(){
+  const pv = DOC.program_views;
+  if(!pv || !(pv.programs||[]).length) return renderRawLegacy();
+  const progByKey = {}; pv.programs.forEach(p=> progByKey[p.catalog_key]=p);
+  const s = pv.stats||{};
+  let html = "<div class='card'><h2>Programs by eManager menu area</h2>";
+  html += "<p class='muted'>Every cataloged field is named from the reverse-engineered model &mdash; "+
+    (s.programs||0)+" programs, "+(s.rows||0)+" rows, "+(s.named_cells||0)+" named fields"+
+    (s.uncataloged?(", "+s.uncataloged+" uncataloged OID(s)"):"")+".</p>";
+  const feats = (pv.feature_views||[]).filter(f=>f.present);
+  if(feats.length) html += "<p>"+feats.map(f=>"<span class='chip'>"+esc(f.title)+"</span>").join("")+"</p>";
+  (pv.menu_areas||[]).forEach(area=>{
+    html += "<h3 style='margin:16px 0 6px;color:var(--fg)'>"+esc(area.area)+
+      " <span class='muted' style='font-weight:400;font-size:12px'>("+area.programs.length+
+      " programs, "+area.row_count+" rows)</span></h3>";
+    area.programs.forEach(key=>{
+      const p = progByKey[key]; if(!p) return;
+      html += "<details><summary>"+esc(p.label||p.program_name||p.catalog_key)+
+        " <span class='muted' style='font-weight:400'>&mdash; "+esc(p.menu_path||p.catalog_key)+
+        " ("+p.row_count+" row(s))</span></summary>";
+      html += "<div style='overflow:auto'><table><thead><tr><th>Row</th><th>Field</th>"+
+        "<th>Value</th><th>OID</th></tr></thead><tbody>";
+      (p.rows||[]).forEach(r=>{
+        (r.cells||[]).forEach(c=>{
+          let disp;
+          if(c.is_enum && c.display_value && String(c.display_value)!==String(c.raw_value))
+            disp = esc(c.display_value)+" <span class='muted'>("+esc(c.raw_value)+")</span>";
+          else disp = esc(c.display_value!==""&&c.display_value!=null ? c.display_value : val(c.raw_value));
+          html += "<tr><td class='mono'>"+esc(r.key||r.index)+"</td>"+
+            "<td>"+esc(c.field_name)+(c.is_secret?" <span class='chip'>secret</span>":"")+"</td>"+
+            "<td class='mono'>"+disp+"</td><td class='mono muted'>"+esc(c.oid)+"</td></tr>";
+        });
+      });
+      html += "</tbody></table></div></details>";
+    });
+  });
+  const un = pv.uncataloged||[];
+  if(un.length){
+    html += "<h3 style='margin:16px 0 6px;color:var(--fg)'>Uncataloged OIDs "+
+      "<span class='muted' style='font-weight:400;font-size:12px'>("+un.length+")</span></h3>";
+    html += "<p class='muted'>Genuinely outside the catalog &mdash; the only values still shown as a bare OID.</p>";
+    html += "<table><thead><tr><th>OID</th><th>Value</th></tr></thead><tbody>";
+    un.forEach(e=> html += "<tr><td class='mono muted'>"+esc(e.oid)+"</td><td class='mono'>"+
+      esc(val(e.raw_value!=null?e.raw_value:e.value))+"</td></tr>");
+    html += "</tbody></table>";
+  }
+  html += "</div>";
+  $("#view-raw").innerHTML = html;
+}
+
+function renderRawLegacy(){
   const raw = DOC.raw_programs||{};
   const keys = Object.keys(raw).sort((a,b)=>(parseInt(a,10)||0)-(parseInt(b,10)||0));
   let html = "<div class='card'><h2>Undocumented programs (raw passthrough)</h2>";
