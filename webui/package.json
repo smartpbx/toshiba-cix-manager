@@ -10,7 +10,8 @@
     "build:only": "vite build && node scripts/finalize.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "check:webui": "node scripts/check-webui-fresh.mjs"
+    "check:webui": "node scripts/check-webui-fresh.mjs",
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.6",
@@ -37,6 +38,7 @@
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "playwright": "^1.64.1",
     "postcss": "^8.5.1",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
