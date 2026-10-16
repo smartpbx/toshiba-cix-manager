@@ -45,6 +45,7 @@ from .backup import backup, render_backup_text
 from .catalog import load_catalog
 from .diff import diff_backups, render_diff_text
 from .enrich import program_views_from_backup
+from .programs import empty_program_view, get_row, list_rows
 from .report import render as render_report
 from .restore import restore
 from .scan import CIXReader
@@ -52,6 +53,8 @@ from .server.app import ServerContext, register_core_routes, run_server
 from .server.auth import generate_token
 from .server.http import build_handler
 from .server.schema import schema_summary
+from .sites import slugify_id
+from .snapshot import read_snapshot
 from .snmp import SnmpError, SnmpV1
 from .update import apply_update, check_for_update, finalize_pending_update, plan_update
 from .write import WRITES_ENABLED, CIXWriter, WriteError
@@ -402,8 +405,215 @@ def route_update_apply(ctx, req):
 
 
 # --------------------------------------------------------------------------
+# P1 browse: session working copy + snapshot-on-connect + per-program reads
+# --------------------------------------------------------------------------
+def route_snapshot_start(ctx, req):
+    """POST /api/snapshot — connect a CIX and start the core→all snapshot job.
+
+    Creates a session, attaches the live (read-only) SNMP client, and submits a
+    background job that reads core programs first (stations/trunks open fast)
+    then the rest, populating the session working copy as each phase lands and
+    saving the finished snapshot for cold start. Returns the session + job ids;
+    progress streams on SSE ``/api/events`` (``job.progress`` / ``session.*``).
+    """
+    params = req.body()
+    try:
+        reader = _reader(params, keep_raw_walk=False)
+    except ValueError as exc:
+        req.send_json({"ok": False, "error": str(exc)}, 400)
+        return
+    try:
+        cat = load_catalog()
+    except Exception as exc:  # noqa: BLE001
+        req.send_json({"ok": False, "error": f"catalog unavailable: {exc}"}, 500)
+        return
+
+    client = reader.client
+    site = params.get("site")
+    site_id = params.get("site_id") or slugify_id(site or getattr(client, "host", "cix"))
+    transport = "overlay" if params.get("reach") == "remote" else "direct"
+    session = ctx.sessions.create(site=site,
+                                  device={"ip": getattr(client, "host", None)},
+                                  transport=transport)
+    session.attach_client(client)
+
+    def job(report):
+        def on_phase(views, phase):
+            session.ingest_views(views)
+            ctx.bus.publish("session.programs",
+                            {"session": session.id, "phase": phase,
+                             "read": len(session.doc)})
+
+        snap = read_snapshot(client, cat, report=report, on_phase=on_phase,
+                             site=site, width=reader.width)
+        ident = snap["identity"]
+        session.set_identity({"software_id": ident.get("swid"),
+                              "chassis_mac": ident.get("chassis_mac")})
+        session.snapshot_meta = snap["meta"]
+        header = None
+        try:
+            header = ctx.snapshots().save(site_id, snap["program_views"],
+                                          identity=ident, meta=snap["meta"],
+                                          kind="snapshot")
+        except Exception as exc:  # noqa: BLE001 — a save failure must not fail the read
+            log.warning("snapshot save failed: %s", exc)
+        return {"session": session.id, "site_id": site_id, "saved": header,
+                "identity": ident, "meta": snap["meta"],
+                "stats": snap["program_views"].get("stats")}
+
+    j = ctx.jobs.submit("snapshot", job)
+    session.jobs.append(j.id)
+    req.send_json({"ok": True, "session": session.id, "site_id": site_id,
+                   "job": j.id})
+
+
+def _session_or_404(ctx, req):
+    s = ctx.sessions.get(req.params["id"])
+    if s is None:
+        req.send_json({"ok": False, "error": "no such session"}, 404)
+    return s
+
+
+def route_session_get(ctx, req):
+    s = _session_or_404(ctx, req)
+    if s is not None:
+        req.send_json({"ok": True, "session": s.as_dict()})
+
+
+def route_session_snapshot(ctx, req):
+    """GET /api/sessions/{id}/snapshot — the working-copy program index.
+
+    A light view the nav uses to grey unread programs and show row counts: the
+    identity, the snapshot meta, and one line per program that returned data.
+    """
+    s = _session_or_404(ctx, req)
+    if s is None:
+        return
+    programs = [{"catalog_key": pv.get("catalog_key"),
+                 "program_number": pv.get("program_number"),
+                 "menu_area": pv.get("menu_area"),
+                 "row_count": pv.get("row_count", 0)}
+                for pv in s.doc.values()]
+    req.send_json({"ok": True, "identity": s.identity,
+                   "meta": s.snapshot_meta, "read_keys": s.read_keys(),
+                   "programs": programs})
+
+
+def _resolve_prog_or_404(ctx, req, cat):
+    prog = cat.program(req.params["key"])
+    if prog is None:
+        req.send_json({"ok": False,
+                       "error": "unknown program %r" % req.params["key"]}, 404)
+    return prog
+
+
+def route_session_program(ctx, req):
+    """GET /api/sessions/{id}/program/{key} — one program's rows.
+
+    From the working copy by default; ``?refresh=1`` does a live scoped read of
+    just this program (read-only) and updates the working copy. An unread
+    program returns its shaped empty view so the page says "no rows", never 404.
+    """
+    s = _session_or_404(ctx, req)
+    if s is None:
+        return
+    try:
+        cat = load_catalog()
+    except Exception as exc:  # noqa: BLE001
+        req.send_json({"ok": False, "error": f"catalog unavailable: {exc}"}, 500)
+        return
+    prog = _resolve_prog_or_404(ctx, req, cat)
+    if prog is None:
+        return
+    if req.query.get("refresh") and s.client is not None:
+        try:
+            view, error = list_rows(s.client, cat, prog, width=10)
+        except Exception as exc:  # noqa: BLE001 — SnmpError or transport
+            req.send_json({"ok": False, "error": str(exc)})
+            return
+        s.put_program_view(view)
+        req.send_json({"ok": True, "program": view, "source": "live",
+                       "error": error})
+        return
+    view = s.program_view(prog.key)
+    if view is None:
+        req.send_json({"ok": True, "program": empty_program_view(cat, prog.key),
+                       "source": "unread"})
+        return
+    req.send_json({"ok": True, "program": view, "source": "snapshot"})
+
+
+def route_session_program_row(ctx, req):
+    """GET /api/sessions/{id}/program/{key}/{index} — one row (record pane).
+
+    From the working copy by default; ``?refresh=1`` does a targeted live GET of
+    just that instance (the record pane's ⟳ re-read)."""
+    s = _session_or_404(ctx, req)
+    if s is None:
+        return
+    try:
+        cat = load_catalog()
+    except Exception as exc:  # noqa: BLE001
+        req.send_json({"ok": False, "error": f"catalog unavailable: {exc}"}, 500)
+        return
+    prog = _resolve_prog_or_404(ctx, req, cat)
+    if prog is None:
+        return
+    index = req.params["index"]
+    if req.query.get("refresh") and s.client is not None:
+        try:
+            row, error = get_row(s.client, cat, prog, index)
+        except Exception as exc:  # noqa: BLE001 — SnmpError or transport
+            req.send_json({"ok": False, "error": str(exc)})
+            return
+        req.send_json({"ok": row is not None, "row": row, "source": "live",
+                       "error": error})
+        return
+    view = s.program_view(prog.key)
+    row = None
+    if view is not None:
+        row = next((r for r in view["rows"] if r["index"] == index), None)
+    req.send_json({"ok": row is not None, "row": row, "source": "snapshot"})
+
+
+# --------------------------------------------------------------------------
+# cold start: snapshots on disk (browse with the device off)
+# --------------------------------------------------------------------------
+def route_site_snapshots(ctx, req):
+    """GET /api/sites/{id}/snapshots — saved-snapshot headers, newest first."""
+    req.send_json({"ok": True,
+                   "snapshots": ctx.snapshots().list(req.params["id"])})
+
+
+def route_site_snapshot_latest(ctx, req):
+    """GET /api/sites/{id}/snapshots/latest — the full last snapshot (cold start)."""
+    snap = ctx.snapshots().latest(req.params["id"])
+    req.send_json({"ok": snap is not None, "snapshot": snap})
+
+
+def route_site_snapshot_get(ctx, req):
+    """GET /api/sites/{id}/snapshots/{sid} — one full saved snapshot."""
+    snap = ctx.snapshots().get(req.params["id"], req.params["sid"])
+    req.send_json({"ok": snap is not None, "snapshot": snap},
+                  200 if snap is not None else 404)
+
+
+# --------------------------------------------------------------------------
 # wiring
 # --------------------------------------------------------------------------
+def register_browse_routes(ctx: ServerContext) -> None:
+    """P1 browse routes: snapshot-on-connect, session working copy, cold start."""
+    r = ctx.router
+    r.post("/api/snapshot", route_snapshot_start)
+    r.get("/api/sessions/{id}", route_session_get)
+    r.get("/api/sessions/{id}/snapshot", route_session_snapshot)
+    r.get("/api/sessions/{id}/program/{key}", route_session_program)
+    r.get("/api/sessions/{id}/program/{key}/{index}", route_session_program_row)
+    r.get("/api/sites/{id}/snapshots", route_site_snapshots)
+    r.get("/api/sites/{id}/snapshots/latest", route_site_snapshot_latest)
+    r.get("/api/sites/{id}/snapshots/{sid}", route_site_snapshot_get)
+
+
 def register_legacy_routes(ctx: ServerContext) -> None:
     """Register the static UI + legacy JSON routes (kept semantics) onto ``ctx``."""
     r = ctx.router
@@ -425,9 +635,10 @@ def register_legacy_routes(ctx: ServerContext) -> None:
 
 
 def make_context(*, token=None, appdirs=None) -> ServerContext:
-    """A context with the core P0 routes + the legacy routes registered."""
+    """A context with the core P0 routes + the browse + legacy routes registered."""
     ctx = ServerContext(token=token, appdirs=appdirs)
     register_core_routes(ctx)
+    register_browse_routes(ctx)
     register_legacy_routes(ctx)
     return ctx
 

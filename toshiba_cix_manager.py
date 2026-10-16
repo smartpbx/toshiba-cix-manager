@@ -4400,6 +4400,460 @@ def relaunch(argv=None):  # pragma: no cover  — replaces the process image
     argv = argv or [sys.executable] + sys.argv[1:]
     os.execv(argv[0], argv)
 
+# ===== programs.py =================================================
+"""Generic single-program read: the engine half of the P1 browse app.
+
+eManager had 208 hand-written pages. Switchroom renders all 186 programs from
+one data file (``data/ui_schema.json``) and reads each one through the same two
+functions here, so a new program is a catalog entry, never code (DESIGN_PLAN
+3.3, 10.2):
+
+* :func:`list_rows` — read **one** program's table over SNMP (read-only
+  GETNEXT) and return it as a single ``<program_view>`` — the exact per-program
+  shape :mod:`toshiba_cix.enrich` emits for a full backup, so the grid renderer
+  is identical whether a program arrives from a snapshot or a scoped re-read.
+* :func:`get_row` — read **one** row (one instance) of a program with a
+  targeted GET of just that row's field OIDs (the record pane's ``⟳`` re-read),
+  cheap even on a 1,000-station 200.
+
+Both are I/O-injected (``client`` is any object with ``get`` / ``bulk_walk``)
+and lean on the pure assembly in :func:`toshiba_cix.enrich.build_program_views`,
+so the whole module is unit-tested offline against a fake client. Nothing here
+writes — the two-phase plan→apply write path (``plan_row_update``) lands in P2.
+
+A ``<program_view>`` always carries its catalog metadata (``program_number``,
+``program_name``, ``menu_area``, ``menu_path``, ``label``) and never a bare OID
+for a cataloged field; a program that returned no rows comes back as an empty
+view (``row_count == 0``) rather than disappearing, so the UI can say "no rows
+in this snapshot" instead of greying the page.
+"""
+
+
+
+__all__ = [
+    "resolve_program",
+    "empty_program_view",
+    "build_program_view",
+    "list_rows",
+    "get_row",
+]
+
+
+def resolve_program(catalog: Catalog, prog):
+    """The catalog :class:`Program` for a key / number / name, or ``None``.
+
+    ``prog`` may already be a resolved program (it is returned unchanged) or any
+    identifier :meth:`Catalog.program` accepts (``"200StationAssign"``, ``"200"``,
+    ``"StationAssign"``).
+    """
+    if prog is None:
+        return None
+    if hasattr(prog, "key") and hasattr(prog, "fields"):
+        return prog
+    return catalog.program(prog)
+
+
+def empty_program_view(catalog: Catalog, prog_key: str) -> dict:
+    """The ``<program_view>`` for a program that returned no cells.
+
+    Same keys a populated view has (so the renderer needs no special case), with
+    ``row_count == 0`` and ``rows == []``. Raises ``KeyError`` if the key is not
+    in the catalog — callers resolve the program first.
+    """
+    prog = catalog.programs[prog_key]
+    info = catalog.menu_info(prog_key)
+    return {
+        "catalog_key": prog_key,
+        "program_number": prog.number,
+        "program_name": prog.name,
+        "menu_area": info["area"],
+        "menu_path": info["menu_path"],
+        "label": info["label"],
+        "group_oid": prog.group_oid,
+        "row_count": 0,
+        "rows": [],
+    }
+
+
+def build_program_view(catalog: Catalog, pairs, prog_key: str) -> dict:
+    """Assemble the single ``<program_view>`` for ``prog_key`` from ``pairs``. Pure.
+
+    Reuses :func:`toshiba_cix.enrich.build_program_views` (so labels, enum
+    captions, columns and the five required cell keys are identical to a full
+    read) and extracts the one program. If that program contributed no cells —
+    an empty table, or ``pairs`` that attributed elsewhere — an empty view is
+    synthesised so the program never silently vanishes.
+    """
+    views = build_program_views(pairs, catalog)
+    for pv in views["programs"]:
+        if pv["catalog_key"] == prog_key:
+            return pv
+    return empty_program_view(catalog, prog_key)
+
+
+def list_rows(client, catalog: Catalog, prog, *, width: int = 10,
+              max_total: int = 500000):
+    """Read one program's table over SNMP. Returns ``(program_view, error)``.
+
+    Read-only (GETNEXT only, via :func:`toshiba_cix.backup.collect`). A transport
+    failure degrades to whatever was collected plus an ``error`` string rather
+    than losing a partial read — the same contract the full backup uses. Raises
+    ``ValueError`` if ``prog`` is not a program this catalog knows.
+    """
+    catalog = catalog or load_catalog()
+    program = resolve_program(catalog, prog)
+    if program is None:
+        raise ValueError("unknown program %r" % (prog,))
+    pairs, error = collect(client, catalog, programs=[program.key],
+                           width=width, max_total=max_total)
+    return build_program_view(catalog, pairs, program.key), error
+
+
+def _usable(value) -> bool:
+    """A GET var-bind worth keeping: a present value, not a missing sentinel."""
+    if value is None:
+        return False
+    if getattr(value, "is_missing", False):
+        return False
+    if getattr(value, "kind", None) in ("endofmib", "nosuchobject",
+                                        "nosuchinstance"):
+        return False
+    return True
+
+
+def get_row(client, catalog: Catalog, prog, index, *, as_view: bool = False):
+    """Read one row (one instance) of a program with a targeted GET.
+
+    ``index`` is the instance tail exactly as a row carries it (``"2"``,
+    ``"1.3.50.48.48"``, or ``"0"`` / ``""`` for a scalar Form program). Every
+    field's instance OID is built with :meth:`Catalog.instance_oid` and GET in
+    one request, so this is cheap even on a program with a thousand rows.
+
+    Returns ``(row, error)`` where ``row`` is the ``<row>`` dict
+    (``{"index", "key", "cells"}``) or ``None`` when that instance holds no
+    value (every field missing → the row does not exist). With ``as_view=True``
+    the single-row ``<program_view>`` is returned in place of the bare row, for
+    callers that want the program metadata alongside it.
+    """
+    catalog = catalog or load_catalog()
+    program = resolve_program(catalog, prog)
+    if program is None:
+        raise ValueError("unknown program %r" % (prog,))
+
+    oids = [catalog.instance_oid(fld, index)
+            for fld in program.fields if fld.get("oid")]
+    error = None
+    pairs = []
+    if oids:
+        try:
+            vbs = client.get(oids)
+        except Exception as exc:  # noqa: BLE001 — SnmpError or transport; degrade
+            error = str(exc)
+            vbs = []
+        pairs = [(vb.oid, vb.value) for vb in vbs if _usable(vb.value)]
+
+    view = build_program_view(catalog, pairs, program.key)
+    if as_view:
+        return view, error
+    want = str(index) if index is not None else "0"
+    for row in view["rows"]:
+        if row["index"] == want or (want in ("", "0") and row["index"] in ("", "0")):
+            return row, error
+    # A single scoped GET attributes to exactly one instance; if any cell
+    # survived it is this row regardless of how the tail normalised.
+    if view["rows"]:
+        return view["rows"][0], error
+    return None, error
+
+# ===== snapshot.py =================================================
+"""Snapshot-on-connect: read a CIX core-first, then the rest, with progress.
+
+DESIGN_PLAN 5.1/11-P1: Connect starts a snapshot job that reads ``core`` first
+— identity and the station/trunk programs a tech almost always wants — so the
+Stations page opens in seconds, then walks the rest to a complete ``all``
+snapshot saved automatically as *Snapshot on connect*. The two phases are what
+make a remote site feel like a direct one.
+
+:func:`read_snapshot` is that job's engine: pure orchestration over the already
+tested read path (``backup.collect`` + ``enrich.build_program_views``), I/O
+only through the injected ``client``. It reports progress through a
+``report(done, total, message)`` callback (wired to the server's SSE
+``job.progress`` channel) and hands each phase's :func:`enrich` views to an
+``on_phase(views, phase)`` callback so the caller can populate a session working
+copy incrementally — the core programs become browsable before the full walk
+finishes. The return value is a cold-start-ready snapshot dict
+(``identity`` + ``meta`` + the full ``program_views`` contract).
+
+Read-only: every pass is GETNEXT. A transport failure on either phase degrades
+to a partial snapshot plus a ``walk_error`` in ``meta`` rather than losing the
+whole read.
+"""
+
+
+from datetime import datetime, timezone
+
+
+# The core-first read: identity + stations (200/204/205/208/214/216) and the
+# trunk block (300-329). These are the programs behind most site visits, so the
+# Stations and Trunk pages open before the full walk completes (DESIGN_PLAN 5.1).
+CORE_PROGRAM_NUMBERS = (
+    "200", "201", "203", "204", "205", "206", "207", "208", "214", "216", "260",
+    "103", "104", "105",
+    "300", "301", "302", "303", "304", "305", "306", "307", "308", "309",
+    "310", "311", "312", "313",
+)
+
+
+def core_program_keys(catalog: Catalog) -> list:
+    """Catalog keys for the core-first read, in catalog order, de-duplicated."""
+    out = []
+    seen = set()
+    for num in CORE_PROGRAM_NUMBERS:
+        prog = catalog.program(num)
+        if prog and prog.key not in seen:
+            seen.add(prog.key)
+            out.append(prog.key)
+    return out
+
+
+def read_snapshot(client, catalog: Catalog = None, *, report=None,
+                  on_phase=None, site=None, width: int = 10,
+                  max_total: int = 500000) -> dict:
+    """Read a CIX core-first then whole; return a cold-start snapshot dict.
+
+    ``report(done, total, message)`` drives the UI progress bar; ``on_phase(
+    program_views, phase)`` (``phase`` ∈ ``{"core", "all"}``) lets the caller
+    ingest each phase's views into a working copy as they land. Both optional.
+    """
+    catalog = catalog or load_catalog()
+    all_keys = [p.key for p in catalog.programs.values()]
+    total = len(all_keys)
+
+    def _report(done, message):
+        if report:
+            report(done, total, message)
+
+    identity = read_identity(client)
+    _report(0, "Reading core programs (stations, trunks)…")
+
+    core_keys = core_program_keys(catalog)
+    core_pairs, core_err = collect(client, catalog, programs=core_keys,
+                                   width=width, max_total=max_total)
+    if on_phase:
+        on_phase(build_program_views(core_pairs, catalog), "core")
+    _report(len(core_keys),
+             "Core ready — stations & trunks open. Reading the rest…")
+
+    rest_keys = [k for k in all_keys if k not in set(core_keys)]
+    rest_pairs, rest_err = collect(client, catalog, programs=rest_keys,
+                                   width=width, max_total=max_total)
+
+    views = build_program_views(core_pairs + rest_pairs, catalog)
+    if on_phase:
+        on_phase(views, "all")
+    _report(total, "Snapshot complete.")
+
+    walk_error = core_err or rest_err
+    meta = {
+        "read_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "catalog_version": catalog.version,
+        "tool_version": __version__,
+        "source_ip": getattr(client, "host", None),
+        "site": site,
+        "scope": "all",
+        "oids_read": len(core_pairs) + len(rest_pairs),
+        "walk_error": walk_error,
+    }
+    return {"identity": identity, "meta": meta, "program_views": views}
+
+
+__all__ = ["CORE_PROGRAM_NUMBERS", "core_program_keys", "read_snapshot"]
+
+# ===== store.py ====================================================
+"""On-disk snapshot store — the local cache that makes browsing feel instant.
+
+DESIGN_PLAN 2.1/5.1/11-P1: browsing reads the *local snapshot*, only Refresh /
+Backup / Apply touch the device, and the app cold-starts from the last snapshot
+in under a second (look up a DN in the parking lot with the laptop barely on).
+This module is that cache: one JSON file per saved snapshot under the per-site
+folder, with a tiny header so listing never parses the big ``program_views``
+payload.
+
+Layout under ``<store root>``::
+
+    snapshots/<site id>/<sid>.json        one snapshot (header + program_views)
+
+A snapshot file is ``{"sid", "site_id", "saved_at", "label", "pinned",
+"kind", "identity", "meta", "program_views"}``. ``program_views`` is the exact
+enrich.py contract the UI renders, so a cold-start load and a live read render
+through the same code path (DESIGN_PLAN rule 6, "same screens live or from a
+file").
+
+Pure disk I/O against an injected root dir (like appdirs / sites / journal), so
+it is unit-tested against a temp directory with no real profile touched. Writes
+are atomic (temp file + ``os.replace``) so a crash mid-save never corrupts a
+prior snapshot.
+"""
+
+
+import json
+import os
+import re
+import tempfile
+import uuid
+from datetime import datetime, timezone
+
+_SAFE = re.compile(r"[^A-Za-z0-9._-]+")
+_HEADER_KEYS = ("sid", "site_id", "saved_at", "label", "pinned", "kind",
+                "identity", "counts")
+
+
+def _safe(part: str) -> str:
+    """A filesystem-safe slug for a site id / sid (never empty, never a path)."""
+    slug = _SAFE.sub("-", str(part or "").strip()).strip("-.")
+    return slug or "unnamed"
+
+
+def _new_sid() -> str:
+    """A sortable, unique snapshot id: ``YYYYMMDD-HHMMSS-ffffff-<4 hex>``.
+
+    Microsecond precision plus a short random suffix so two saves in the same
+    instant never collide (overwrite) and the lexical order matches time order.
+    """
+    now = datetime.now(timezone.utc)
+    return now.strftime("%Y%m%d-%H%M%S-%f-") + uuid.uuid4().hex[:4]
+
+
+class SnapshotStore:
+    """Save / list / load snapshots under ``<root>/snapshots/<site>``."""
+
+    def __init__(self, root: str):
+        self.root = root
+
+    def _site_dir(self, site_id: str) -> str:
+        return os.path.join(self.root, "snapshots", _safe(site_id))
+
+    def _path(self, site_id: str, sid: str) -> str:
+        return os.path.join(self._site_dir(site_id), _safe(sid) + ".json")
+
+    # -- save --------------------------------------------------------------
+    def save(self, site_id: str, program_views: dict, *, identity=None,
+             meta=None, label=None, pinned: bool = False,
+             kind: str = "snapshot") -> dict:
+        """Write a snapshot and return its header. ``sid`` is generated.
+
+        ``program_views`` is the enrich.py contract dict; ``identity`` the live
+        device identity (swid / chassis mac); ``meta`` any extra provenance
+        (scope, walk_error, source ip). ``kind`` is ``"snapshot"`` (the default,
+        the auto *Snapshot on connect*) or ``"backup"`` (a named .cixbak-style
+        keep). Returns the header dict (no ``program_views``)."""
+        site_dir = self._site_dir(site_id)
+        os.makedirs(site_dir, exist_ok=True)
+        sid = _new_sid()
+        counts = (program_views or {}).get("stats", {})
+        doc = {
+            "sid": sid,
+            "site_id": site_id,
+            "saved_at": datetime.now(timezone.utc).isoformat(timespec="microseconds"),
+            "label": label,
+            "pinned": bool(pinned),
+            "kind": kind,
+            "identity": identity or {},
+            "meta": meta or {},
+            "counts": {k: counts.get(k) for k in ("programs", "rows", "cells")},
+            "program_views": program_views or {},
+        }
+        self._atomic_write(self._path(site_id, sid), doc)
+        return self._header(doc)
+
+    # -- list / load -------------------------------------------------------
+    def list(self, site_id: str) -> list:
+        """Headers for every saved snapshot, newest first (no payload read)."""
+        site_dir = self._site_dir(site_id)
+        if not os.path.isdir(site_dir):
+            return []
+        out = []
+        for name in os.listdir(site_dir):
+            if not name.endswith(".json"):
+                continue
+            doc = self._read(os.path.join(site_dir, name))
+            if doc:
+                out.append(self._header(doc))
+        out.sort(key=lambda h: (h.get("saved_at") or "", h.get("sid") or ""),
+                 reverse=True)
+        return out
+
+    def get(self, site_id: str, sid: str) -> dict:
+        """One full snapshot (header + ``program_views``), or ``None``."""
+        return self._read(self._path(site_id, sid))
+
+    def latest(self, site_id: str) -> dict:
+        """The most recent full snapshot for cold start, or ``None``."""
+        headers = self.list(site_id)
+        if not headers:
+            return None
+        return self.get(site_id, headers[0]["sid"])
+
+    # -- mutate header -----------------------------------------------------
+    def set_label(self, site_id: str, sid: str, label) -> dict:
+        return self._patch(site_id, sid, {"label": label})
+
+    def set_pinned(self, site_id: str, sid: str, pinned: bool) -> dict:
+        return self._patch(site_id, sid, {"pinned": bool(pinned)})
+
+    def delete(self, site_id: str, sid: str) -> bool:
+        path = self._path(site_id, sid)
+        try:
+            os.remove(path)
+            return True
+        except OSError:
+            return False
+
+    # -- internals ---------------------------------------------------------
+    def _patch(self, site_id: str, sid: str, changes: dict):
+        doc = self.get(site_id, sid)
+        if doc is None:
+            return None
+        doc.update(changes)
+        self._atomic_write(self._path(site_id, sid), doc)
+        return self._header(doc)
+
+    @staticmethod
+    def _header(doc: dict) -> dict:
+        return {k: doc.get(k) for k in _HEADER_KEYS}
+
+    @staticmethod
+    def _read(path: str):
+        try:
+            with open(path, encoding="utf-8") as fh:
+                return json.load(fh)
+        except (OSError, ValueError):
+            return None
+
+    @staticmethod
+    def _atomic_write(path: str, doc: dict) -> None:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path), suffix=".tmp")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                json.dump(doc, fh, default=str)
+            os.replace(tmp, path)
+        except BaseException:
+            try:
+                os.remove(tmp)
+            except OSError:
+                pass
+            raise
+
+
+def store_from_root(appdirs_or_root) -> SnapshotStore:
+    """Build a :class:`SnapshotStore` from an AppDirs or a plain root path."""
+    root = getattr(appdirs_or_root, "root", None) or appdirs_or_root
+    return SnapshotStore(root)
+
+
+__all__ = ["SnapshotStore", "store_from_root"]
+
 # ===== appdirs.py ==================================================
 """Per-OS store root for Switchroom — one name, ``<store root>``, everywhere.
 
@@ -5372,20 +5826,66 @@ class Session:
         self.device = device or {}
         self.transport = transport
         self.identity = None
-        self.doc = {}                 # working copy: program_key -> rows
-        self.freshness = {}           # program_key -> read timestamp
+        self.doc = {}                 # working copy: catalog_key -> program_view
+        self.freshness = {}           # catalog_key -> read timestamp
+        self.snapshot_meta = {}       # meta of the last read (scope, walk_error…)
         self.pending = []             # staged ops (a Changeset mirror)
         self.mode = MODE_DISARMED
         self.mode_expires = None
         self.jobs = []
         self.created = time.time()
         self._bus = bus
+        self._client = None           # runtime SNMP client (never serialised)
 
     # -- identity ----------------------------------------------------------
     def set_identity(self, identity) -> None:
         self.identity = identity
         self._publish("session.identity",
                       {"session": self.id, "identity": identity})
+
+    # -- runtime client (attached, not part of the data model) -------------
+    def attach_client(self, client) -> None:
+        """Hold the live SNMP client so a scoped re-read of one program works.
+
+        A :class:`Session` is a data object (DESIGN_PLAN says it is handed a
+        device descriptor, never a socket); the client is an attached runtime
+        resource, kept off ``as_dict`` so nothing serialises a socket.
+        """
+        self._client = client
+
+    @property
+    def client(self):
+        return self._client
+
+    # -- working copy ------------------------------------------------------
+    def ingest_views(self, program_views: dict) -> None:
+        """Merge an enrich.py ``program_views`` dict into the working copy.
+
+        Each ``<program_view>`` is stored under its ``catalog_key``; a later
+        phase (``core`` then ``all``) replaces the earlier entry so the full
+        walk supersedes the core one. Programs with data become browsable the
+        moment their phase lands, which is what lets Stations open early."""
+        now = time.time()
+        for pv in (program_views or {}).get("programs", []):
+            key = pv.get("catalog_key")
+            if not key:
+                continue
+            self.doc[key] = pv
+            self.freshness[key] = now
+
+    def put_program_view(self, pv: dict) -> None:
+        key = pv.get("catalog_key")
+        if key:
+            self.doc[key] = pv
+            self.freshness[key] = time.time()
+
+    def program_view(self, catalog_key: str):
+        """The working-copy view for a catalog key, or ``None`` if unread."""
+        return self.doc.get(catalog_key)
+
+    def read_keys(self) -> list:
+        """Catalog keys that returned data (what the nav shows as read)."""
+        return sorted(self.doc.keys())
 
     # -- mode --------------------------------------------------------------
     def set_mode(self, mode: str, *, minutes: int | None = None) -> dict:
@@ -5421,7 +5921,10 @@ class Session:
                 "identity": self.identity, "mode": self.mode_state()["mode"],
                 "mode_expires": self.mode_expires,
                 "pending": len(self.pending),
-                "programs_read": sorted(self.doc.keys()), "jobs": list(self.jobs)}
+                "snapshot_meta": self.snapshot_meta,
+                "programs_read": self.read_keys(),
+                "programs_read_count": len(self.doc),
+                "jobs": list(self.jobs)}
 
     def _publish(self, event, data):
         if self._bus is not None:
@@ -5445,6 +5948,13 @@ class SessionManager:
     def get(self, session_id: str) -> Session | None:
         with self._lock:
             return self._sessions.get(session_id)
+
+    def current(self) -> Session | None:
+        """The most recently created session (the single-browser daemon's one)."""
+        with self._lock:
+            if not self._sessions:
+                return None
+            return max(self._sessions.values(), key=lambda s: s.created)
 
     def list(self) -> list[dict]:
         with self._lock:
@@ -5767,6 +6277,7 @@ class ServerContext:
         self.appdirs = appdirs
         self._sitebook = None
         self._journal = None
+        self._snapshots = None
 
     # -- lazy store accessors (nothing is created until a route needs it) --
     def sitebook(self):
@@ -5783,6 +6294,13 @@ class ServerContext:
             root.ensure()
             self._journal = journal_from_root(root)
         return self._journal
+
+    def snapshots(self):
+        if self._snapshots is None:
+            root = self.appdirs or AppDirs(store_root())
+            root.ensure()
+            self._snapshots = SnapshotStore(root.root)
+        return self._snapshots
 
 
 # --------------------------------------------------------------------------
@@ -6379,8 +6897,215 @@ def route_update_apply(ctx, req):
 
 
 # --------------------------------------------------------------------------
+# P1 browse: session working copy + snapshot-on-connect + per-program reads
+# --------------------------------------------------------------------------
+def route_snapshot_start(ctx, req):
+    """POST /api/snapshot — connect a CIX and start the core→all snapshot job.
+
+    Creates a session, attaches the live (read-only) SNMP client, and submits a
+    background job that reads core programs first (stations/trunks open fast)
+    then the rest, populating the session working copy as each phase lands and
+    saving the finished snapshot for cold start. Returns the session + job ids;
+    progress streams on SSE ``/api/events`` (``job.progress`` / ``session.*``).
+    """
+    params = req.body()
+    try:
+        reader = _reader(params, keep_raw_walk=False)
+    except ValueError as exc:
+        req.send_json({"ok": False, "error": str(exc)}, 400)
+        return
+    try:
+        cat = load_catalog()
+    except Exception as exc:  # noqa: BLE001
+        req.send_json({"ok": False, "error": f"catalog unavailable: {exc}"}, 500)
+        return
+
+    client = reader.client
+    site = params.get("site")
+    site_id = params.get("site_id") or slugify_id(site or getattr(client, "host", "cix"))
+    transport = "overlay" if params.get("reach") == "remote" else "direct"
+    session = ctx.sessions.create(site=site,
+                                  device={"ip": getattr(client, "host", None)},
+                                  transport=transport)
+    session.attach_client(client)
+
+    def job(report):
+        def on_phase(views, phase):
+            session.ingest_views(views)
+            ctx.bus.publish("session.programs",
+                            {"session": session.id, "phase": phase,
+                             "read": len(session.doc)})
+
+        snap = read_snapshot(client, cat, report=report, on_phase=on_phase,
+                             site=site, width=reader.width)
+        ident = snap["identity"]
+        session.set_identity({"software_id": ident.get("swid"),
+                              "chassis_mac": ident.get("chassis_mac")})
+        session.snapshot_meta = snap["meta"]
+        header = None
+        try:
+            header = ctx.snapshots().save(site_id, snap["program_views"],
+                                          identity=ident, meta=snap["meta"],
+                                          kind="snapshot")
+        except Exception as exc:  # noqa: BLE001 — a save failure must not fail the read
+            log.warning("snapshot save failed: %s", exc)
+        return {"session": session.id, "site_id": site_id, "saved": header,
+                "identity": ident, "meta": snap["meta"],
+                "stats": snap["program_views"].get("stats")}
+
+    j = ctx.jobs.submit("snapshot", job)
+    session.jobs.append(j.id)
+    req.send_json({"ok": True, "session": session.id, "site_id": site_id,
+                   "job": j.id})
+
+
+def _session_or_404(ctx, req):
+    s = ctx.sessions.get(req.params["id"])
+    if s is None:
+        req.send_json({"ok": False, "error": "no such session"}, 404)
+    return s
+
+
+def route_session_get(ctx, req):
+    s = _session_or_404(ctx, req)
+    if s is not None:
+        req.send_json({"ok": True, "session": s.as_dict()})
+
+
+def route_session_snapshot(ctx, req):
+    """GET /api/sessions/{id}/snapshot — the working-copy program index.
+
+    A light view the nav uses to grey unread programs and show row counts: the
+    identity, the snapshot meta, and one line per program that returned data.
+    """
+    s = _session_or_404(ctx, req)
+    if s is None:
+        return
+    programs = [{"catalog_key": pv.get("catalog_key"),
+                 "program_number": pv.get("program_number"),
+                 "menu_area": pv.get("menu_area"),
+                 "row_count": pv.get("row_count", 0)}
+                for pv in s.doc.values()]
+    req.send_json({"ok": True, "identity": s.identity,
+                   "meta": s.snapshot_meta, "read_keys": s.read_keys(),
+                   "programs": programs})
+
+
+def _resolve_prog_or_404(ctx, req, cat):
+    prog = cat.program(req.params["key"])
+    if prog is None:
+        req.send_json({"ok": False,
+                       "error": "unknown program %r" % req.params["key"]}, 404)
+    return prog
+
+
+def route_session_program(ctx, req):
+    """GET /api/sessions/{id}/program/{key} — one program's rows.
+
+    From the working copy by default; ``?refresh=1`` does a live scoped read of
+    just this program (read-only) and updates the working copy. An unread
+    program returns its shaped empty view so the page says "no rows", never 404.
+    """
+    s = _session_or_404(ctx, req)
+    if s is None:
+        return
+    try:
+        cat = load_catalog()
+    except Exception as exc:  # noqa: BLE001
+        req.send_json({"ok": False, "error": f"catalog unavailable: {exc}"}, 500)
+        return
+    prog = _resolve_prog_or_404(ctx, req, cat)
+    if prog is None:
+        return
+    if req.query.get("refresh") and s.client is not None:
+        try:
+            view, error = list_rows(s.client, cat, prog, width=10)
+        except Exception as exc:  # noqa: BLE001 — SnmpError or transport
+            req.send_json({"ok": False, "error": str(exc)})
+            return
+        s.put_program_view(view)
+        req.send_json({"ok": True, "program": view, "source": "live",
+                       "error": error})
+        return
+    view = s.program_view(prog.key)
+    if view is None:
+        req.send_json({"ok": True, "program": empty_program_view(cat, prog.key),
+                       "source": "unread"})
+        return
+    req.send_json({"ok": True, "program": view, "source": "snapshot"})
+
+
+def route_session_program_row(ctx, req):
+    """GET /api/sessions/{id}/program/{key}/{index} — one row (record pane).
+
+    From the working copy by default; ``?refresh=1`` does a targeted live GET of
+    just that instance (the record pane's ⟳ re-read)."""
+    s = _session_or_404(ctx, req)
+    if s is None:
+        return
+    try:
+        cat = load_catalog()
+    except Exception as exc:  # noqa: BLE001
+        req.send_json({"ok": False, "error": f"catalog unavailable: {exc}"}, 500)
+        return
+    prog = _resolve_prog_or_404(ctx, req, cat)
+    if prog is None:
+        return
+    index = req.params["index"]
+    if req.query.get("refresh") and s.client is not None:
+        try:
+            row, error = get_row(s.client, cat, prog, index)
+        except Exception as exc:  # noqa: BLE001 — SnmpError or transport
+            req.send_json({"ok": False, "error": str(exc)})
+            return
+        req.send_json({"ok": row is not None, "row": row, "source": "live",
+                       "error": error})
+        return
+    view = s.program_view(prog.key)
+    row = None
+    if view is not None:
+        row = next((r for r in view["rows"] if r["index"] == index), None)
+    req.send_json({"ok": row is not None, "row": row, "source": "snapshot"})
+
+
+# --------------------------------------------------------------------------
+# cold start: snapshots on disk (browse with the device off)
+# --------------------------------------------------------------------------
+def route_site_snapshots(ctx, req):
+    """GET /api/sites/{id}/snapshots — saved-snapshot headers, newest first."""
+    req.send_json({"ok": True,
+                   "snapshots": ctx.snapshots().list(req.params["id"])})
+
+
+def route_site_snapshot_latest(ctx, req):
+    """GET /api/sites/{id}/snapshots/latest — the full last snapshot (cold start)."""
+    snap = ctx.snapshots().latest(req.params["id"])
+    req.send_json({"ok": snap is not None, "snapshot": snap})
+
+
+def route_site_snapshot_get(ctx, req):
+    """GET /api/sites/{id}/snapshots/{sid} — one full saved snapshot."""
+    snap = ctx.snapshots().get(req.params["id"], req.params["sid"])
+    req.send_json({"ok": snap is not None, "snapshot": snap},
+                  200 if snap is not None else 404)
+
+
+# --------------------------------------------------------------------------
 # wiring
 # --------------------------------------------------------------------------
+def register_browse_routes(ctx: ServerContext) -> None:
+    """P1 browse routes: snapshot-on-connect, session working copy, cold start."""
+    r = ctx.router
+    r.post("/api/snapshot", route_snapshot_start)
+    r.get("/api/sessions/{id}", route_session_get)
+    r.get("/api/sessions/{id}/snapshot", route_session_snapshot)
+    r.get("/api/sessions/{id}/program/{key}", route_session_program)
+    r.get("/api/sessions/{id}/program/{key}/{index}", route_session_program_row)
+    r.get("/api/sites/{id}/snapshots", route_site_snapshots)
+    r.get("/api/sites/{id}/snapshots/latest", route_site_snapshot_latest)
+    r.get("/api/sites/{id}/snapshots/{sid}", route_site_snapshot_get)
+
+
 def register_legacy_routes(ctx: ServerContext) -> None:
     """Register the static UI + legacy JSON routes (kept semantics) onto ``ctx``."""
     r = ctx.router
@@ -6402,9 +7127,10 @@ def register_legacy_routes(ctx: ServerContext) -> None:
 
 
 def make_context(*, token=None, appdirs=None) -> ServerContext:
-    """A context with the core P0 routes + the legacy routes registered."""
+    """A context with the core P0 routes + the browse + legacy routes registered."""
     ctx = ServerContext(token=token, appdirs=appdirs)
     register_core_routes(ctx)
+    register_browse_routes(ctx)
     register_legacy_routes(ctx)
     return ctx
 

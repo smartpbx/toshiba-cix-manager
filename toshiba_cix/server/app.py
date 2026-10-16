@@ -52,6 +52,7 @@ class ServerContext:
         self.appdirs = appdirs
         self._sitebook = None
         self._journal = None
+        self._snapshots = None
 
     # -- lazy store accessors (nothing is created until a route needs it) --
     def sitebook(self):
@@ -70,6 +71,14 @@ class ServerContext:
             root.ensure()
             self._journal = journal_from_root(root)
         return self._journal
+
+    def snapshots(self):
+        from ..store import SnapshotStore
+        if self._snapshots is None:
+            root = self.appdirs or AppDirs(store_root())
+            root.ensure()
+            self._snapshots = SnapshotStore(root.root)
+        return self._snapshots
 
 
 # --------------------------------------------------------------------------

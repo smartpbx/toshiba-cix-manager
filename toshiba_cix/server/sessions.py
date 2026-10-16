@@ -37,20 +37,66 @@ class Session:
         self.device = device or {}
         self.transport = transport
         self.identity = None
-        self.doc = {}                 # working copy: program_key -> rows
-        self.freshness = {}           # program_key -> read timestamp
+        self.doc = {}                 # working copy: catalog_key -> program_view
+        self.freshness = {}           # catalog_key -> read timestamp
+        self.snapshot_meta = {}       # meta of the last read (scope, walk_error…)
         self.pending = []             # staged ops (a Changeset mirror)
         self.mode = MODE_DISARMED
         self.mode_expires = None
         self.jobs = []
         self.created = time.time()
         self._bus = bus
+        self._client = None           # runtime SNMP client (never serialised)
 
     # -- identity ----------------------------------------------------------
     def set_identity(self, identity) -> None:
         self.identity = identity
         self._publish("session.identity",
                       {"session": self.id, "identity": identity})
+
+    # -- runtime client (attached, not part of the data model) -------------
+    def attach_client(self, client) -> None:
+        """Hold the live SNMP client so a scoped re-read of one program works.
+
+        A :class:`Session` is a data object (DESIGN_PLAN says it is handed a
+        device descriptor, never a socket); the client is an attached runtime
+        resource, kept off ``as_dict`` so nothing serialises a socket.
+        """
+        self._client = client
+
+    @property
+    def client(self):
+        return self._client
+
+    # -- working copy ------------------------------------------------------
+    def ingest_views(self, program_views: dict) -> None:
+        """Merge an enrich.py ``program_views`` dict into the working copy.
+
+        Each ``<program_view>`` is stored under its ``catalog_key``; a later
+        phase (``core`` then ``all``) replaces the earlier entry so the full
+        walk supersedes the core one. Programs with data become browsable the
+        moment their phase lands, which is what lets Stations open early."""
+        now = time.time()
+        for pv in (program_views or {}).get("programs", []):
+            key = pv.get("catalog_key")
+            if not key:
+                continue
+            self.doc[key] = pv
+            self.freshness[key] = now
+
+    def put_program_view(self, pv: dict) -> None:
+        key = pv.get("catalog_key")
+        if key:
+            self.doc[key] = pv
+            self.freshness[key] = time.time()
+
+    def program_view(self, catalog_key: str):
+        """The working-copy view for a catalog key, or ``None`` if unread."""
+        return self.doc.get(catalog_key)
+
+    def read_keys(self) -> list:
+        """Catalog keys that returned data (what the nav shows as read)."""
+        return sorted(self.doc.keys())
 
     # -- mode --------------------------------------------------------------
     def set_mode(self, mode: str, *, minutes: int | None = None) -> dict:
@@ -86,7 +132,10 @@ class Session:
                 "identity": self.identity, "mode": self.mode_state()["mode"],
                 "mode_expires": self.mode_expires,
                 "pending": len(self.pending),
-                "programs_read": sorted(self.doc.keys()), "jobs": list(self.jobs)}
+                "snapshot_meta": self.snapshot_meta,
+                "programs_read": self.read_keys(),
+                "programs_read_count": len(self.doc),
+                "jobs": list(self.jobs)}
 
     def _publish(self, event, data):
         if self._bus is not None:
@@ -110,6 +159,13 @@ class SessionManager:
     def get(self, session_id: str) -> Session | None:
         with self._lock:
             return self._sessions.get(session_id)
+
+    def current(self) -> Session | None:
+        """The most recently created session (the single-browser daemon's one)."""
+        with self._lock:
+            if not self._sessions:
+                return None
+            return max(self._sessions.values(), key=lambda s: s.created)
 
     def list(self) -> list[dict]:
         with self._lock:

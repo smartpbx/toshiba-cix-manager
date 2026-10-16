@@ -170,6 +170,9 @@ def main() -> None:
         ["snmp.py", "decode.py", "scan.py", "catalog.py", "write.py",
          "backup.py", "enrich.py", "diff.py", "restore.py", "discover.py",
          "report.py", "cli.py", "update.py",
+         # generic single-program read + snapshot engine (depend on backup /
+         # enrich / catalog above) and the snapshot store (stdlib only).
+         "programs.py", "snapshot.py", "store.py",
          # disk-state layer, then the server package (dependency order: a
          # module is listed after everything it references, because the
          # amalgam flattens them into one namespace and strips the imports).
