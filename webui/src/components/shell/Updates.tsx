@@ -30,6 +30,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { api } from "@/lib/api";
 import { useStore } from "@/store/useStore";
 import { useShallow } from "zustand/react/shallow";
 
@@ -66,17 +67,20 @@ export function UpdateButton() {
   );
 }
 
+// A plain <a target="_blank"> opens nothing in the Tauri desktop WebView (no
+// Tauri JS API, content HTTP-served), so route the open through the engine,
+// which runs on the user's machine and opens their default browser. Works
+// identically in the plain web app. See api.openExternal / route_open_external.
 function ReleaseNotesLink({ href }: { href?: string | null }) {
   if (!href) return null;
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
+    <button
+      type="button"
+      onClick={() => void api.openExternal(href)}
       className="inline-flex items-center gap-1 text-primary hover:underline"
     >
       Release notes <ExternalLink className="h-3.5 w-3.5" />
-    </a>
+    </button>
   );
 }
 
@@ -86,17 +90,21 @@ function UpdatesBody() {
     info,
     checking,
     applying,
+    relaunching,
     result,
     checkUpdate,
     applyUpdate,
+    relaunchApp,
   } = useStore(
     useShallow((s) => ({
       info: s.updateInfo,
       checking: s.updateChecking,
       applying: s.updateApplying,
+      relaunching: s.updateRelaunching,
       result: s.updateResult,
       checkUpdate: s.checkUpdate,
       applyUpdate: s.applyUpdate,
+      relaunchApp: s.relaunchApp,
     })),
   );
 
@@ -168,9 +176,28 @@ function UpdatesBody() {
           }
         >
           <div>{result.message || result.error || "Update finished."}</div>
-          {result.ok && result.needs_restart && (
-            <div className="pt-1 font-medium">
-              Restart Switchroom to finish.
+          {result.ok && result.relaunch && (
+            <div className="mt-2 space-y-1.5">
+              <Button
+                size="sm"
+                onClick={() => void relaunchApp()}
+                disabled={relaunching}
+                className="w-full"
+              >
+                {relaunching ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Restarting…
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4" /> Restart now
+                  </>
+                )}
+              </Button>
+              <p className="text-2xs text-fg-3">
+                Switchroom restarts automatically to finish. If it doesn't,
+                click Restart now.
+              </p>
             </div>
           )}
         </div>
@@ -195,7 +222,7 @@ function UpdatesBody() {
           <p className="text-2xs text-fg-3">
             {installer
               ? "Downloads the installer and opens it — you'll confirm in your system installer, then reopen Switchroom."
-              : "Replaces this app in place and prompts you to restart."}
+              : "Replaces this app in place and restarts it automatically."}
           </p>
         </div>
       ) : (
@@ -205,10 +232,13 @@ function UpdatesBody() {
               "This build updates outside the app — get the new release from GitHub."}
           </p>
           {info.html_url && (
-            <Button variant="outline" size="sm" asChild className="w-full">
-              <a href={info.html_url} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-4 w-4" /> Download from GitHub
-              </a>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => info.html_url && void api.openExternal(info.html_url)}
+            >
+              <ExternalLink className="h-4 w-4" /> Download from GitHub
             </Button>
           )}
         </div>

@@ -32,6 +32,9 @@ import json
 import logging
 import os
 import sys
+import threading
+import time
+import webbrowser
 import zipfile
 from datetime import datetime, timezone
 
@@ -71,7 +74,7 @@ from .server.schema import schema_summary
 from .sites import record_connection, slugify_id
 from .snapshot import read_snapshot
 from .snmp import SnmpError, SnmpV1
-from .update import apply_update, check_for_update, finalize_pending_update, plan_update
+from .update import apply_update, check_for_update, finalize_pending_update, plan_update, relaunch
 # ``writes_enabled`` (a function) is imported, NOT ``WRITES_ENABLED`` (a value):
 # importing the value would freeze a snapshot at import time, so a runtime toggle
 # (a test, a future UI switch) would never be seen. Every call site reads the
@@ -456,6 +459,65 @@ def route_update_apply(ctx, req):
         req.send_json({"ok": False, "error": f"{type(exc).__name__}: {exc}"})
         return
     req.send_json(result)
+
+
+def route_open_external(ctx, req):
+    """POST /api/open-external {url} — open a URL in the user's default browser.
+
+    The engine runs on the user's own machine, so :func:`webbrowser.open` opens
+    *their* browser — identically under the Tauri desktop shell (whose WebView
+    has no Tauri JS API, since the UI is HTTP-served) and the plain web app, both
+    of which drop an ``<a target="_blank">`` to an external site. Only ``http(s)``
+    URLs are accepted, so this is never a general open-redirect / exec surface;
+    callers pass a known field (the release ``html_url``), never arbitrary input.
+    """
+    url = (req.body().get("url") or "").strip()
+    low = url.lower()
+    if not (low.startswith("http://") or low.startswith("https://")):
+        req.send_json({"ok": False, "error": "only http(s) URLs may be opened"}, 400)
+        return
+    try:
+        # Best-effort: on a headless box (no browser / no DISPLAY) this returns
+        # False or raises — fine, there is nothing to open there anyway.
+        webbrowser.open(url)
+    except Exception as exc:  # noqa: BLE001 — opening a browser must never 500
+        req.send_json({"ok": False, "error": f"{type(exc).__name__}: {exc}"})
+        return
+    req.send_json({"ok": True})
+
+
+def _schedule_relaunch(delay: float = 0.4) -> None:
+    """Relaunch the app shortly after the current response is delivered.
+
+    :func:`~toshiba_cix.update.relaunch` either replaces this process
+    (``os.execv``) or exits with the Tauri sentinel — both of which kill the
+    in-flight connection — so it runs on a short timer that lets the HTTP
+    response flush and the socket close first.
+    """
+    def _go():
+        time.sleep(delay)
+        try:
+            relaunch()
+        except Exception:  # noqa: BLE001 — a failed relaunch must not crash loudly
+            log.exception("relaunch failed")
+    threading.Thread(target=_go, daemon=True).start()
+
+
+def route_update_relaunch(ctx, req):
+    """POST /api/update/relaunch — restart the app to finish an applied update.
+
+    Responds first, then restarts out-of-band (see :func:`_schedule_relaunch`)
+    so the client gets the ``{ok}`` before the process goes away. A raw web-app /
+    PyInstaller build ``os.execv``s into the (updated) binary; under the Tauri
+    desktop shell the engine exits with a sentinel code the Rust shell watches
+    for and relaunches the whole app.
+    """
+    req.send_json({"ok": True})
+    try:
+        req.handler.wfile.flush()
+    except Exception:  # noqa: BLE001
+        pass
+    _schedule_relaunch()
 
 
 # --------------------------------------------------------------------------
@@ -1591,6 +1653,8 @@ def register_legacy_routes(ctx: ServerContext) -> None:
     r.post("/api/diff", route_diff)
     r.post("/api/restore", route_restore)
     r.post("/api/update", route_update_apply)
+    r.post("/api/update/relaunch", route_update_relaunch)
+    r.post("/api/open-external", route_open_external)
 
 
 def make_context(*, token=None, appdirs=None) -> ServerContext:

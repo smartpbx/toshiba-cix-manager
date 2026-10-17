@@ -180,11 +180,13 @@ interface AppState {
   updateInfo: UpdateInfo | null;
   updateChecking: boolean;
   updateApplying: boolean;
+  updateRelaunching: boolean;
   updateResult: UpdateApplyResult | null;
   updateDialogOpen: boolean;
   updateToastDismissed: boolean;
   checkUpdate: () => Promise<void>;
   applyUpdate: () => Promise<void>;
+  relaunchApp: () => Promise<void>;
   setUpdateDialogOpen: (open: boolean) => void;
   dismissUpdateToast: () => void;
 }
@@ -831,6 +833,7 @@ export const useStore = create<AppState>((set, get) => ({
   updateInfo: null,
   updateChecking: false,
   updateApplying: false,
+  updateRelaunching: false,
   updateResult: null,
   updateDialogOpen: false,
   updateToastDismissed: false,
@@ -853,10 +856,28 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       const res = await api.applyUpdate();
       set({ updateResult: res });
+      // A successful self-replace finishes with an automatic relaunch — no
+      // passive "restart to finish" step. The installer hand-off (.deb/.msi)
+      // reports relaunch:false, because the OS installer runs and the user
+      // reopens; relaunching then would kill the app mid-install.
+      if (res.ok && res.relaunch) void get().relaunchApp();
     } catch (e) {
       set({ updateResult: { ok: false, error: (e as Error).message } });
     } finally {
       set({ updateApplying: false });
+    }
+  },
+  async relaunchApp() {
+    if (get().updateRelaunching) return;
+    set({ updateRelaunching: true });
+    try {
+      const res = await api.updateRelaunch();
+      // On ok the engine responds, then re-execs (web app) or exits for the
+      // Tauri shell to restart it — this page is about to be replaced, so stay
+      // in the "restarting" state. Only reset if the request itself was refused.
+      if (!res.ok) set({ updateRelaunching: false });
+    } catch {
+      set({ updateRelaunching: false });
     }
   },
   setUpdateDialogOpen: (updateDialogOpen) => set({ updateDialogOpen }),
