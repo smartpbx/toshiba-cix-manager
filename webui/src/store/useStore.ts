@@ -32,7 +32,7 @@ export type VmScreen =
 
 export interface Tab {
   id: string;
-  kind: "home" | "program" | "backups" | "vm" | "problems" | "help";
+  kind: "home" | "program" | "backups" | "vm" | "problems" | "help" | "callflow";
   programKey?: string;
   vmScreen?: VmScreen;
   title: string;
@@ -144,6 +144,7 @@ interface AppState {
   openHome: () => void;
   openBackups: () => void;
   openProblems: () => void;
+  openCallFlow: () => void;
   openHelp: () => void;
   openVm: (screen: VmScreen, title: string) => void;
   closeTab: (id: string) => void;
@@ -722,6 +723,14 @@ export const useStore = create<AppState>((set, get) => ({
     const id = "problems";
     if (!tabs.some((t) => t.id === id)) {
       set({ tabs: [...tabs, { id, kind: "problems", title: "Problems" }] });
+    }
+    set({ activeTabId: id });
+  },
+  openCallFlow() {
+    const { tabs } = get();
+    const id = "callflow";
+    if (!tabs.some((t) => t.id === id)) {
+      set({ tabs: [...tabs, { id, kind: "callflow", title: "Call flow" }] });
     }
     set({ activeTabId: id });
   },
