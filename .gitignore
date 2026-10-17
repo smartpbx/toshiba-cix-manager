@@ -24,3 +24,6 @@ python-build-standalone*
 
 # UI/UX redesign review screenshots (not source)
 .uiux-shots/
+
+# Call Flow renderer QA screenshots (not source)
+.callflow-shots/

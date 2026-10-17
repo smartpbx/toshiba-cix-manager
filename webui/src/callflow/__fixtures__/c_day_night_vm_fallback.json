@@ -1,0 +1,34 @@
+{
+  "version": "1.0.0",
+  "entrypoints": ["tg:2"],
+  "nodes": [
+    {
+      "id": "tg:2",
+      "kind": "trunk_group",
+      "num": "2",
+      "label": "CO Trunk Group 2",
+      "meta": "2 PRI channels · day -> Daytime ring group, night -> night mailbox",
+      "ports": [
+        { "id": "tg:2/port:3.1.1", "label": "PRI B-channel 1", "equipment": "3/1/1", "type": "pri" },
+        { "id": "tg:2/port:3.1.2", "label": "PRI B-channel 2", "equipment": "3/1/2", "type": "pri" }
+      ]
+    },
+    { "id": "rg:610", "kind": "ring_group", "num": "610", "label": "Daytime", "meta": "Strategy: simultaneous · 20s ring time" },
+    { "id": "ext:301", "kind": "extension", "num": "301", "label": "Desk - Erin", "meta": "" },
+    { "id": "ext:302", "kind": "extension", "num": "302", "label": "Desk - Frank", "meta": "" },
+    { "id": "ext:303", "kind": "extension", "num": "303", "label": "Desk - Gina", "meta": "" },
+    { "id": "vm:9100", "kind": "voicemail", "num": "9100", "label": "Voicemail - Night / overflow", "meta": "" },
+    { "id": "ext:+15195551212", "kind": "external", "num": "+15195551212", "label": "Answering service", "meta": "Off-system PSTN number" }
+  ],
+  "edges": [
+    { "src": "tg:2", "tgt": "rg:610", "kind": "route", "label": "day", "condition": "day" },
+    { "src": "tg:2", "tgt": "vm:9100", "kind": "route", "label": "night", "condition": "night" },
+    { "src": "rg:610", "tgt": "ext:301", "kind": "member", "label": "rings" },
+    { "src": "rg:610", "tgt": "ext:302", "kind": "member", "label": "rings" },
+    { "src": "rg:610", "tgt": "ext:303", "kind": "member", "label": "rings" },
+    { "src": "rg:610", "tgt": "vm:9100", "kind": "timeout", "label": "no answer", "condition": "no_answer" },
+    { "src": "ext:301", "tgt": "ext:302", "kind": "fwd", "label": "busy", "condition": "busy" },
+    { "src": "ext:303", "tgt": "ext:+15195551212", "kind": "fwd", "label": "no answer", "condition": "no_answer" }
+  ],
+  "stats": { "nodes": 7, "edges": 8, "unresolved": 0 }
+}

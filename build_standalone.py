@@ -214,6 +214,10 @@ def main() -> None:
          # generic single-program read + snapshot engine (depend on backup /
          # enrich / catalog above), the snapshot store and the value index.
          "programs.py", "snapshot.py", "store.py", "index.py",
+         # Call Flow adapter (pure): the neutral inbound-routing graph. Listed
+         # after index.py / decode.py, which it references as flattened globals,
+         # and before webapp.py, which registers its routes.
+         "callflow.py",
          # P2 write path (pure): field/row validation, the three-way review,
          # bulk-edit planners, and the staged changeset. Listed after programs/
          # write/snmp because they reference those as flattened globals.

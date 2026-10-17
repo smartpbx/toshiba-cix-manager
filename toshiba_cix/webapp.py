@@ -51,6 +51,10 @@ from .diff import diff_backups, load_volatile_oids, render_diff_text
 # strips intra-package imports, so an `import X as Y` alias would vanish there.
 from .diff_view import annotate, attribute, to_csv, to_json, to_markdown, to_text
 from .enrich import program_views_from_backup
+# Call Flow adapter: the neutral inbound-routing graph (callflow-port/CONTRACT.md
+# v1.0.0). Bare names (no `as` alias) so the single-file amalgam, which strips
+# this import and flattens the package, resolves them as globals.
+from .callflow import build_callflow, callflow_available
 from .index import build_index, build_index_from_views, search
 from .programs import empty_program_view, get_row, list_rows
 from .report import render as render_report
@@ -762,6 +766,46 @@ def route_snapshot_find(ctx, req):
         return
     res = search(idx, q, limit=int(req.query.get("limit") or 200))
     req.send_json({"ok": True, **res})
+
+
+# --------------------------------------------------------------------------
+# Call Flow — the neutral inbound-routing graph (callflow-port/CONTRACT.md).
+# The app is session-scoped (like /find, /lint), so the generic GET /api/callflow
+# the design names is realized per working copy here: the live session's copy
+# and the cold/file-mode snapshot. Both return the same frozen contract graph.
+# --------------------------------------------------------------------------
+def _callflow_reply(req, program_views) -> None:
+    available = callflow_available(program_views)
+    graph = build_callflow(program_views) if available else None
+    req.send_json({
+        "ok": True,
+        "available": available,
+        # When the routing programs are absent the read was almost certainly
+        # CORE-only (they come from a full / feature scan) — tell the UI to say
+        # "run a full scan" rather than draw an empty diagram.
+        "reason": None if available else
+        "No inbound-routing programs (304/309/310/318) in this read — run a "
+        "full scan (Connect does core→all; the Backups page can take a full "
+        "snapshot).",
+        "graph": graph,
+    })
+
+
+def route_session_callflow(ctx, req):
+    """GET /api/sessions/{id}/callflow — the call-flow graph from the working copy."""
+    s = _session_or_404(ctx, req)
+    if s is None:
+        return
+    _callflow_reply(req, {"programs": list(s.doc.values())})
+
+
+def route_snapshot_callflow(ctx, req):
+    """GET /api/sites/{id}/snapshots/{sid}/callflow — call-flow graph in file mode."""
+    doc = ctx.snapshots().get(req.params["id"], req.params["sid"])
+    if doc is None:
+        req.send_json({"ok": False, "error": "no such snapshot"}, 404)
+        return
+    _callflow_reply(req, program_views_from_backup(doc, load_catalog()))
 
 
 # --------------------------------------------------------------------------
@@ -1625,11 +1669,13 @@ def register_browse_routes(ctx: ServerContext) -> None:
     r.get("/api/sessions/{id}/program/{key}", route_session_program)
     r.get("/api/sessions/{id}/program/{key}/{index}", route_session_program_row)
     r.get("/api/sessions/{id}/find", route_session_find)
+    r.get("/api/sessions/{id}/callflow", route_session_callflow)
     r.get("/api/sites/{id}/snapshots", route_site_snapshots)
     r.post("/api/sites/{id}/snapshots", route_site_snapshot_take)
     r.post("/api/sites/{id}/snapshots/import", route_site_snapshot_import)
     r.get("/api/sites/{id}/snapshots/latest", route_site_snapshot_latest)
     r.get("/api/sites/{id}/snapshots/{sid}/find", route_snapshot_find)
+    r.get("/api/sites/{id}/snapshots/{sid}/callflow", route_snapshot_callflow)
     r.get("/api/sites/{id}/snapshots/{sid}/export", route_site_snapshot_export)
     r.get("/api/sites/{id}/snapshots/{sid}/program/{key}", route_site_snapshot_program)
     r.get("/api/sites/{id}/snapshots/{sid}", route_site_snapshot_get)

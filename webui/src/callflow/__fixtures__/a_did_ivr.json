@@ -1,0 +1,28 @@
+{
+  "version": "1.0.0",
+  "entrypoints": ["did:5551000"],
+  "nodes": [
+    { "id": "did:5551000", "kind": "did", "num": "5551000", "label": "Main Line", "meta": "DNIS 1000" },
+    { "id": "ivr:700", "kind": "ivr_menu", "num": "700", "label": "Main Auto Attendant", "meta": "greeting: main_greeting.wav · 5s timeout" },
+    { "id": "ext:100", "kind": "extension", "num": "100", "label": "Operator", "meta": "" },
+    { "id": "ext:101", "kind": "extension", "num": "101", "label": "Sales - Alice", "meta": "" },
+    { "id": "ext:102", "kind": "extension", "num": "102", "label": "Support - Dan", "meta": "" },
+    { "id": "rg:600", "kind": "ring_group", "num": "600", "label": "Support", "meta": "Strategy: simultaneous · 20s ring time" },
+    { "id": "vm:600", "kind": "voicemail", "num": "600", "label": "Voicemail - Support mailbox", "meta": "" },
+    { "id": "vm:101", "kind": "voicemail", "num": "101", "label": "Voicemail - Alice", "meta": "" },
+    { "id": "syn:124", "kind": "unknown", "num": "124", "label": "unresolved 124", "meta": "This destination could not be matched to any object in the tenant." }
+  ],
+  "edges": [
+    { "src": "did:5551000", "tgt": "ivr:700", "kind": "route", "label": "" },
+    { "src": "ivr:700", "tgt": "ext:101", "kind": "option", "label": "press 1" },
+    { "src": "ivr:700", "tgt": "rg:600", "kind": "option", "label": "press 2" },
+    { "src": "ivr:700", "tgt": "ext:100", "kind": "option", "label": "press 0" },
+    { "src": "ivr:700", "tgt": "syn:124", "kind": "option", "label": "press 9" },
+    { "src": "ivr:700", "tgt": "ext:100", "kind": "timeout", "label": "timeout", "condition": "timeout" },
+    { "src": "rg:600", "tgt": "ext:101", "kind": "member", "label": "rings" },
+    { "src": "rg:600", "tgt": "ext:102", "kind": "member", "label": "rings" },
+    { "src": "rg:600", "tgt": "vm:600", "kind": "timeout", "label": "no answer", "condition": "no_answer" },
+    { "src": "ext:101", "tgt": "vm:101", "kind": "vm", "label": "no answer", "condition": "no_answer" }
+  ],
+  "stats": { "nodes": 9, "edges": 10, "unresolved": 1 }
+}

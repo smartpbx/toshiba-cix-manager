@@ -5,6 +5,7 @@ import {
   ChevronsUpDown,
   History,
   ListTree,
+  Route,
   Search,
   Settings2,
   Voicemail,
@@ -302,7 +303,7 @@ function EmanagerTree() {
 }
 
 export function NavTree() {
-  const { schema, navMode, prefsOpen, setPrefsOpen, setNavMode, openBackups } = useStore(
+  const { schema, navMode, prefsOpen, setPrefsOpen, setNavMode, openBackups, openCallFlow } = useStore(
     useShallow((s) => ({
       schema: s.schema,
       navMode: s.navMode,
@@ -310,6 +311,7 @@ export function NavTree() {
       setPrefsOpen: s.setPrefsOpen,
       setNavMode: s.setNavMode,
       openBackups: s.openBackups,
+      openCallFlow: s.openCallFlow,
     })),
   );
 
@@ -349,6 +351,13 @@ export function NavTree() {
           <span className="rounded-[10px] bg-surface-2 px-[7px] py-0.5 text-[11px] text-fg-2">
             {navMode === "task" ? "Task menu" : "eManager menu"}
           </span>
+        </button>
+        <button
+          onClick={openCallFlow}
+          className="flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-fg-2 hover:bg-surface-2"
+        >
+          <Route className="h-4 w-4" />
+          <span className="flex-1 text-left">Call flow</span>
         </button>
         <button
           onClick={openBackups}

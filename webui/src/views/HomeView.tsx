@@ -31,6 +31,7 @@ export function HomeView() {
     hasSnapshot,
     openProgram,
     openBackups,
+    openCallFlow,
     setConnectDrawerOpen,
     siteId,
   } = useStore(
@@ -48,6 +49,7 @@ export function HomeView() {
         s.progress.status === "done" || s.progress.status === "cold" || s.readKeys.size > 0,
       openProgram: s.openProgram,
       openBackups: s.openBackups,
+      openCallFlow: s.openCallFlow,
       setConnectDrawerOpen: s.setConnectDrawerOpen,
       siteId: s.siteId(),
     })),
@@ -128,6 +130,7 @@ export function HomeView() {
   const jobs: Job[] = [
     { icon: "user-pen", title: "Add or rename a phone", desc: "Change a name, type, or class of service.", ref: "Stations · 200", onClick: () => openNum("200") },
     { icon: "phone-forwarded", title: "Change where a line rings", desc: "Incoming routing for a trunk or DID.", ref: "Trunks · 300 / 309", onClick: () => openNum("300") },
+    { icon: "route", title: "Map the call flow", desc: "Visual diagram of inbound routing: DIDs & line groups.", ref: "Call flow", onClick: openCallFlow },
     { icon: "moon", title: "Set day / night hours", desc: "When the system switches to night mode.", ref: "Day night · 106", onClick: () => openNum("106") },
     { icon: "zap", title: "Edit speed dials", desc: "System-wide and per-station numbers.", ref: "501 / 516", onClick: () => openNum("516") },
     { icon: "settings", title: "System settings", desc: "Clock, hold recall, music source.", ref: "System data · 105", onClick: () => openNum("105") },

@@ -2,6 +2,7 @@
 // cookie on the "/" load, so same-origin fetches authenticate with nothing
 // added (DESIGN_PLAN 2.2); in dev, Vite proxies /api and auth is off.
 
+import type { CallFlowResult } from "@/callflow/types";
 import type { UISchema } from "./schema";
 import type {
   AnnotatedDiffResult,
@@ -182,6 +183,14 @@ export const api = {
       `/api/sessions/${s(sessionId)}/find?q=${encodeURIComponent(q)}` +
         (refs ? "&refs=1" : ""),
     ),
+
+  // -- Call flow (callflow-port/CONTRACT.md): the neutral inbound-routing graph.
+  // Session-scoped (like find/lint) for a live working copy; snapshot-scoped for
+  // cold / file mode. Both return the same frozen contract graph envelope.
+  callflow: (sessionId: string) =>
+    jget<CallFlowResult>(`/api/sessions/${s(sessionId)}/callflow`),
+  snapshotCallflow: (siteId: string, sid: string) =>
+    jget<CallFlowResult>(`/api/sites/${s(siteId)}/snapshots/${s(sid)}/callflow`),
 
   // cold start: browse the last snapshot with the device off
   siteSnapshots: (siteId: string) =>

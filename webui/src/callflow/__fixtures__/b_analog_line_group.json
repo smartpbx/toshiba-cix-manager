@@ -1,0 +1,31 @@
+{
+  "version": "1.0.0",
+  "entrypoints": ["lg:1"],
+  "nodes": [
+    {
+      "id": "lg:1",
+      "kind": "line_group",
+      "num": "",
+      "label": "Analog CO Group 1",
+      "meta": "3 loop-start CO lines, no DID · day -> Reception ring group, night -> after-hours VM · day/night times are set at the switch, not stored in this backup",
+      "ports": [
+        { "id": "lg:1/port:2.4.1", "label": "Loop-start CO 94000", "equipment": "2/4/1", "type": "loop_start" },
+        { "id": "lg:1/port:2.4.2", "label": "Loop-start CO 94001", "equipment": "2/4/2", "type": "loop_start" },
+        { "id": "lg:1/port:2.4.3", "label": "Loop-start CO 94002", "equipment": "2/4/3", "type": "loop_start" }
+      ]
+    },
+    { "id": "rg:500", "kind": "ring_group", "num": "500", "label": "Reception", "meta": "Strategy: linear · 24s ring time" },
+    { "id": "ext:201", "kind": "extension", "num": "201", "label": "Reception - Bob", "meta": "" },
+    { "id": "ext:202", "kind": "extension", "num": "202", "label": "Reception - Carol", "meta": "" },
+    { "id": "vm:500", "kind": "voicemail", "num": "500", "label": "Voicemail - Reception", "meta": "" },
+    { "id": "vm:9000", "kind": "voicemail", "num": "9000", "label": "Voicemail - After hours", "meta": "" }
+  ],
+  "edges": [
+    { "src": "lg:1", "tgt": "rg:500", "kind": "route", "label": "day", "condition": "day" },
+    { "src": "lg:1", "tgt": "vm:9000", "kind": "route", "label": "night", "condition": "night" },
+    { "src": "rg:500", "tgt": "ext:201", "kind": "member", "label": "rings" },
+    { "src": "rg:500", "tgt": "ext:202", "kind": "member", "label": "rings" },
+    { "src": "rg:500", "tgt": "vm:500", "kind": "timeout", "label": "no answer", "condition": "no_answer" }
+  ],
+  "stats": { "nodes": 6, "edges": 5, "unresolved": 0 }
+}
