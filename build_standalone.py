@@ -233,7 +233,10 @@ def main() -> None:
          "appdirs.py", "sites.py", "journal.py",
          "server/events.py", "server/auth.py", "server/router.py",
          "server/jobs.py", "server/sessions.py", "server/schema.py",
-         "server/http.py", "server/app.py", "webapp.py"],
+         "server/http.py", "server/app.py",
+         # manager bridge (Conduit deep-link + save-to-cloud): depends on
+         # update.py (TLS ctx) above and is referenced by webapp.py below.
+         "bridge.py", "webapp.py"],
         "toshiba_cix_manager.py",
         title="Toshiba CIX Manager — standalone web app (generated).",
         with_web=True,

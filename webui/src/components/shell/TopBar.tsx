@@ -1,11 +1,20 @@
 import * as React from "react";
-import { CircleHelp, ListChecks, Search } from "lucide-react";
+import {
+  Check,
+  CircleHelp,
+  CloudUpload,
+  ListChecks,
+  Loader2,
+  Search,
+  X,
+} from "lucide-react";
 import { ModeBadge } from "./ModeBadge";
 import { UpdateButton } from "./Updates";
 import type { UISchema } from "@/lib/schema";
 import type { Tab } from "@/store/useStore";
 import { useStore } from "@/store/useStore";
 import { useShallow } from "zustand/react/shallow";
+import { cn } from "@/lib/utils";
 
 // The breadcrumb for the active tab. eManager mode uses the program's verbatim
 // menu_path (split on " - "); task mode uses the task group / item the program
@@ -42,6 +51,60 @@ function crumbsFor(
     return recordCrumb ? [...base, recordCrumb] : base;
   }
   return [tab.title];
+}
+
+// Save to cloud — only shown when the app was opened from Conduit (a deep-link
+// bridge context is active). Generic label per the contract: it POSTs the
+// backup the app already produces to the configured cloud endpoint (Conduit for
+// our deployment). Shows a transient success / failure that auto-clears.
+function SaveToCloudButton() {
+  const { active, saving, result, saveToCloud, clearResult } = useStore(
+    useShallow((s) => ({
+      active: s.bridge.active,
+      saving: s.bridgeSaving,
+      result: s.bridgeSaveResult,
+      saveToCloud: s.saveToCloud,
+      clearResult: s.clearBridgeSaveResult,
+    })),
+  );
+
+  React.useEffect(() => {
+    if (!result) return;
+    const t = setTimeout(clearResult, 6000);
+    return () => clearTimeout(t);
+  }, [result, clearResult]);
+
+  if (!active) return null;
+
+  return (
+    <div className="flex items-center gap-1.5">
+      {result && (
+        <span
+          className={cn(
+            "flex items-center gap-1 text-xs",
+            result.ok ? "text-ok" : "text-bad",
+          )}
+          title={result.text}
+        >
+          {result.ok ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+          <span className="max-w-[18ch] truncate">{result.text}</span>
+        </span>
+      )}
+      <button
+        onClick={() => void saveToCloud()}
+        disabled={saving}
+        className="flex h-8 items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 text-[13px] text-fg-2 hover:bg-surface-2 disabled:opacity-60"
+        title="Save this backup to Conduit (the system that opened this app)"
+      >
+        {saving ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <CloudUpload className="h-4 w-4" />
+        )}
+        Save to cloud
+      </button>
+    </div>
+  );
 }
 
 export function TopBar() {
@@ -84,6 +147,8 @@ export function TopBar() {
       </nav>
 
       <span className="flex-1" />
+
+      <SaveToCloudButton />
 
       <button
         onClick={openProblems}

@@ -18,10 +18,13 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
+import sys
 import threading
 from http.server import ThreadingHTTPServer
 
 from . import __version__
+from .bridge import pop_deeplink_arg
 from .webapp import CIXHandler, serve
 
 
@@ -49,6 +52,15 @@ def launch(host: str = "127.0.0.1", port: int = 8765,
 
 
 def main(argv=None) -> int:
+    # A `switchroom://…` deep link launched from a browser arrives as an argv
+    # entry (via the .desktop MimeType handler). Lift it into the environment —
+    # serve() seeds the manager-bridge context from $SWITCHROOM_DEEPLINK — before
+    # argparse sees (and rejects) it as an unknown positional.
+    base_argv = list(sys.argv[1:] if argv is None else argv)
+    base_argv, deeplink = pop_deeplink_arg(base_argv)
+    if deeplink:
+        os.environ["SWITCHROOM_DEEPLINK"] = deeplink
+    argv = base_argv
     p = argparse.ArgumentParser(
         prog="toshiba-cix-manager",
         description="Toshiba CIX Manager — read/manage a Strata CIX over SNMP "

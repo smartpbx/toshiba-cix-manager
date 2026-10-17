@@ -5,6 +5,9 @@
 import type { UISchema } from "./schema";
 import type {
   AnnotatedDiffResult,
+  BridgeContextResult,
+  BridgeSaveResult,
+  DeeplinkPending,
   FindResult,
   FullSnapshot,
   Health,
@@ -74,6 +77,16 @@ export const api = {
   // P4: config linter (Problems panel) over the working copy.
   lint: (sessionId: string) =>
     jget<LintResult>(`/api/sessions/${s(sessionId)}/lint`),
+
+  // -- Manager bridge (Conduit deep-link + Save to cloud) -----------------
+  // The engine (not the browser) talks to Conduit, so these loopback calls
+  // carry no Conduit secrets. deeplinkPending is consume-once: it returns the
+  // link to act on (prefill + connect) the first time only. See webapp
+  // route_deeplink_pending / route_bridge_context / route_bridge_backup.
+  deeplinkPending: () => jget<DeeplinkPending>("/api/deeplink/pending"),
+  bridgeContext: () => jget<BridgeContextResult>("/api/bridge/context"),
+  bridgeSave: (body: { site_id: string; snapshot?: string; redact?: boolean }) =>
+    jpost<BridgeSaveResult>("/api/bridge/backup", body),
 
   // -- saved sites (toshiba_cix/sites.py; DESIGN_PLAN 5.1) ----------------
   // The Connect drawer lists these as one-click reconnect cards. A successful

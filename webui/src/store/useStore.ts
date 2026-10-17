@@ -176,6 +176,15 @@ interface AppState {
   recordCrumb: string | null;
   setRecordCrumb: (s: string | null) => void;
 
+  // manager bridge (Conduit deep-link + Save to cloud) --------------------
+  bridge: { active: boolean; component: string | null; systemName: string | null };
+  bridgeSaving: boolean;
+  bridgeSaveResult: { ok: boolean; text: string } | null;
+  initBridge: () => Promise<void>;
+  handleDeeplink: () => Promise<void>;
+  saveToCloud: () => Promise<void>;
+  clearBridgeSaveResult: () => void;
+
   // self-updater (toshiba_cix/update.py via /api/update) -------------------
   updateInfo: UpdateInfo | null;
   updateChecking: boolean;
@@ -829,6 +838,106 @@ export const useStore = create<AppState>((set, get) => ({
   setPrefsOpen: (prefsOpen) => set({ prefsOpen }),
   recordCrumb: null,
   setRecordCrumb: (recordCrumb) => set({ recordCrumb }),
+
+  bridge: { active: false, component: null, systemName: null },
+  bridgeSaving: false,
+  bridgeSaveResult: null,
+  async initBridge() {
+    // On mount: re-establish the Save-to-cloud target if a context is still
+    // active engine-side (survives a reload), then act on any pending deep link
+    // exactly once. The SSE `deeplink` event handles links that arrive later.
+    try {
+      const res = await api.bridgeContext();
+      if (res.ok && res.context?.active) {
+        set({
+          bridge: {
+            active: true,
+            component: res.context.component,
+            systemName: res.context.system_name,
+          },
+        });
+      }
+    } catch {
+      /* offline / daemon down */
+    }
+    await get().handleDeeplink();
+  },
+  async handleDeeplink() {
+    let dl;
+    try {
+      const res = await api.deeplinkPending();
+      dl = res.ok ? res.deeplink : null;
+    } catch {
+      return; // transient
+    }
+    if (!dl) return;
+    set({
+      bridge: {
+        active: true,
+        component: dl.component,
+        systemName: dl.system_name,
+      },
+    });
+    if (dl.error) {
+      // The engine couldn't fetch the connection (Conduit down, token expired).
+      // Keep the save target active and let the tech connect manually.
+      set({
+        connectDrawerOpen: true,
+        progress: {
+          status: "error",
+          done: 0,
+          total: 0,
+          message: `Conduit: ${dl.error}`,
+          jobId: null,
+          error: dl.error,
+        },
+      });
+      return;
+    }
+    const form = dl.form;
+    if (form) {
+      set((st) => ({
+        form: {
+          ...st.form,
+          ip: form.ip,
+          community: form.community || "communityName",
+          port: form.port || 161,
+          reach: form.reach,
+          site: form.site,
+        },
+      }));
+      if (form.ip.trim()) await get().connect();
+      else set({ connectDrawerOpen: true });
+    }
+  },
+  async saveToCloud() {
+    const { bridge, bridgeSaving, fileMode } = get();
+    if (!bridge.active || bridgeSaving) return;
+    const siteId = get().siteId();
+    if (!siteId) {
+      set({
+        bridgeSaveResult: { ok: false, text: "Connect to the CIX first." },
+      });
+      return;
+    }
+    set({ bridgeSaving: true, bridgeSaveResult: null });
+    try {
+      const res = await api.bridgeSave({
+        site_id: siteId,
+        snapshot: fileMode?.sid,
+      });
+      set({
+        bridgeSaveResult: res.ok
+          ? { ok: true, text: "Saved to Conduit." }
+          : { ok: false, text: res.error ?? "Save failed." },
+      });
+    } catch (e) {
+      set({ bridgeSaveResult: { ok: false, text: (e as Error).message } });
+    } finally {
+      set({ bridgeSaving: false });
+    }
+  },
+  clearBridgeSaveResult: () => set({ bridgeSaveResult: null }),
 
   updateInfo: null,
   updateChecking: false,

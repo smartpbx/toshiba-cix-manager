@@ -24,13 +24,29 @@
 // non-loopback and every `/api` call would 403 unless we weakened that guard.
 // So: zero changes to the security model, and one code path shared with the
 // browser app-mode launch.
+//
+// Manager bridge (conduit#manager-bridge + the shared CONTRACT): the app
+// registers the `switchroom://` URL scheme (tauri-plugin-deep-link, with
+// single-instance so a link reaches a *running* app on Linux/Windows). A
+// `switchroom://open?conduit&component&token` link arrives on THIS (Rust) side —
+// the webview has no Tauri JS API (it loads over loopback HTTP). We parse it and
+// hand the params to the engine with a plain loopback POST to its new
+// `/api/deeplink` route, authenticated with the same launch token (via
+// `X-CIX-Token`). A link that lands before the engine's endpoint line is
+// buffered and flushed once the port + token are known. The engine then fetches
+// the connection from Conduit and the UI picks it up (SSE `deeplink` + the
+// pending poll). No HTTP client crate is pulled in — a tiny std TcpStream POST
+// to loopback is enough (plain HTTP, no TLS).
 
 // No console window on Windows release builds.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::io::{Read, Write};
+use std::net::TcpStream;
 use std::sync::Mutex;
 
 use tauri::{AppHandle, Manager, RunEvent};
+use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
 
@@ -44,6 +60,9 @@ use tauri_plugin_shell::ShellExt;
 const SIDECAR: &str = "switchroom-engine";
 const ENDPOINT_MARKER: &str = "@@SWITCHROOM_ENDPOINT@@ ";
 
+// The custom URL scheme the manager bridge launches us with.
+const DEEP_LINK_SCHEME: &str = "switchroom";
+
 // The engine exits with this code (toshiba_cix/update.py::TAURI_RELAUNCH_EXIT_CODE)
 // after it applies an update. os.execv in the Python sidecar would replace the
 // sidecar but leave this Rust shell running the old WebView, so the engine hands
@@ -51,10 +70,29 @@ const ENDPOINT_MARKER: &str = "@@SWITCHROOM_ENDPOINT@@ ";
 // Keep in sync with the Python constant.
 const RELAUNCH_EXIT_CODE: i32 = 42;
 
-/// Holds the sidecar child so we can kill it when the app exits.
+/// The engine's loopback endpoint once it has reported one: the OS-chosen port
+/// and the launch token, used to POST deep links to `/api/deeplink`.
+#[derive(Clone)]
+struct Endpoint {
+    port: u16,
+    token: String,
+}
+
+/// One parsed `switchroom://open?…` deep link.
+#[derive(Clone)]
+struct DeepLink {
+    conduit: String,
+    component: String,
+    token: String,
+}
+
+/// Holds the sidecar child (to kill on exit), the engine endpoint once known,
+/// and any deep links that arrived before it was known (flushed on ready).
 #[derive(Default)]
 struct Engine {
     child: Mutex<Option<CommandChild>>,
+    endpoint: Mutex<Option<Endpoint>>,
+    pending_links: Mutex<Vec<DeepLink>>,
 }
 
 /// A fresh 32-byte URL-safe-ish launch token (64 hex chars).
@@ -108,11 +146,93 @@ fn relaunch_app(app: &AppHandle) {
     app.restart();
 }
 
-/// Parse the engine's endpoint line into the URL to load, if this is it.
-fn endpoint_url(line: &str) -> Option<String> {
+/// Parse the engine's endpoint line into `(url, endpoint)`, if this is it.
+fn parse_endpoint(line: &str) -> Option<(String, Endpoint)> {
     let json = line.trim().strip_prefix(ENDPOINT_MARKER)?;
     let value: serde_json::Value = serde_json::from_str(json).ok()?;
-    value.get("url")?.as_str().map(str::to_owned)
+    let url = value.get("url")?.as_str()?.to_owned();
+    let port = value.get("port")?.as_u64()? as u16;
+    let token = value
+        .get("token")
+        .and_then(|t| t.as_str())
+        .unwrap_or("")
+        .to_owned();
+    Some((url, Endpoint { port, token }))
+}
+
+/// Extract the three manager-bridge params from a `switchroom://open?…` URL.
+/// `query_pairs()` percent-decodes, so the URL-encoded Conduit base comes back
+/// whole. Returns `None` unless it is our scheme and all three params are set.
+fn parse_switchroom_url(u: &url::Url) -> Option<DeepLink> {
+    if u.scheme() != DEEP_LINK_SCHEME {
+        return None;
+    }
+    let (mut conduit, mut component, mut token) = (None, None, None);
+    for (k, v) in u.query_pairs() {
+        match k.as_ref() {
+            "conduit" => conduit = Some(v.into_owned()),
+            "component" => component = Some(v.into_owned()),
+            "token" => token = Some(v.into_owned()),
+            _ => {}
+        }
+    }
+    Some(DeepLink {
+        conduit: conduit?,
+        component: component?,
+        token: token?,
+    })
+}
+
+/// Route a deep link to the engine, or buffer it until the engine is ready.
+fn on_deep_link(app: &AppHandle, link: DeepLink) {
+    let engine = app.state::<Engine>();
+    let endpoint = engine.endpoint.lock().unwrap().clone();
+    match endpoint {
+        Some(ep) => deliver_deep_link(&ep, &link),
+        None => engine.pending_links.lock().unwrap().push(link),
+    }
+    // Bring the window forward so the tech sees the connect happen.
+    if let Some(w) = app.get_webview_window("main") {
+        let _ = w.set_focus();
+    }
+}
+
+/// POST a parsed deep link to the engine's `/api/deeplink` route.
+fn deliver_deep_link(ep: &Endpoint, link: &DeepLink) {
+    let body = serde_json::json!({
+        "conduit": link.conduit,
+        "component": link.component,
+        "token": link.token,
+    })
+    .to_string();
+    if let Err(e) = post_loopback(ep.port, &ep.token, "/api/deeplink", &body) {
+        eprintln!("[switchroom] deep-link delivery failed: {e}");
+    }
+}
+
+/// Minimal loopback HTTP/1.0 POST — no TLS, no HTTP-client crate. The engine's
+/// `/api/deeplink` route is loopback-only and gated on the launch token, which
+/// we send as `X-CIX-Token` (toshiba_cix/server/auth.py accepts header or
+/// cookie). The response is drained and ignored.
+fn post_loopback(port: u16, token: &str, path: &str, body: &str) -> std::io::Result<()> {
+    let mut stream = TcpStream::connect(("127.0.0.1", port))?;
+    let req = format!(
+        "POST {path} HTTP/1.0\r\n\
+         Host: 127.0.0.1\r\n\
+         Content-Type: application/json\r\n\
+         X-CIX-Token: {token}\r\n\
+         Content-Length: {len}\r\n\
+         Connection: close\r\n\r\n{body}",
+        path = path,
+        token = token,
+        len = body.len(),
+        body = body
+    );
+    stream.write_all(req.as_bytes())?;
+    let _ = stream.flush();
+    let mut resp = String::new();
+    let _ = stream.read_to_string(&mut resp); // drain; we don't act on the reply
+    Ok(())
 }
 
 fn spawn_engine(app: &AppHandle) {
@@ -141,8 +261,18 @@ fn spawn_engine(app: &AppHandle) {
             match event {
                 CommandEvent::Stdout(bytes) => {
                     let line = String::from_utf8_lossy(&bytes);
-                    if let Some(url) = endpoint_url(&line) {
+                    if let Some((url, endpoint)) = parse_endpoint(&line) {
                         open_engine(&handle, &url);
+                        // Record the endpoint and flush any deep links that
+                        // arrived before the engine was ready (cold start: the
+                        // app was launched BY the link).
+                        let engine = handle.state::<Engine>();
+                        engine.endpoint.lock().unwrap().replace(endpoint.clone());
+                        let pending: Vec<DeepLink> =
+                            engine.pending_links.lock().unwrap().drain(..).collect();
+                        for link in &pending {
+                            deliver_deep_link(&endpoint, link);
+                        }
                     }
                 }
                 CommandEvent::Stderr(bytes) => {
@@ -170,9 +300,46 @@ fn spawn_engine(app: &AppHandle) {
 
 fn main() {
     tauri::Builder::default()
+        // single-instance MUST be registered before deep-link: with its
+        // `deep-link` feature, a second launch carrying a `switchroom://` link
+        // (how Linux/Windows deliver one to a running app) is forwarded into the
+        // deep-link plugin's `on_open_url` instead of spawning a new window.
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            if let Some(w) = app.get_webview_window("main") {
+                let _ = w.set_focus();
+            }
+        }))
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_shell::init())
         .manage(Engine::default())
         .setup(|app| {
+            let handle = app.handle().clone();
+            // A link that arrives while we are running (or, on macOS, the one we
+            // were launched with) is delivered here.
+            app.deep_link().on_open_url(move |event| {
+                for u in event.urls() {
+                    if let Some(link) = parse_switchroom_url(&u) {
+                        on_deep_link(&handle, link);
+                    }
+                }
+            });
+            // Cold start on Linux/Windows: the launching URL is passed as a
+            // process argument, surfaced here. It buffers until the engine is up.
+            if let Ok(Some(urls)) = app.deep_link().get_current() {
+                let h = app.handle().clone();
+                for u in urls {
+                    if let Some(link) = parse_switchroom_url(&u) {
+                        on_deep_link(&h, link);
+                    }
+                }
+            }
+            // Best-effort runtime registration (chiefly for `tauri dev`). Packaged
+            // builds get the association from the bundler via the scheme declared
+            // in tauri.conf.json (plugins.deep-link) and the .desktop MimeType.
+            #[cfg(desktop)]
+            {
+                let _ = app.deep_link().register(DEEP_LINK_SCHEME);
+            }
             spawn_engine(&app.handle().clone());
             Ok(())
         })
