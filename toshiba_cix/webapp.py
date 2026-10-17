@@ -54,7 +54,7 @@ from .enrich import program_views_from_backup
 # Call Flow adapter: the neutral inbound-routing graph (callflow-port/CONTRACT.md
 # v1.0.0). Bare names (no `as` alias) so the single-file amalgam, which strips
 # this import and flattens the package, resolves them as globals.
-from .callflow import build_callflow, callflow_available
+from .callflow import callflow_diagnosis
 from .index import build_index, build_index_from_views, search
 from .programs import empty_program_view, get_row, list_rows
 from .report import render as render_report
@@ -775,19 +775,18 @@ def route_snapshot_find(ctx, req):
 # and the cold/file-mode snapshot. Both return the same frozen contract graph.
 # --------------------------------------------------------------------------
 def _callflow_reply(req, program_views) -> None:
-    available = callflow_available(program_views)
-    graph = build_callflow(program_views) if available else None
+    # callflow_diagnosis builds the frozen-shape graph AND the envelope metadata
+    # the UI needs to tell three look-alike cases apart: a CORE-only read, a
+    # partial read missing an answer-point table, and a system that genuinely
+    # has no inbound routing in its SNMP tables (lines ring stations directly).
+    diag = callflow_diagnosis(program_views)
     req.send_json({
         "ok": True,
-        "available": available,
-        # When the routing programs are absent the read was almost certainly
-        # CORE-only (they come from a full / feature scan) — tell the UI to say
-        # "run a full scan" rather than draw an empty diagram.
-        "reason": None if available else
-        "No inbound-routing programs (304/309/310/318) in this read — run a "
-        "full scan (Connect does core→all; the Backups page can take a full "
-        "snapshot).",
-        "graph": graph,
+        "available": diag["available"],
+        "routing_complete": diag["routing_complete"],
+        "reason": diag["reason"],
+        "coverage": diag["coverage"],
+        "graph": diag["graph"],
     })
 
 

@@ -250,6 +250,121 @@ def test_fallback_jsonschema_if_available():
         assert not errs, [ (list(e.path), e.message) for e in errs ][:3]
 
 
+# A sanitized synthetic of a real analog-CO site (the Progressive case the
+# owner reported): two incoming groups — an analog CO line group whose service
+# type is DIT, and a QSIG tie trunk group — but every DIT / No-DID answer point
+# is 'no data' and there is no DID program. The lines ring stations directly by
+# CO-line key assignment, which SNMP does not express, so a truthful graph is
+# two entry points with no onward routing. Equipment ids and DNs are invented.
+def _unrouted_dit_site_views(with_dit=True):
+    programs = [
+        _prog("304", "304ILGAssign", [
+            _row("1", "1", ilgGrpNo="1", ilgAnalogISDNType=(1, "analog"),
+                 ilgTrunkType=(1, "cO"), ilgTrunkServiceType=(2, "dIT")),
+            _row("9", "9", ilgGrpNo="9", ilgAnalogISDNType=(2, "iSDN"),
+                 ilgTrunkType=(2, "tIE"), ilgTrunkServiceType=(2, "dIT"))]),
+        _prog("300", "300TrunkAssign", [
+            _row("1", "1", trunkNo="1", trunkIlg="1", trunkEquipment="020101",
+                 trunkSignaling=(2, "lOOP"), trunkTrunkName=""),
+            _row("2", "2", trunkNo="2", trunkIlg="1", trunkEquipment="020102",
+                 trunkSignaling=(2, "lOOP"), trunkTrunkName="")]),
+        # No-DID answer points for both groups — all 'no data'.
+        _prog("318", "318NoCpnDID", [
+            _row("1.1", "1", noDidIlg="1",
+                 noDidDay1AudioDestinationType=(1, "noData"), noDidDay1AudioDestination="",
+                 noDidDay2AudioDestinationType=(1, "noData"), noDidDay2AudioDestination="",
+                 noDidNightAudioDestinationType=(1, "noData"), noDidNightAudioDestination=""),
+            _row("9.1", "9", noDidIlg="9",
+                 noDidDay1AudioDestinationType=(1, "noData"), noDidDay1AudioDestination="",
+                 noDidDay2AudioDestinationType=(1, "noData"), noDidDay2AudioDestination="",
+                 noDidNightAudioDestinationType=(1, "noData"), noDidNightAudioDestination="")]),
+        # A hunt group exists internally but nothing inbound points at it.
+        _prog("209", "209StationHunting", [
+            _row("1", "1", stationHuntGrp="1", stationHuntPilotNumber="700",
+                 stationHuntMethod=(3, "distribute"))]),
+        _prog("218", "218StationHuntingGroupMember", [
+            _row("1.1", "1", huntGrpMemberNumber="1", huntGrpMemberIndex="1",
+                 huntGrpMemberDn="701"),
+            _row("1.2", "2", huntGrpMemberNumber="1", huntGrpMemberIndex="2",
+                 huntGrpMemberDn="702")]),
+        _prog("200", "200StationAssign", [
+            _row("a", "701", stationDn="701", stationStationName="Front 1"),
+            _row("b", "702", stationDn="702", stationStationName="Front 2")]),
+    ]
+    if with_dit:
+        # DIT rows read, one per CO line, but every destination 'no data'.
+        programs.append(_prog("310", "310DIT", [
+            _row("1", "020101", ditEquipment="020101",
+                 ditDay1AudioDestinationType=(1, "noData"), ditDay1AudioDestination="",
+                 ditDay2AudioDestinationType=(1, "noData"), ditDay2AudioDestination="",
+                 ditNightAudioDestinationType=(1, "noData"), ditNightAudioDestination=""),
+            _row("2", "020102", ditEquipment="020102",
+                 ditDay1AudioDestinationType=(1, "noData"), ditDay1AudioDestination="",
+                 ditDay2AudioDestinationType=(1, "noData"), ditDay2AudioDestination="",
+                 ditNightAudioDestinationType=(1, "noData"), ditNightAudioDestination="")]))
+    return {"programs": programs}
+
+
+def test_unrouted_site_is_two_entrypoints_no_edges():
+    # Reproduces the owner's "2 nodes · 0 edges" from real data: the graph is
+    # honest (two groups, no routing) — not an error, not a dropped edge.
+    g = CF.build_callflow(_unrouted_dit_site_views())
+    assert_contract(g)
+    by = _by_id(g)
+    assert set(g["entrypoints"]) == {"lg:1", "tg:9"}, g["entrypoints"]
+    assert by["lg:1"]["kind"] == "line_group"
+    assert by["tg:9"]["kind"] == "trunk_group"
+    # the analog group carries its two decoded CO ports
+    assert sorted(p["equipment"] for p in by["lg:1"]["ports"]) == ["2/1/1", "2/1/2"]
+    # no answer-point edge leaves either entry point
+    assert not [e for e in g["edges"] if e["src"] in {"lg:1", "tg:9"}], g["edges"]
+
+
+def test_diagnosis_unrouted_present_but_no_data():
+    # DIT/No-DID tables ARE read (present) but all 'no data' and there is no DID
+    # program → honest "rings stations directly", NOT "run a full read".
+    diag = CF.callflow_diagnosis(_unrouted_dit_site_views(with_dit=True))
+    assert diag["available"] is True
+    assert diag["routing_complete"] is False
+    assert diag["graph"]["stats"]["edges"] == 0
+    cov = diag["coverage"]
+    assert cov["answer_points_programmed"] == 0
+    assert cov["programs"]["310"]["status"] == "present"
+    assert cov["programs"]["318"]["status"] == "present"
+    assert cov["programs"]["309"]["status"] == "missing"
+    assert "no data" in diag["reason"].lower()
+    assert "co-line key" in diag["reason"].lower()
+
+
+def test_diagnosis_incomplete_read_flags_missing_dit():
+    # Same site but the DIT answer-point table (310) was NOT in the read →
+    # the reason must say the read is incomplete and name program 310.
+    diag = CF.callflow_diagnosis(_unrouted_dit_site_views(with_dit=False))
+    assert diag["available"] is True
+    assert diag["routing_complete"] is False
+    assert diag["coverage"]["programs"]["310"]["status"] == "missing"
+    assert "incomplete" in diag["reason"].lower()
+    assert "310" in diag["reason"]
+
+
+def test_diagnosis_complete_when_entry_routes():
+    # The fully-routed line-group fixture: entry points reach answer points, so
+    # routing_complete is True and there is no banner reason.
+    diag = CF.callflow_diagnosis(_line_group_views())
+    assert diag["available"] is True
+    assert diag["routing_complete"] is True
+    assert diag["reason"] is None
+    assert diag["coverage"]["answer_points_programmed"] >= 1
+
+
+def test_diagnosis_core_only_asks_for_full_read():
+    diag = CF.callflow_diagnosis({"programs": [
+        _prog("200", "200StationAssign", [_row("1", "100", stationDn="100")])]})
+    assert diag["available"] is False
+    assert diag["graph"] is None
+    assert "full read" in diag["reason"].lower()
+
+
 def _run_all():
     fns = [v for k, v in sorted(globals().items())
            if k.startswith("test_") and callable(v)]

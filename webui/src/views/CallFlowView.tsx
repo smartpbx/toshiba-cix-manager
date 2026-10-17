@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Loader2, Maximize2, RefreshCw, Search, ZoomIn, ZoomOut } from "lucide-react";
+import { AlertTriangle, Loader2, Maximize2, RefreshCw, Search, ZoomIn, ZoomOut } from "lucide-react";
 import { PageHeader, EmptyState } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
@@ -9,7 +9,9 @@ import { CallFlowCanvas } from "@/callflow/CallFlowCanvas";
 import type { CallFlowCanvasHandle } from "@/callflow/CallFlowCanvas";
 import { NodeInspector } from "@/callflow/NodeInspector";
 import { DEFAULT_HIDDEN_EDGES, edgeKind, nodeKind } from "@/callflow/kinds";
-import type { CallFlowGraph, EdgeKind, LayoutModel, NodeKind } from "@/callflow/types";
+import type {
+  CallFlowCoverage, CallFlowGraph, EdgeKind, LayoutModel, NodeKind,
+} from "@/callflow/types";
 
 // The Call flow tab: fetch the neutral routing graph for the active working
 // copy (live session or cold/file snapshot) and render it with the ported
@@ -28,6 +30,10 @@ export function CallFlowView() {
   const [graph, setGraph] = React.useState<CallFlowGraph | null>(null);
   const [notAvailable, setNotAvailable] = React.useState<string | null>(null);
   const [err, setErr] = React.useState<string | null>(null);
+  // Entry points were drawn but nothing routes onward: carry the honest reason
+  // + read coverage so the diagram shows a clear banner, not a bare canvas.
+  const [routingNotice, setRoutingNotice] =
+    React.useState<{ reason: string | null; coverage: CallFlowCoverage | null } | null>(null);
 
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [focusId, setFocusId] = React.useState<string | null>(null);
@@ -46,6 +52,7 @@ export function CallFlowView() {
   const load = React.useCallback(() => {
     setErr(null);
     setNotAvailable(null);
+    setRoutingNotice(null);
     if (!hasSource) { setGraph(null); return; }
     setLoading(true);
     const resolve = async () => {
@@ -62,6 +69,13 @@ export function CallFlowView() {
         if (!res.ok) { setErr(res.reason ?? "Could not build the call flow."); setGraph(null); return; }
         if (!res.available) { setNotAvailable(res.reason ?? "Routing programs not in this read."); setGraph(null); return; }
         setGraph(res.graph ?? null);
+        // Available, but the entry points may not route anywhere in this read —
+        // keep the diagram AND surface the reason as a banner above it.
+        setRoutingNotice(
+          res.routing_complete === false
+            ? { reason: res.reason ?? null, coverage: res.coverage ?? null }
+            : null,
+        );
         setSelectedId(null);
         setFocusId(null);
       })
@@ -193,6 +207,13 @@ export function CallFlowView() {
             </div>
           </div>
 
+          {routingNotice && (
+            <RoutingNotice
+              reason={routingNotice.reason}
+              coverage={routingNotice.coverage}
+            />
+          )}
+
           <div className="relative min-h-0 flex-1">
             <CallFlowCanvas
               ref={canvas}
@@ -264,6 +285,50 @@ export function CallFlowView() {
     <div className="flex h-full min-h-0 flex-col">
       {header}
       <div className="min-h-0 flex-1 overflow-hidden">{body}</div>
+    </div>
+  );
+}
+
+const COVERAGE_STATUS: Record<string, { label: string; cls: string }> = {
+  present: { label: "read", cls: "bg-ok-tint text-fg-2" },
+  empty: { label: "no rows", cls: "bg-warn-tint text-warn" },
+  missing: { label: "not read", cls: "bg-bad-tint text-bad" },
+};
+
+// Shown above the canvas when entry points were drawn but nothing routes onward
+// (an incomplete read, or a system whose inbound routing isn't in the SNMP
+// tables). The diagram stays visible below — the entry points + their member
+// ports are still useful — but the reason is no longer a mystery.
+function RoutingNotice({
+  reason, coverage,
+}: {
+  reason: string | null;
+  coverage: CallFlowCoverage | null;
+}) {
+  const programs = coverage ? Object.entries(coverage.programs) : [];
+  return (
+    <div className="flex items-start gap-2 border-b border-warn/40 bg-warn-tint/60 px-3 py-2">
+      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warn" />
+      <div className="min-w-0 text-xs">
+        <div className="font-semibold text-fg">Inbound routing isn’t drawn</div>
+        {reason && <div className="mt-0.5 text-fg-2">{reason}</div>}
+        {programs.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            {programs.map(([num, p]) => {
+              const s = COVERAGE_STATUS[p.status] ?? COVERAGE_STATUS.missing;
+              return (
+                <span
+                  key={num}
+                  className={`rounded px-1.5 py-0.5 text-2xs font-medium ${s.cls}`}
+                  title={p.title}
+                >
+                  {num} · {s.label}
+                </span>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
