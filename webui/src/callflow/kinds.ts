@@ -40,6 +40,7 @@ export const EDGE_KINDS: Record<EdgeKind, { label: string; color: string }> = {
   cf_off:  { label: "Inactive leg",   color: "#9ca3af" },
   timeout: { label: "Timeout / exit", color: "#d97706" },
   fwd:     { label: "Call forward",   color: "#7c3aed" },
+  ring_key:{ label: "Rings on CO line", color: "#0d9488" },
   vm:      { label: "Mailbox link",   color: "#e11d48" },
 };
 
@@ -48,8 +49,10 @@ export const nodeKind = (k: string) =>
 export const edgeKind = (k: string) =>
   EDGE_KINDS[k as EdgeKind] ?? EDGE_KINDS.route;
 
-/** "rings" adds nothing beside the colour + legend, so it stays hidden until selected. */
-export const QUIET_EDGES = new Set<string>(["member"]);
+/** "rings" adds nothing beside the colour + legend, so it stays hidden until selected.
+ *  ring_key edges draw by default (they ARE the routing on key systems) but their
+ *  repeated "rings" label is suppressed the same way — the teal colour + legend say it. */
+export const QUIET_EDGES = new Set<string>(["member", "ring_key"]);
 
 /** Shorter on canvas; the inspector still shows the full text. */
 export const SHORT_LABEL: Record<string, string> = { "timeout / invalid": "timeout" };

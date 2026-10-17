@@ -52,7 +52,7 @@ from .diff import diff_backups, load_volatile_oids, render_diff_text
 from .diff_view import annotate, attribute, to_csv, to_json, to_markdown, to_text
 from .enrich import program_views_from_backup
 # Call Flow adapter: the neutral inbound-routing graph (callflow-port/CONTRACT.md
-# v1.0.0). Bare names (no `as` alias) so the single-file amalgam, which strips
+# v1.1.0). Bare names (no `as` alias) so the single-file amalgam, which strips
 # this import and flattens the package, resolves them as globals.
 from .callflow import callflow_diagnosis
 from .index import build_index, build_index_from_views, search

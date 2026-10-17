@@ -29,7 +29,7 @@ NODE_KINDS = {
     "recording", "external", "feature", "hangup", "unknown",
 }
 EDGE_KINDS = {"route", "option", "member", "open", "closed", "always",
-              "cf_on", "cf_off", "timeout", "fwd", "vm"}
+              "cf_on", "cf_off", "timeout", "fwd", "ring_key", "vm"}
 PORT_TYPES = {"loop_start", "ground_start", "e_and_m", "t1", "pri", "bri",
               "isdn", "sip", "did", "analog_co", "digital", "unknown"}
 
@@ -250,19 +250,23 @@ def test_fallback_jsonschema_if_available():
         assert not errs, [ (list(e.path), e.message) for e in errs ][:3]
 
 
-# A sanitized synthetic of a real analog-CO site (the Progressive case the
-# owner reported): two incoming groups — an analog CO line group whose service
-# type is DIT, and a QSIG tie trunk group — but every DIT / No-DID answer point
-# is 'no data' and there is no DID program. The lines ring stations directly by
-# CO-line key assignment, which SNMP does not express, so a truthful graph is
-# two entry points with no onward routing. Equipment ids and DNs are invented.
-def _unrouted_dit_site_views(with_dit=True):
+# A sanitized synthetic of a real analog-CO key system (the Progressive case the
+# owner reported): an analog CO line group whose service type is DIT and a QSIG
+# tie trunk group, every DIT / No-DID answer point 'no data', no DID program.
+# The real inbound path is ring-by-key: stations carry the CO lines as ring keys
+# (program 205). ``keys`` is a list of (station_dn, feature_code, param1); pass
+# ``None`` to omit program 205 entirely (key map not read). Equipment ids and
+# DNs are invented — no customer read data.
+def _unrouted_dit_site_views(with_dit=True, keys=None, stations=None):
+    stations = stations or [("701", "Front 1"), ("702", "Front 2")]
     programs = [
         _prog("304", "304ILGAssign", [
             _row("1", "1", ilgGrpNo="1", ilgAnalogISDNType=(1, "analog"),
-                 ilgTrunkType=(1, "cO"), ilgTrunkServiceType=(2, "dIT")),
+                 ilgTrunkType=(1, "cO"), ilgTrunkServiceType=(2, "dIT"),
+                 ilgPoolLineGroup="0"),
             _row("9", "9", ilgGrpNo="9", ilgAnalogISDNType=(2, "iSDN"),
-                 ilgTrunkType=(2, "tIE"), ilgTrunkServiceType=(2, "dIT"))]),
+                 ilgTrunkType=(2, "tIE"), ilgTrunkServiceType=(2, "dIT"),
+                 ilgPoolLineGroup="0")]),
         _prog("300", "300TrunkAssign", [
             _row("1", "1", trunkNo="1", trunkIlg="1", trunkEquipment="020101",
                  trunkSignaling=(2, "lOOP"), trunkTrunkName=""),
@@ -278,18 +282,9 @@ def _unrouted_dit_site_views(with_dit=True):
                  noDidDay1AudioDestinationType=(1, "noData"), noDidDay1AudioDestination="",
                  noDidDay2AudioDestinationType=(1, "noData"), noDidDay2AudioDestination="",
                  noDidNightAudioDestinationType=(1, "noData"), noDidNightAudioDestination="")]),
-        # A hunt group exists internally but nothing inbound points at it.
-        _prog("209", "209StationHunting", [
-            _row("1", "1", stationHuntGrp="1", stationHuntPilotNumber="700",
-                 stationHuntMethod=(3, "distribute"))]),
-        _prog("218", "218StationHuntingGroupMember", [
-            _row("1.1", "1", huntGrpMemberNumber="1", huntGrpMemberIndex="1",
-                 huntGrpMemberDn="701"),
-            _row("1.2", "2", huntGrpMemberNumber="1", huntGrpMemberIndex="2",
-                 huntGrpMemberDn="702")]),
         _prog("200", "200StationAssign", [
-            _row("a", "701", stationDn="701", stationStationName="Front 1"),
-            _row("b", "702", stationDn="702", stationStationName="Front 2")]),
+            _row(str(i), dn, stationDn=dn, stationStationName=name)
+            for i, (dn, name) in enumerate(stations)]),
     ]
     if with_dit:
         # DIT rows read, one per CO line, but every destination 'no data'.
@@ -302,12 +297,18 @@ def _unrouted_dit_site_views(with_dit=True):
                  ditDay1AudioDestinationType=(1, "noData"), ditDay1AudioDestination="",
                  ditDay2AudioDestinationType=(1, "noData"), ditDay2AudioDestination="",
                  ditNightAudioDestinationType=(1, "noData"), ditNightAudioDestination="")]))
+    if keys is not None:
+        krows = []
+        for i, (dn, code, p1) in enumerate(keys):
+            krows.append(_row(f"{dn}.{i}", dn, featureDn=dn, featureKeyNo=str(i + 1),
+                              featureCode=code, featureParameter1=p1))
+        programs.append(_prog("205", "205FeatureKey", krows))
     return {"programs": programs}
 
 
 def test_unrouted_site_is_two_entrypoints_no_edges():
-    # Reproduces the owner's "2 nodes · 0 edges" from real data: the graph is
-    # honest (two groups, no routing) — not an error, not a dropped edge.
+    # Reproduces the owner's "2 nodes · 0 edges" from real data (no 205 read):
+    # the graph is honest (two groups, no routing) — not an error, not a drop.
     g = CF.build_callflow(_unrouted_dit_site_views())
     assert_contract(g)
     by = _by_id(g)
@@ -320,20 +321,74 @@ def test_unrouted_site_is_two_entrypoints_no_edges():
     assert not [e for e in g["edges"] if e["src"] in {"lg:1", "tg:9"}], g["edges"]
 
 
-def test_diagnosis_unrouted_present_but_no_data():
-    # DIT/No-DID tables ARE read (present) but all 'no data' and there is no DID
-    # program → honest "rings stations directly", NOT "run a full read".
-    diag = CF.callflow_diagnosis(_unrouted_dit_site_views(with_dit=True))
-    assert diag["available"] is True
+def test_ring_by_key_draws_group_to_stations():
+    # The real Progressive shape: the analog CO line group's lines appear as CO
+    # ring keys (feature code 120, param = trunk no) on three keyset stations.
+    # The graph must wire the GROUP to each ringing station with a ring_key edge.
+    keys = [
+        ("201", "120", "1"), ("201", "120", "2"),   # both CO lines on 201
+        ("202", "120", "1"),                          # line 1 on 202
+        ("203", "120", "2"),                          # line 2 on 203
+    ]
+    stations = [("201", "FRONT"), ("202", "BACK"), ("203", "LOBBY")]
+    g = CF.build_callflow(_unrouted_dit_site_views(keys=keys, stations=stations))
+    assert_contract(g)
+    assert g["version"] == "1.1.0"
+    rk = [e for e in g["edges"] if e["kind"] == "ring_key"]
+    # one edge per (group, station) — 201's two keys collapse to a single edge
+    assert {(e["src"], e["tgt"]) for e in rk} == {
+        ("lg:1", "ext:201"), ("lg:1", "ext:202"), ("lg:1", "ext:203")}, rk
+    assert all(e["src"] == "lg:1" for e in rk)
+    # the QSIG tie group has no ring keys → it stays an unrouted entry point
+    assert not [e for e in rk if e["src"] == "tg:9"]
+    # stations are real extension nodes
+    assert _by_id(g)["ext:201"]["kind"] == "extension"
+
+
+def test_ring_by_key_only_where_programmed():
+    # A CO key for a line that isn't in any group, and a group-less pool key,
+    # must NOT invent an edge.
+    keys = [("201", "120", "99"),    # trunk 99 — not in program 300
+            ("202", "140", "88")]    # pooled group 88 — no ILG in that pool
+    g = CF.build_callflow(_unrouted_dit_site_views(
+        keys=keys, stations=[("201", "A"), ("202", "B")]))
+    assert_contract(g)
+    assert not [e for e in g["edges"] if e["kind"] == "ring_key"], g["edges"]
+
+
+def test_diagnosis_ring_by_key_is_complete():
+    # With ring-by-key drawn, a key system is routing_complete (no banner), even
+    # though every DID/DIT answer point is 'no data'.
+    keys = [("201", "120", "1"), ("202", "120", "1")]
+    diag = CF.callflow_diagnosis(_unrouted_dit_site_views(
+        keys=keys, stations=[("201", "A"), ("202", "B")]))
+    assert diag["routing_complete"] is True
+    assert diag["reason"] is None
+    assert sum(1 for e in diag["graph"]["edges"] if e["kind"] == "ring_key") == 2
+    assert diag["coverage"]["answer_points_programmed"] == 0  # none in the tables
+    assert diag["coverage"]["programs"]["205"]["status"] == "present"
+
+
+def test_diagnosis_unrouted_no_ring_keys_is_honest():
+    # Fully read (205 present) but no CO ring keys anywhere and all answer points
+    # 'no data' → genuinely nothing to draw; the reason says so, not "run again".
+    diag = CF.callflow_diagnosis(_unrouted_dit_site_views(
+        keys=[("701", "100", "701")]))  # a prime-DN key only, no CO key
     assert diag["routing_complete"] is False
-    assert diag["graph"]["stats"]["edges"] == 0
-    cov = diag["coverage"]
-    assert cov["answer_points_programmed"] == 0
-    assert cov["programs"]["310"]["status"] == "present"
-    assert cov["programs"]["318"]["status"] == "present"
-    assert cov["programs"]["309"]["status"] == "missing"
-    assert "no data" in diag["reason"].lower()
-    assert "co-line key" in diag["reason"].lower()
+    assert sum(1 for e in diag["graph"]["edges"] if e["kind"] == "ring_key") == 0
+    assert "no inbound routing" in diag["reason"].lower()
+    assert "ring key" in diag["reason"].lower()
+    assert diag["coverage"]["programs"]["205"]["status"] == "present"
+
+
+def test_diagnosis_unrouted_no_keymap_asks_full_read():
+    # Answer points all 'no data' and program 205 NOT read → ring-by-key can't
+    # be checked, so the honest answer is "run a full read", naming 205.
+    diag = CF.callflow_diagnosis(_unrouted_dit_site_views(keys=None))
+    assert diag["routing_complete"] is False
+    assert diag["coverage"]["programs"]["205"]["status"] == "missing"
+    assert "205" in diag["reason"]
+    assert "full read" in diag["reason"].lower()
 
 
 def test_diagnosis_incomplete_read_flags_missing_dit():

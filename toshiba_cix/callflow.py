@@ -41,7 +41,7 @@ from __future__ import annotations
 from .decode import MISSING, looks_like_port
 from .index import build_index_from_views
 
-CONTRACT_VERSION = "1.0.0"
+CONTRACT_VERSION = "1.1.0"
 
 # Program numbers of the routing tables this adapter reads. If none of the
 # core four returned data the snapshot is almost certainly a CORE-only read
@@ -68,6 +68,18 @@ _SIGNALING_PORT_TYPE = {
     "tIE": "e_and_m", "lP": "loop_start", "sR": "analog_co", "aCU": "analog_co",
 }
 _ANALOG_PORT_TYPES = {"loop_start", "ground_start", "e_and_m", "analog_co", "did"}
+
+# Flexible-button feature codes (program 205 col 3, `featureCode`) that make a
+# station ring on incoming CO calls — the key-system inbound path on small
+# Toshiba systems that have NO DID/DIT answer-point table. Codes are eManager's
+# own flexible-button feature codes (feature_key_labels.csv in the eManager
+# reverse-engineering catalog): 120=CO (individual line), 130=CO Line Group,
+# 140=Pooled Line Key. featureParameter1 carries the referenced line / group /
+# pool number. Nothing else is treated as a ring key, so no ring is invented.
+_FK_CO_LINE = "120"        # featureParameter1 = CO line (trunk) number
+_FK_CO_LINE_GROUP = "130"  # featureParameter1 = incoming line group (ILG) number
+_FK_POOLED_LINE = "140"    # featureParameter1 = pooled line group number
+_RING_KEY_CODES = (_FK_CO_LINE, _FK_CO_LINE_GROUP, _FK_POOLED_LINE)
 
 # systemCallForwardType (500 col 4) → condition.
 _CF_TYPE_CONDITION = {
@@ -125,6 +137,11 @@ class _Builder:
         self._queue: list[str] = []
         self._expanded: set = set()
         self._dn_cache: dict[str, str | None] = {}
+        # ILG group number → its entrypoint node id (lg:/tg:), filled by
+        # build_groups so ring-by-key can wire a CO-line key to the right group.
+        self._group_node_by_ilg: dict[str, str] = {}
+        # Pooled-line-group number → the ILG group numbers that belong to it.
+        self._ilgs_by_pool: dict[str, list[str]] = {}
 
     # -- row access --------------------------------------------------------
     def rows(self, num: str) -> list[dict]:
@@ -403,6 +420,12 @@ class _Builder:
         self.add_node(node_id, kind, grp, label, " · ".join(meta_bits),
                       ports=ports)
         self.entrypoints.append(node_id)
+        # Remember how to reach this group by its ILG number and pool, so
+        # build_ring_keys() can wire a station's CO-line key to it.
+        self._group_node_by_ilg[grp] = node_id
+        pool = self.f(row, "ilgPoolLineGroup")
+        if pool and pool != "0":
+            self._ilgs_by_pool.setdefault(pool, []).append(grp)
 
         # Answer points: member DIT (310) entries, by mode.
         pairs = []
@@ -428,6 +451,60 @@ class _Builder:
                 if node:
                     pairs.append((mode, node))
         self.emit_mode_edges(node_id, pairs)
+
+    # -- ring-by-key: the key-system inbound path (no answer-point table) --
+    def build_ring_keys(self) -> None:
+        """Wire each incoming line/trunk group to the stations that ring on its
+        CO lines by **key appearance** (program 205 flexible buttons).
+
+        On a small Toshiba key system there is no DID/DIT answer point — the CO
+        lines simply ring the phones that carry those line keys. This reads that
+        programming and draws a ``ring_key`` edge group→station for every real
+        appearance. Nothing is invented: a ring is drawn only where the key is
+        actually programmed and both the group and the station resolve.
+
+        Must run after :meth:`build_groups` (group nodes + the ILG/pool maps).
+        """
+        if not self._group_node_by_ilg:
+            return
+        trunk_ilg = {self.f(r, "trunkNo"): self.f(r, "trunkIlg")
+                     for r in self.rows("300") if self.f(r, "trunkNo")}
+        for row in self.rows("205"):
+            code = self.f(row, "featureCode")
+            if code not in _RING_KEY_CODES:
+                continue
+            station = self.f(row, "featureDn")
+            ref = self.f(row, "featureParameter1")
+            if not station or not ref:
+                continue
+            group_ids = self._ring_key_groups(code, ref, trunk_ilg)
+            if not group_ids:
+                continue
+            tgt = self.resolve_dn(station)
+            if not tgt or self.nodes.get(tgt, {}).get("kind") != "extension":
+                continue
+            for gid in group_ids:
+                self.add_edge(gid, tgt, "ring_key", "rings")
+
+    def _ring_key_groups(self, code: str, ref: str, trunk_ilg: dict) -> list[str]:
+        """The group entrypoint node id(s) a ring key of ``code`` points at.
+
+        120 CO → the ILG of trunk ``ref``; 130 CO Line Group → ILG ``ref``
+        directly; 140 Pooled Line → every ILG in pool ``ref``. Unknown refs
+        yield nothing (the station simply isn't drawn ringing — never a guess).
+        """
+        if code == _FK_CO_LINE:
+            ilg = trunk_ilg.get(ref)
+            gid = self._group_node_by_ilg.get(ilg) if ilg else None
+            return [gid] if gid else []
+        if code == _FK_CO_LINE_GROUP:
+            gid = self._group_node_by_ilg.get(ref)
+            return [gid] if gid else []
+        if code == _FK_POOLED_LINE:
+            return [self._group_node_by_ilg[g]
+                    for g in self._ilgs_by_pool.get(ref, [])
+                    if g in self._group_node_by_ilg]
+        return []
 
     # -- expansion of referenced destinations -----------------------------
     def expand_all(self) -> None:
@@ -556,6 +633,7 @@ class _Builder:
     def graph(self) -> dict:
         self.build_dids()
         self.build_groups()
+        self.build_ring_keys()
         self.expand_all()
         # Entrypoints, de-duplicated, order preserved.
         seen: set = set()
@@ -596,21 +674,23 @@ def build_callflow(program_views: dict) -> dict:
 # --------------------------------------------------------------------------
 # Read coverage + honest diagnosis — ENVELOPE metadata, not the graph.
 #
-# The graph object is the FROZEN v1.0.0 contract (callflow.schema.json has
+# The graph object is the FROZEN contract (callflow.schema.json has
 # additionalProperties:false on the object *and* on stats), so none of this can
 # live inside it. It rides on the /callflow endpoint envelope instead, so the UI
-# can tell three cases apart that otherwise all look like an empty diagram:
+# can tell these cases apart that otherwise all look like an empty diagram:
 #   1. CORE-only read            → routing programs not read at all
 #   2. partial / scoped read     → an answer-point table (310/318/309) is missing
-#   3. genuinely unrouted system → the tables ARE read but every destination is
-#      'no data' (the CIX rings stations directly by CO-line key, which SNMP's
-#      routing tables do not express — so there is nothing to draw, truthfully).
+#   3. genuinely unrouted system → the tables ARE read, every destination is
+#      'no data', AND no station has these lines as a ring key — nothing to draw.
+# Since 1.1.0 ring-by-key (program 205) is drawn, so case 3 now means *no*
+# documented inbound at all, not merely "no answer-point table".
 # --------------------------------------------------------------------------
 _ENTRYPOINT_PROGRAMS = {"309": "DID numbers",
                         "304": "Incoming line / trunk groups"}
 _ANSWER_POINT_PROGRAMS = {"310": "DIT — per-line answer points",
                           "318": "No-DID answer points",
                           "309": "DID answer points"}
+_RING_KEY_PROGRAMS = {"205": "Station CO-line ring keys"}
 
 # Per program, the (day1, day2, night) destination-TYPE field triple whose value
 # says whether a mode answers anywhere. Mirrors what build_groups/build_dids read.
@@ -647,7 +727,8 @@ def callflow_coverage(program_views: dict) -> dict:
 
     programs = {num: {"title": title, "status": status(num)}
                 for num, title in {**_ENTRYPOINT_PROGRAMS,
-                                    **_ANSWER_POINT_PROGRAMS}.items()}
+                                   **_ANSWER_POINT_PROGRAMS,
+                                   **_RING_KEY_PROGRAMS}.items()}
     programmed = 0
     for num, type_fields in _ANSWER_TYPE_FIELDS.items():
         for row in (_program_rows(program_views, num) or []):
@@ -704,19 +785,23 @@ def callflow_diagnosis(program_views: dict) -> dict:
                 f"{'were' if len(missing) != 1 else 'was'} not in this read. "
                 "Run a full read (Connect does core→all, or take a full "
                 "snapshot) so the inbound routing can be drawn.")
-        elif coverage["answer_points_programmed"] == 0:
+        elif _program_rows(program_views, "205") is None:
+            # No answer points AND the station key map wasn't read, so
+            # ring-by-key could not even be checked — treat as a partial read.
             reason = (
-                "Entry points were found, but no inbound answer points are "
-                "programmed — the DID / DIT tables (309 / 310 / 318) are "
-                "present but every destination is set to ‘no data’. "
-                "On a system like this the incoming lines ring stations "
-                "directly by CO-line key assignment, which the CIX does not "
-                "express in its SNMP routing tables, so there is nothing to "
-                "draw here.")
+                "Entry points were found, but the DID / DIT answer-point tables "
+                "are all ‘no data’ and the station key programming (program 205) "
+                "was not in this read, so ring-by-key can’t be checked. Run a "
+                "full read (Connect does core→all, or take a full snapshot).")
         else:
+            # Answer points are all 'no data' AND no station rings these lines by
+            # key — there is genuinely no documented inbound path to draw.
             reason = (
-                "Entry points were found, but none routes onward in the read "
-                "routing tables. The read may be partial — try a full read.")
+                "Entry points were found, but there is no inbound routing to "
+                "draw: the DID / DIT answer-point tables are all ‘no data’ and "
+                "no station has these lines as a CO-line ring key. Inbound "
+                "handling may be off-switch (a carrier or auto-attendant) or "
+                "not yet programmed.")
 
     return {
         "available": True,
