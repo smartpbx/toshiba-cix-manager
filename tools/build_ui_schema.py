@@ -111,6 +111,7 @@ def load_inputs() -> dict:
         "ui_overrides.json": os.path.join(HERE, "ui_overrides.json"),
         "enum_label_overrides.json": os.path.join(HERE, "enum_label_overrides.json"),
         "binary_pairs.json": os.path.join(HERE, "binary_pairs.json"),
+        "task_menu.json": os.path.join(HERE, "task_menu.json"),
     }
     text = {name: _read_text(path) for name, path in files.items()}
     hashes = {name: _sha(text[name]) for name in sorted(text)}
@@ -131,6 +132,7 @@ def load_inputs() -> dict:
                            json.loads(text["enum_label_overrides.json"]).items()
                            if not k.startswith("_")},
         "binary_pairs": json.loads(text["binary_pairs.json"]).get("pairs", []),
+        "task_menu": json.loads(text["task_menu.json"]),
         "source_hashes": hashes,
     }
 
@@ -265,6 +267,7 @@ def build_schema(inp: dict) -> dict:
     ov_display = overrides.get("display_no", {})
     ov_never = set(overrides.get("never_write", []))
     ov_level0 = set(overrides.get("level0", []))
+    ov_field_meta = overrides.get("field_meta", {})
 
     programs: dict[str, dict] = {}
     enum_field_total = 0
@@ -290,6 +293,7 @@ def build_schema(inp: dict) -> dict:
 
         ordered = sorted(enumerate(cat_fields), key=lambda it: (_order_key(it[1]), it[0]))
         disp_over = ov_display.get(key, {})
+        field_meta = ov_field_meta.get(key, {})
 
         fields = []
         key_fields = []
@@ -330,6 +334,15 @@ def build_schema(inp: dict) -> dict:
                 cell["enum_values"] = enum_values
             if binary:
                 cell["binary_pair"] = binary
+            # Hand-maintained grouping + plain-English description for the
+            # single-record form pages (e.g. 105 System settings). Ungrouped
+            # fields fall back to "Advanced" in the UI.
+            meta = field_meta.get(fname)
+            if meta:
+                if meta.get("group"):
+                    cell["group"] = meta["group"]
+                if meta.get("desc"):
+                    cell["desc"] = meta["desc"]
             fields.append(cell)
 
         row_keyed = bool(key_fields)
@@ -376,6 +389,7 @@ def build_schema(inp: dict) -> dict:
         programs[key] = pv
 
     menu_tree = _build_menu_tree(programs)
+    task_tree = _build_task_tree(inp["task_menu"], programs)
     feature_keys = [{"code": r.get("feature_key_code", "").strip(),
                      "name": r.get("feature_name", "").strip()}
                     for r in inp["feature_keys"]
@@ -408,6 +422,7 @@ def build_schema(inp: dict) -> dict:
         "counts": counts,
         "menu_area_order": list(MENU_AREA_ORDER),
         "menu_tree": menu_tree,
+        "task_tree": task_tree,
         "programs": programs,
         "feature_keys": feature_keys,
         "actions": actions,
@@ -415,6 +430,43 @@ def build_schema(inp: dict) -> dict:
                          for p in binary_pairs],
         "title_pool": inp["title_pool"],
     }
+
+
+def _build_task_tree(task_menu: dict, programs: dict) -> list:
+    """The hand-maintained task-first nav (Switchroom 2a) as validated data.
+
+    Groups -> items; each item is either the Home entry (``kind: "home"``) or a
+    set of real catalog programs grouped under one plain-English name. Every
+    program key is validated against the built catalog so a typo fails the build
+    rather than shipping a dead nav row. ``num`` is the first program's display
+    number (what the menu shows secondary); anything not listed here stays
+    reachable through Ctrl K search and the "All programs" footer link.
+    """
+    groups_out = []
+    for g in task_menu.get("groups", []):
+        items_out = []
+        for it in g.get("items", []):
+            title = it.get("title") or ""
+            kind = it.get("kind", "program")
+            if kind == "home":
+                items_out.append({
+                    "title": title, "icon": it.get("icon", "house"),
+                    "kind": "home", "programs": [], "num": None,
+                })
+                continue
+            prog_keys = list(it.get("programs", []))
+            for k in prog_keys:
+                if k not in programs:
+                    raise ValueError(
+                        f"task_menu.json: unknown program key {k!r} in item "
+                        f"{title!r} — it is not in the catalog.")
+            num = programs[prog_keys[0]]["program_number"] if prog_keys else None
+            items_out.append({
+                "title": title, "icon": it.get("icon", "dot"),
+                "kind": "program", "programs": prog_keys, "num": num,
+            })
+        groups_out.append({"label": g.get("label"), "items": items_out})
+    return groups_out
 
 
 def _build_menu_tree(programs: dict) -> list:

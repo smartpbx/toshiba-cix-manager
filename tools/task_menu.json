@@ -1,0 +1,46 @@
+{
+  "_note": "Hand-maintained task-first navigation (Switchroom redesign 2a). Groups programs by the job a tech does, with plain-English names; the program number is shown secondary. build_ui_schema.py validates every 'programs' key against the catalog and emits 'task_tree' into ui_schema.json next to 'menu_tree'. Reachability for anything NOT listed here is the footer 'All 186 programs' link + Ctrl K search, so this file is curated, not exhaustive. Icons are lucide-react names.",
+
+  "groups": [
+    {
+      "label": null,
+      "items": [
+        { "title": "Overview", "icon": "house", "kind": "home" }
+      ]
+    },
+    {
+      "label": "People & phones",
+      "items": [
+        { "title": "Stations", "icon": "phone", "programs": ["200StationAssign"] },
+        { "title": "Hunt groups", "icon": "users", "programs": ["209StationHunting", "218StationHuntingGroupMember"] },
+        { "title": "Pickup groups", "icon": "hand", "programs": ["210PickUpGrp"] },
+        { "title": "Speed dials", "icon": "zap", "programs": ["516StationSpeedDial"] }
+      ]
+    },
+    {
+      "label": "Lines",
+      "items": [
+        { "title": "Trunks", "icon": "phone-call", "programs": ["300TrunkAssign"] },
+        { "title": "Incoming numbers", "icon": "phone-incoming", "programs": ["309DID"] },
+        { "title": "Line groups", "icon": "layers", "programs": ["304ILGAssign", "306OLGAssign"] }
+      ]
+    },
+    {
+      "label": "Call routing",
+      "items": [
+        { "title": "Day / night", "icon": "moon", "programs": ["106DayNightModePrivateDay", "112DayNightModePrivateCalendar", "113DayNightModeSchedule"] },
+        { "title": "Least-cost routing", "icon": "route", "programs": ["520LCRParameter"] },
+        { "title": "Restrictions", "icon": "shield", "programs": ["532TollRestrictionTableAllowDeny"] }
+      ]
+    },
+    {
+      "label": "System",
+      "items": [
+        { "title": "Settings", "icon": "settings", "programs": ["105SystemData"] },
+        { "title": "Timers", "icon": "timer", "programs": ["104SystemTimer"] },
+        { "title": "Class of service", "icon": "sliders-horizontal", "programs": ["103ClassOfService"] },
+        { "title": "Cards & slots", "icon": "cpu", "programs": ["100CardSlot"] }
+      ]
+    }
+  ]
+}

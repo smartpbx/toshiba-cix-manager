@@ -21,3 +21,6 @@ packaging/icon.png
 packaging/icon.ico
 appimagetool*
 python-build-standalone*
+
+# UI/UX redesign review screenshots (not source)
+.uiux-shots/

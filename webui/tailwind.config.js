@@ -58,7 +58,11 @@ export default {
         row: "var(--row-h)",
         ctl: "var(--ctl-h)",
         topbar: "var(--topbar-h)",
+        header: "var(--header-h)",
         statusbar: "var(--statusbar-h)",
+      },
+      width: {
+        nav: "var(--nav-w)",
       },
       keyframes: {
         "accordion-down": {

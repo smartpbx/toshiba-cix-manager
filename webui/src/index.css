@@ -3,77 +3,135 @@
 @tailwind utilities;
 
 /* ------------------------------------------------------------------ *
- * Design tokens — adopted UNCHANGED from ui.md §3.2.                  *
- * These are the only styling source; shadcn/ui is themed off them.   *
+ * Self-hosted IBM Plex (UI + mono).                                   *
+ * The single-file build (vite-plugin-singlefile) must work OFFLINE on *
+ * a PBX voice LAN, so the fonts are vendored (webui/src/fonts/, latin *
+ * subset) and inlined — never a Google Fonts <link>.                  *
+ * ------------------------------------------------------------------ */
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/ibm-plex-sans-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./fonts/ibm-plex-sans-latin-500-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./fonts/ibm-plex-sans-latin-600-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./fonts/ibm-plex-sans-latin-700-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./fonts/ibm-plex-mono-latin-600-normal.woff2") format("woff2");
+}
+
+/* ------------------------------------------------------------------ *
+ * Design tokens — Switchroom redesign option 2a (design handoff).     *
+ * These CSS custom properties are the single styling source; shadcn   *
+ * and Tailwind are themed off them (tailwind.config.js references).   *
  * ------------------------------------------------------------------ */
 :root {
   /* surfaces */
-  --bg: #f4f6f9;
-  --surface: #ffffff;
-  --surface-2: #eef2f7;
-  --surface-3: #e3e9f1;
-  --line: #d6dee9;
-  --line-strong: #b9c5d4;
+  --bg: #f7f6f3;
+  --surface: #fffefc;
+  --surface-2: #efede8;
+  --surface-3: #e5e2db;
+  --line: #e4e1d9;
+  --line-strong: #cfcbc1;
 
   /* text */
-  --fg: #0f1b2a;
-  --fg-2: #44546a;
-  --fg-3: #7a889a;
+  --fg: #1c1b18;
+  --fg-2: #57544c;
+  --fg-3: #8a867b;
 
   /* accent + semantics */
-  --accent: #1f6fd1;
-  --accent-hover: #185bb0;
-  --accent-tint: #e4eefb;
+  --accent: #0f7f80;
+  --accent-hover: #0c6a6b;
+  --accent-tint: #dcefee;
   --accent-fg: #ffffff;
   --ok: #1a8a5a;
   --ok-tint: #dff3ea;
   --warn: #b26a00;
-  --warn-tint: #fdf0d8;
+  --warn-tint: #f6ead2;
   --bad: #c22f2f;
   --bad-tint: #fbe3e3;
   --remote: #6d4fd6;
   --remote-tint: #ece7fb;
-  --focus: #1f6fd1;
+  --focus: #0f7f80;
 
-  /* type */
-  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+  /* type — IBM Plex (UI) + IBM Plex Mono (DNs, OIDs, program/field numbers) */
+  --font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
   --fs-0: 11px;
   --fs-1: 12px;
-  --fs-2: 13px;
+  --fs-2: 13.5px;
   --fs-3: 14px;
   --fs-4: 16px;
   --fs-5: 20px;
 
   /* geometry */
   --r-1: 4px;
-  --r-2: 6px;
-  --r-3: 8px;
+  --r-2: 7px;
+  --r-3: 9px;
   --row-h: 28px;
   --ctl-h: 32px;
   --gutter: 16px;
-  --nav-w: 240px;
+  --nav-w: 244px;
   --rail-w: 300px;
   --topbar-h: 44px;
+  --header-h: 58px;
   --statusbar-h: 26px;
 }
 
 /* Dark follows the OS unless the user forced light; and when forced dark. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f141b;
-    --surface: #161c25;
-    --surface-2: #1d2531;
-    --surface-3: #263040;
-    --line: #2a3442;
-    --line-strong: #3a4656;
-    --fg: #e6ecf3;
-    --fg-2: #a6b3c3;
-    --fg-3: #6f7d8f;
-    --accent: #5b9cf0;
-    --accent-hover: #7bb0f5;
-    --accent-tint: #1a2d47;
-    --accent-fg: #0f141b;
+    --bg: #141513;
+    --surface: #1b1c1a;
+    --surface-2: #242522;
+    --surface-3: #2e2f2b;
+    --line: #30312d;
+    --line-strong: #454640;
+    --fg: #ecebe6;
+    --fg-2: #b0aea5;
+    --fg-3: #7f7d74;
+    --accent: #4cc2c0;
+    --accent-hover: #6fd0ce;
+    --accent-tint: #173332;
+    --accent-fg: #141513;
     --ok: #3fc58a;
     --ok-tint: #10301f;
     --warn: #f0b24a;
@@ -82,24 +140,24 @@
     --bad-tint: #3b1717;
     --remote: #a78bfa;
     --remote-tint: #241b45;
-    --focus: #5b9cf0;
+    --focus: #4cc2c0;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #0f141b;
-  --surface: #161c25;
-  --surface-2: #1d2531;
-  --surface-3: #263040;
-  --line: #2a3442;
-  --line-strong: #3a4656;
-  --fg: #e6ecf3;
-  --fg-2: #a6b3c3;
-  --fg-3: #6f7d8f;
-  --accent: #5b9cf0;
-  --accent-hover: #7bb0f5;
-  --accent-tint: #1a2d47;
-  --accent-fg: #0f141b;
+  --bg: #141513;
+  --surface: #1b1c1a;
+  --surface-2: #242522;
+  --surface-3: #2e2f2b;
+  --line: #30312d;
+  --line-strong: #454640;
+  --fg: #ecebe6;
+  --fg-2: #b0aea5;
+  --fg-3: #7f7d74;
+  --accent: #4cc2c0;
+  --accent-hover: #6fd0ce;
+  --accent-tint: #173332;
+  --accent-fg: #141513;
   --ok: #3fc58a;
   --ok-tint: #10301f;
   --warn: #f0b24a;
@@ -108,13 +166,8 @@
   --bad-tint: #3b1717;
   --remote: #a78bfa;
   --remote-tint: #241b45;
-  --focus: #5b9cf0;
+  --focus: #4cc2c0;
 }
-
-/* Accent presets (ui.md §3.2) — only swap --accent*; semantics never change. */
-:root[data-accent="graphite"] { --accent: #3b4452; --accent-hover: #2c333e; --accent-tint: #e6e9ee; --focus: #3b4452; }
-:root[data-accent="red"] { --accent: #c0392b; --accent-hover: #9c2d22; --accent-tint: #fbe6e3; --focus: #c0392b; }
-:root[data-accent="teal"] { --accent: #0f8b8d; --accent-hover: #0b6d6f; --accent-tint: #dff1f1; --focus: #0f8b8d; }
 
 @layer base {
   * {
@@ -167,8 +220,10 @@
 @media print {
   :root { --app-print: 1; }
   header[class*="h-topbar"],
+  header[class*="h-header"],
   aside,
   [data-chrome="nav"],
+  [data-chrome="header"],
   [data-chrome="tabs"],
   [data-chrome="status"],
   [data-chrome="rail"],

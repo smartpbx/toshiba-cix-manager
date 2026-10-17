@@ -4832,12 +4832,14 @@
           },
           "col": null,
           "control": "segmented",
+          "desc": "Let privileged stations break into a busy call.",
           "display_no": "00",
           "enc": "INTEGER",
           "enum_values": {
             "1": "Enable",
             "2": "Disable"
           },
+          "group": "Call handling",
           "is_binary_pair": true,
           "is_enum": true,
           "is_secret": false,
@@ -4855,8 +4857,10 @@
           "access": "rw",
           "col": null,
           "control": "text",
+          "desc": "National / long-distance dialing prefix.",
           "display_no": "01",
           "enc": "OCTETSTRING",
+          "group": "Dialing & codes",
           "is_binary_pair": false,
           "is_enum": false,
           "is_secret": false,
@@ -4874,6 +4878,7 @@
           "access": "rw",
           "col": null,
           "control": "select",
+          "desc": "Source for music a caller hears on hold.",
           "display_no": "02",
           "enc": "INTEGER",
           "enum_values": {
@@ -4895,6 +4900,7 @@
             "8": "External 7",
             "9": "External 8"
           },
+          "group": "Audio & paging",
           "is_binary_pair": false,
           "is_enum": true,
           "is_secret": false,
@@ -4912,8 +4918,10 @@
           "access": "rw",
           "col": null,
           "control": "text",
+          "desc": "International dialing prefix.",
           "display_no": "03",
           "enc": "OCTETSTRING",
+          "group": "Dialing & codes",
           "is_binary_pair": false,
           "is_enum": false,
           "is_secret": false,
@@ -4931,12 +4939,14 @@
           "access": "rw",
           "col": null,
           "control": "select",
+          "desc": "How a transferred call rings at the destination.",
           "display_no": "04",
           "enc": "INTEGER",
           "enum_values": {
             "1": "RBT",
             "2": "MOH"
           },
+          "group": "Call handling",
           "is_binary_pair": false,
           "is_enum": true,
           "is_secret": false,
@@ -4954,12 +4964,14 @@
           "access": "rw",
           "col": null,
           "control": "select",
+          "desc": "Numbering-plan id sent on the calling-party number.",
           "display_no": "05",
           "enc": "INTEGER",
           "enum_values": {
             "1": "Unknown",
             "2": "ISDN Telephony Numbering Plan"
           },
+          "group": "Caller ID & numbering",
           "is_binary_pair": false,
           "is_enum": true,
           "is_secret": false,
@@ -4987,12 +4999,14 @@
           },
           "col": null,
           "control": "segmented",
+          "desc": "Block others from joining a transferred call.",
           "display_no": "06",
           "enc": "INTEGER",
           "enum_values": {
             "1": "Enable",
             "2": "Disable"
           },
+          "group": "Call handling",
           "is_binary_pair": true,
           "is_enum": true,
           "is_secret": false,
@@ -5010,12 +5024,14 @@
           "access": "rw",
           "col": null,
           "control": "select",
+          "desc": "Treat a hook-flash as a transfer request.",
           "display_no": "07",
           "enc": "INTEGER",
           "enum_values": {
             "1": "Hooking",
             "2": "On Hook Off Hook"
           },
+          "group": "Call handling",
           "is_binary_pair": false,
           "is_enum": true,
           "is_secret": false,
@@ -5043,12 +5059,14 @@
           },
           "col": null,
           "control": "segmented",
+          "desc": "Let a station override privacy on a line.",
           "display_no": "08",
           "enc": "INTEGER",
           "enum_values": {
             "1": "Enable",
             "2": "Disable"
           },
+          "group": "Call handling",
           "is_binary_pair": true,
           "is_enum": true,
           "is_secret": false,
@@ -5089,8 +5107,10 @@
           "access": "rw",
           "col": null,
           "control": "text",
+          "desc": "Service code for credit-card calls.",
           "display_no": "10",
           "enc": "OCTETSTRING",
+          "group": "Dialing & codes",
           "is_binary_pair": false,
           "is_enum": false,
           "is_secret": false,
@@ -5141,8 +5161,10 @@
           "access": "rw",
           "col": null,
           "control": "number",
+          "desc": "Minimum digits before a credit-card call dials.",
           "display_no": "12",
           "enc": "INTEGER",
+          "group": "Dialing & codes",
           "is_binary_pair": false,
           "is_enum": false,
           "is_secret": false,
@@ -5203,12 +5225,14 @@
           },
           "col": null,
           "control": "segmented",
+          "desc": "Enable E911 emergency-call handling.",
           "display_no": "14",
           "enc": "INTEGER",
           "enum_values": {
             "1": "Enable",
             "2": "Disable"
           },
+          "group": "Emergency (E911)",
           "is_binary_pair": true,
           "is_enum": true,
           "is_secret": false,
@@ -5260,12 +5284,14 @@
           },
           "col": null,
           "control": "segmented",
+          "desc": "Allow toll-restriction override on this system.",
           "display_no": "16",
           "enc": "INTEGER",
           "enum_values": {
             "1": "Enable",
             "2": "Disable"
           },
+          "group": "Call handling",
           "is_binary_pair": true,
           "is_enum": true,
           "is_secret": false,
@@ -5316,12 +5342,14 @@
           },
           "col": null,
           "control": "segmented",
+          "desc": "Free a station that is left off-hook.",
           "display_no": "18",
           "enc": "INTEGER",
           "enum_values": {
             "1": "Enable",
             "2": "Disable"
           },
+          "group": "Call handling",
           "is_binary_pair": true,
           "is_enum": true,
           "is_secret": false,
@@ -5339,12 +5367,14 @@
           "access": "rw",
           "col": null,
           "control": "select",
+          "desc": "Play a melody instead of ringback.",
           "display_no": "19",
           "enc": "INTEGER",
           "enum_values": {
             "1": "Start",
             "2": "Stop"
           },
+          "group": "Audio & paging",
           "is_binary_pair": false,
           "is_enum": true,
           "is_secret": false,
@@ -5385,12 +5415,14 @@
           "access": "rw",
           "col": null,
           "control": "select",
+          "desc": "Which built-in melody plays.",
           "display_no": "21",
           "enc": "INTEGER",
           "enum_values": {
             "1": "Melody 1",
             "2": "Melody 2"
           },
+          "group": "Audio & paging",
           "is_binary_pair": false,
           "is_enum": true,
           "is_secret": false,
@@ -5437,12 +5469,14 @@
           },
           "col": null,
           "control": "segmented",
+          "desc": "Volume padding on internal calls.",
           "display_no": "23",
           "enc": "INTEGER",
           "enum_values": {
             "1": "Enable",
             "2": "Disable"
           },
+          "group": "Audio & paging",
           "is_binary_pair": true,
           "is_enum": true,
           "is_secret": false,
@@ -5460,8 +5494,10 @@
           "access": "rw",
           "col": null,
           "control": "number",
+          "desc": "Number of external paging zones.",
           "display_no": "24",
           "enc": "INTEGER",
+          "group": "Audio & paging",
           "is_binary_pair": false,
           "is_enum": false,
           "is_secret": false,
@@ -5479,12 +5515,14 @@
           "access": "rw",
           "col": null,
           "control": "select",
+          "desc": "Ring cadence pattern used system-wide.",
           "display_no": "25",
           "enc": "INTEGER",
           "enum_values": {
             "1": "Ringing Type 1",
             "2": "Ringing Type 2"
           },
+          "group": "Audio & paging",
           "is_binary_pair": false,
           "is_enum": true,
           "is_secret": false,
@@ -5502,8 +5540,10 @@
           "access": "rw",
           "col": null,
           "control": "text",
+          "desc": "Where unanswered or abandoned calls land.",
           "display_no": "26",
           "enc": "OCTETSTRING",
+          "group": "Call handling",
           "is_binary_pair": false,
           "is_enum": false,
           "is_secret": false,
@@ -5531,12 +5571,14 @@
           },
           "col": null,
           "control": "segmented",
+          "desc": "Allow call-forward to chain across systems.",
           "display_no": "27",
           "enc": "INTEGER",
           "enum_values": {
             "1": "Enable",
             "2": "Disable"
           },
+          "group": "Call handling",
           "is_binary_pair": true,
           "is_enum": true,
           "is_secret": false,
@@ -5554,8 +5596,10 @@
           "access": "rw",
           "col": null,
           "control": "number",
+          "desc": "Length of the class-of-service override code.",
           "display_no": "28",
           "enc": "INTEGER",
+          "group": "Dialing & codes",
           "is_binary_pair": false,
           "is_enum": false,
           "is_secret": false,
@@ -5616,12 +5660,14 @@
           },
           "col": null,
           "control": "segmented",
+          "desc": "Enable large multi-party conferences.",
           "display_no": "30",
           "enc": "INTEGER",
           "enum_values": {
             "1": "Allowed",
             "2": "Not Allowed"
           },
+          "group": "Call handling",
           "is_binary_pair": true,
           "is_enum": true,
           "is_secret": false,
@@ -5682,12 +5728,14 @@
           },
           "col": null,
           "control": "segmented",
+          "desc": "Show the caller's number on phones.",
           "display_no": "32",
           "enc": "INTEGER",
           "enum_values": {
             "1": "Enable",
             "2": "Disable"
           },
+          "group": "Caller ID & numbering",
           "is_binary_pair": true,
           "is_enum": true,
           "is_secret": false,
@@ -5767,12 +5815,14 @@
           },
           "col": null,
           "control": "segmented",
+          "desc": "Default outbound caller ID when none is set.",
           "display_no": "35",
           "enc": "INTEGER",
           "enum_values": {
             "1": "Enable",
             "2": "Disable"
           },
+          "group": "Caller ID & numbering",
           "is_binary_pair": true,
           "is_enum": true,
           "is_secret": false,
@@ -5790,12 +5840,14 @@
           "access": "rw",
           "col": null,
           "control": "select",
+          "desc": "Prefer DNIS or caller ID on the display.",
           "display_no": "36",
           "enc": "INTEGER",
           "enum_values": {
             "1": "DNIS",
             "2": "Call ID"
           },
+          "group": "Caller ID & numbering",
           "is_binary_pair": false,
           "is_enum": true,
           "is_secret": false,
@@ -5856,6 +5908,7 @@
           "access": "rw",
           "col": null,
           "control": "select",
+          "desc": "Which caller ID shows on a transferred call.",
           "display_no": "39",
           "enc": "INTEGER",
           "enum_values": {
@@ -5868,6 +5921,7 @@
             "7": "Transferred",
             "8": "Recalled"
           },
+          "group": "Caller ID & numbering",
           "is_binary_pair": false,
           "is_enum": true,
           "is_secret": false,
@@ -5885,8 +5939,10 @@
           "access": "rw",
           "col": null,
           "control": "port",
+          "desc": "Primary network clock reference (card / port).",
           "display_no": "40",
           "enc": "OCTETSTRING",
+          "group": "Clock & timing",
           "is_binary_pair": false,
           "is_enum": false,
           "is_secret": false,
@@ -5904,6 +5960,7 @@
           "access": "rw",
           "col": null,
           "control": "select",
+          "desc": "Type-of-number tag on the calling-party number.",
           "display_no": "41",
           "enc": "INTEGER",
           "enum_values": {
@@ -5915,6 +5972,7 @@
             "6": "Subscriber Number",
             "7": "Abbreviated Number"
           },
+          "group": "Caller ID & numbering",
           "is_binary_pair": false,
           "is_enum": true,
           "is_secret": false,
@@ -5932,8 +5990,10 @@
           "access": "rw",
           "col": null,
           "control": "port",
+          "desc": "Backup network clock reference.",
           "display_no": "42",
           "enc": "OCTETSTRING",
+          "group": "Clock & timing",
           "is_binary_pair": false,
           "is_enum": false,
           "is_secret": false,
@@ -5951,6 +6011,7 @@
           "access": "rw",
           "col": null,
           "control": "select",
+          "desc": "Numbering-plan id on the calling-party number.",
           "display_no": "43",
           "enc": "INTEGER",
           "enum_values": {
@@ -5962,6 +6023,7 @@
             "6": "National Standard Numbering Plan",
             "7": "Private Numbering Plan"
           },
+          "group": "Caller ID & numbering",
           "is_binary_pair": false,
           "is_enum": true,
           "is_secret": false,
@@ -5979,12 +6041,14 @@
           "access": "rw",
           "col": null,
           "control": "select",
+          "desc": "Prefix added to numbers in call history.",
           "display_no": "44",
           "enc": "INTEGER",
           "enum_values": {
             "1": "Add",
             "2": "Not Add"
           },
+          "group": "Caller ID & numbering",
           "is_binary_pair": false,
           "is_enum": true,
           "is_secret": false,
@@ -6002,8 +6066,10 @@
           "access": "rw",
           "col": null,
           "control": "number",
+          "desc": "How often LCD key labels refresh.",
           "display_no": "45",
           "enc": "INTEGER",
+          "group": "Clock & timing",
           "is_binary_pair": false,
           "is_enum": false,
           "is_secret": false,
@@ -6021,8 +6087,10 @@
           "access": "rw",
           "col": null,
           "control": "text",
+          "desc": "Digits prepended to an E911 call.",
           "display_no": "46",
           "enc": "OCTETSTRING",
+          "group": "Emergency (E911)",
           "is_binary_pair": false,
           "is_enum": false,
           "is_secret": false,
@@ -6040,8 +6108,10 @@
           "access": "rw",
           "col": null,
           "control": "text",
+          "desc": "Digits dialled to recall a call-history entry.",
           "display_no": "47",
           "enc": "OCTETSTRING",
+          "group": "Caller ID & numbering",
           "is_binary_pair": false,
           "is_enum": false,
           "is_secret": false,
@@ -60130,9 +60200,174 @@
     "feature_key_labels.csv": "sha256:d7c52df7cedfe0bc5af4db9966e817d1a72d9b51ce4882124eadf4507b19e547",
     "native_field_titles.txt": "sha256:c31057e8294124ebe4229de9563fb0693a715e307b732e05085371b814729f75",
     "program_menus.json": "sha256:366467a7dfb6ce560544153ed4daf4ab836e0b65b515c13e58d3658e5df5a7fa",
+    "task_menu.json": "sha256:8d7f68ae4ea9109b16dbc38cdfe277b69beb83aa50ff28c4e39c28b493c6923a",
     "tbl_program_headers.json": "sha256:5823d02d7a8083387a2700feb19c632d3d75e7775ecbb8a7128cb67fa7e61913",
-    "ui_overrides.json": "sha256:bd4307169e70c61d682f85e226a22d038b145cc17d2e4bf32984ef3b22372289"
+    "ui_overrides.json": "sha256:a9a59136609214abe56e8a7767913b0892c2f385995fbab4b8e53f4937af3189"
   },
+  "task_tree": [
+    {
+      "items": [
+        {
+          "icon": "house",
+          "kind": "home",
+          "num": null,
+          "programs": [],
+          "title": "Overview"
+        }
+      ],
+      "label": null
+    },
+    {
+      "items": [
+        {
+          "icon": "phone",
+          "kind": "program",
+          "num": "200",
+          "programs": [
+            "200StationAssign"
+          ],
+          "title": "Stations"
+        },
+        {
+          "icon": "users",
+          "kind": "program",
+          "num": "209",
+          "programs": [
+            "209StationHunting",
+            "218StationHuntingGroupMember"
+          ],
+          "title": "Hunt groups"
+        },
+        {
+          "icon": "hand",
+          "kind": "program",
+          "num": "210",
+          "programs": [
+            "210PickUpGrp"
+          ],
+          "title": "Pickup groups"
+        },
+        {
+          "icon": "zap",
+          "kind": "program",
+          "num": "516",
+          "programs": [
+            "516StationSpeedDial"
+          ],
+          "title": "Speed dials"
+        }
+      ],
+      "label": "People & phones"
+    },
+    {
+      "items": [
+        {
+          "icon": "phone-call",
+          "kind": "program",
+          "num": "300",
+          "programs": [
+            "300TrunkAssign"
+          ],
+          "title": "Trunks"
+        },
+        {
+          "icon": "phone-incoming",
+          "kind": "program",
+          "num": "309",
+          "programs": [
+            "309DID"
+          ],
+          "title": "Incoming numbers"
+        },
+        {
+          "icon": "layers",
+          "kind": "program",
+          "num": "304",
+          "programs": [
+            "304ILGAssign",
+            "306OLGAssign"
+          ],
+          "title": "Line groups"
+        }
+      ],
+      "label": "Lines"
+    },
+    {
+      "items": [
+        {
+          "icon": "moon",
+          "kind": "program",
+          "num": "106",
+          "programs": [
+            "106DayNightModePrivateDay",
+            "112DayNightModePrivateCalendar",
+            "113DayNightModeSchedule"
+          ],
+          "title": "Day / night"
+        },
+        {
+          "icon": "route",
+          "kind": "program",
+          "num": "520",
+          "programs": [
+            "520LCRParameter"
+          ],
+          "title": "Least-cost routing"
+        },
+        {
+          "icon": "shield",
+          "kind": "program",
+          "num": "532",
+          "programs": [
+            "532TollRestrictionTableAllowDeny"
+          ],
+          "title": "Restrictions"
+        }
+      ],
+      "label": "Call routing"
+    },
+    {
+      "items": [
+        {
+          "icon": "settings",
+          "kind": "program",
+          "num": "105",
+          "programs": [
+            "105SystemData"
+          ],
+          "title": "Settings"
+        },
+        {
+          "icon": "timer",
+          "kind": "program",
+          "num": "104",
+          "programs": [
+            "104SystemTimer"
+          ],
+          "title": "Timers"
+        },
+        {
+          "icon": "sliders-horizontal",
+          "kind": "program",
+          "num": "103",
+          "programs": [
+            "103ClassOfService"
+          ],
+          "title": "Class of service"
+        },
+        {
+          "icon": "cpu",
+          "kind": "program",
+          "num": "100",
+          "programs": [
+            "100CardSlot"
+          ],
+          "title": "Cards & slots"
+        }
+      ],
+      "label": "System"
+    }
+  ],
   "title_pool": [
     "00 Access Code",
     "00 Analysis Digits",

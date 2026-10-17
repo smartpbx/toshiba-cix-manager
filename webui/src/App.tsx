@@ -14,6 +14,7 @@ import { VoiceMailView } from "@/views/VoiceMailView";
 import { ProblemsView } from "@/views/ProblemsView";
 import { HelpView } from "@/views/HelpView";
 import { FileModeBanner } from "@/components/backup/FileModeBanner";
+import { PreferencesPopover } from "@/components/shell/PreferencesPopover";
 import { PendingRail } from "@/components/write/PendingRail";
 import { ReviewWriteDialog } from "@/components/write/ReviewWriteDialog";
 import { useEventStream } from "@/lib/sse";
@@ -73,10 +74,10 @@ export default function App() {
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden">
-      <TopBar />
       <div className="flex min-h-0 flex-1">
         <NavTree />
         <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-background">
+          <TopBar />
           <TabStrip />
           <FileModeBanner />
           <div className="min-h-0 flex-1 overflow-hidden">
@@ -91,6 +92,7 @@ export default function App() {
       <ReviewWriteDialog />
       <UpdatesDialog />
       <UpdateToast />
+      <PreferencesPopover />
     </div>
   );
 }
