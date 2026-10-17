@@ -25,6 +25,13 @@
       "csp": null
     }
   },
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": ["switchroom"]
+      }
+    }
+  },
   "bundle": {
     "active": true,
     "targets": ["deb", "appimage"],

@@ -62,9 +62,16 @@ export default function App() {
   useEventStream();
   const loadSchema = useStore((s) => s.loadSchema);
   const checkUpdate = useStore((s) => s.checkUpdate);
+  const initBridge = useStore((s) => s.initBridge);
   React.useEffect(() => {
     void loadSchema();
   }, [loadSchema]);
+  // Manager bridge: re-establish the Save-to-cloud target after a reload and
+  // act on a deep link that launched the app (cold start — it may have arrived
+  // before the SSE stream was subscribed, so poll once here too).
+  React.useEffect(() => {
+    void initBridge();
+  }, [initBridge]);
   // One-time, non-blocking "is there a newer release?" check on launch. It
   // degrades silently offline (store swallows the error) and never blocks the
   // UI from mounting — it only surfaces the dismissible UpdateToast if newer.

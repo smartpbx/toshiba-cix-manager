@@ -4,9 +4,16 @@ Version=1.0
 Name=Toshiba CIX Manager
 GenericName=PBX Management Tool
 Comment=Read and manage a Toshiba Strata CIX over SNMP (opens in your browser)
-Exec=toshiba-cix-manager
+# %u passes a launched switchroom:// deep link to the app (the launcher lifts it
+# into $SWITCHROOM_DEEPLINK; serve() seeds the manager-bridge context from it).
+Exec=toshiba-cix-manager %u
 Icon=toshiba-cix-manager
 Terminal=false
 Categories=Utility;Network;System;
 Keywords=Toshiba;CIX;Strata;PBX;SNMP;eManager;
+# Register as the handler for switchroom:// links (the manager bridge). When the
+# AppImage is desktop-integrated (appimaged) this .desktop is installed and the
+# association is picked up by update-desktop-database; the Tauri build registers
+# the scheme via its own generated .desktop (desktop/src-tauri/tauri.conf.json).
+MimeType=x-scheme-handler/switchroom;
 StartupNotify=false

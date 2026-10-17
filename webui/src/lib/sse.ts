@@ -10,6 +10,7 @@ export function useEventStream() {
   const onJob = useStore((s) => s.onJob);
   const onSessionPrograms = useStore((s) => s.onSessionPrograms);
   const onIdentity = useStore((s) => s.onIdentity);
+  const handleDeeplink = useStore((s) => s.handleDeeplink);
 
   React.useEffect(() => {
     let es: EventSource | null = null;
@@ -37,6 +38,10 @@ export function useEventStream() {
         /* ignore */
       }
     });
+    // A deep link opened while the app is already running (Tauri forwards it via
+    // single-instance; the engine re-seeds and fires this). Pull the pending
+    // link and prefill + connect.
+    es.addEventListener("deeplink", () => void handleDeeplink());
     return () => es?.close();
-  }, [onJob, onSessionPrograms, onIdentity]);
+  }, [onJob, onSessionPrograms, onIdentity, handleDeeplink]);
 }

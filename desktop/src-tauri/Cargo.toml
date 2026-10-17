@@ -17,6 +17,15 @@ tauri-build = { version = "2.1.0", features = [] }
 [dependencies]
 tauri = { version = "2.2.0", features = [] }
 tauri-plugin-shell = "2.2.0"
+# Manager bridge: register the `switchroom://` URL scheme and receive the link.
+# single-instance's `deep-link` feature forwards a link to the already-running
+# app on Linux/Windows (otherwise a second instance would spawn). Pinned to the
+# 2.2.x plugin line that matches tauri 2.2.
+tauri-plugin-deep-link = "2.2.0"
+tauri-plugin-single-instance = { version = "2.2.0", features = ["deep-link"] }
+# URL parsing for the incoming deep link. Already in the tree transitively via
+# tauri; named here so we can type the parsed link.
+url = "2.5.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 getrandom = "0.2"

@@ -633,3 +633,42 @@ export interface Site {
   last_connected?: string | null;
   conduit_component_id?: number | null;
 }
+
+// ---- Manager bridge (Conduit deep-link + Save to cloud) -------------------
+// A `switchroom://open?conduit&component&token` link reaches the engine, which
+// fetches the connection from Conduit and exposes it here. The conduit base and
+// the bearer token stay engine-side and never appear in these shapes.
+export interface BridgeForm {
+  ip: string;
+  community: string;
+  port: number;
+  reach: Reach;
+  site: string;
+}
+
+export interface BridgeDeeplink {
+  active: boolean;
+  component: string | null;
+  system_name: string | null;
+  kind: string | null;
+  error: string | null;
+  form?: BridgeForm;
+}
+
+export interface DeeplinkPending {
+  ok: boolean;
+  deeplink: BridgeDeeplink | null;
+}
+
+export interface BridgeContextResult {
+  ok: boolean;
+  context: BridgeDeeplink | null;
+}
+
+export interface BridgeSaveResult {
+  ok: boolean;
+  document_id?: string | number | null;
+  filename?: string;
+  error?: string;
+  status?: number;
+}

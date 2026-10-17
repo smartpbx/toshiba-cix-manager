@@ -75,6 +75,10 @@ from .sites import record_connection, slugify_id
 from .snapshot import read_snapshot
 from .snmp import SnmpError, SnmpV1
 from .update import apply_update, check_for_update, finalize_pending_update, plan_update, relaunch
+# Manager bridge (Conduit deep-link + save-to-cloud). Bare names (no `as` alias,
+# single line) so the single-file amalgam — which strips this import and flattens
+# the package — resolves them as globals defined by the amalgamated bridge module.
+from .bridge import fetch_connection, post_backup, parse_deeplink, pop_deeplink_arg
 # ``writes_enabled`` (a function) is imported, NOT ``WRITES_ENABLED`` (a value):
 # importing the value would freeze a snapshot at import time, so a runtime toggle
 # (a test, a future UI switch) would never be seen. Every call site reads the
@@ -1657,6 +1661,170 @@ def register_legacy_routes(ctx: ServerContext) -> None:
     r.post("/api/open-external", route_open_external)
 
 
+# ==========================================================================
+# Manager bridge: Conduit deep-link -> pre-filled connect + Save to cloud.
+#
+# A `switchroom://open?conduit&component&token` link reaches this engine from
+# the Rust shell (POST /api/deeplink) or the stdlib launcher (a launch arg ->
+# $SWITCHROOM_DEEPLINK, seeded in serve()). The engine — never the browser —
+# calls Conduit (bridge.fetch_connection / bridge.post_backup, stdlib urllib,
+# honoring update.py's CA resolver on https), so there is no CORS and the
+# short-lived bearer token never reaches page JS. The UI picks the context up
+# via GET /api/deeplink/pending (consume-once) + an SSE `deeplink` event, and
+# saves with POST /api/bridge/backup. One active context per engine (one tech,
+# one loopback). See docs/MANAGER_BRIDGE.md + the shared CONTRACT.
+# ==========================================================================
+def _bridge_get(ctx):
+    return getattr(ctx, "_bridge", None)
+
+
+def _bridge_public(ctx, *, include_form):
+    """The browser-safe view of the active context — NEVER the conduit base or
+    the bearer token (those stay engine-side)."""
+    b = _bridge_get(ctx)
+    if not b:
+        return None
+    out = {"active": True, "component": b.get("component"),
+           "system_name": b.get("system_name"), "kind": b.get("kind"),
+           "error": b.get("error")}
+    if include_form:
+        out["form"] = b.get("form")
+    return out
+
+
+def seed_bridge_context(ctx, conduit, component, token):
+    """Fetch the Conduit connection (best-effort) and store the active context.
+
+    A fetch failure is kept as ``error`` rather than discarded: the save target
+    (component/token) is still valid, and the UI shows the error and lets the
+    tech connect manually. Marks the context pending so the next
+    ``GET /api/deeplink/pending`` prefills + connects exactly once, and fires an
+    SSE ``deeplink`` event (carrying no secrets) so a running UI reacts live.
+    """
+    result = fetch_connection(conduit, component, token)
+    context = {
+        "conduit": conduit, "component": component, "token": token,
+        "kind": result.get("kind"), "system_name": result.get("system_name"),
+        "form": result.get("form"),
+        "error": None if result.get("ok") else result.get("error"),
+    }
+    ctx._bridge = context
+    ctx._bridge_pending = True
+    try:
+        ctx.bus.publish("deeplink", {"component": component,
+                                     "system_name": context.get("system_name"),
+                                     "ok": bool(result.get("ok"))})
+    except Exception:  # noqa: BLE001 — a publish failure must not fail the seed
+        log.warning("deeplink publish failed", exc_info=True)
+    return context
+
+
+def route_deeplink_post(ctx, req):
+    """POST /api/deeplink {conduit, component, token} — from the Rust shell /
+    the stdlib launcher. Seeds the active bridge context (fetches the connection
+    best-effort) and returns at once."""
+    body = req.body() or {}
+    conduit = (body.get("conduit") or "").strip()
+    component = (body.get("component") or "").strip()
+    token = (body.get("token") or "").strip()
+    if not (conduit and component and token):
+        req.send_json({"ok": False,
+                        "error": "conduit, component and token are required"}, 400)
+        return
+    seed_bridge_context(ctx, conduit, component, token)
+    req.send_json({"ok": True})
+
+
+def route_deeplink_pending(ctx, req):
+    """GET /api/deeplink/pending — consume-once. Returns the deep-link to act on
+    (prefill the connect form + connect) the first time only; later calls return
+    ``null`` while the context stays active for Save to cloud."""
+    b = _bridge_get(ctx)
+    if not b or not getattr(ctx, "_bridge_pending", False):
+        req.send_json({"ok": True, "deeplink": None})
+        return
+    ctx._bridge_pending = False
+    req.send_json({"ok": True, "deeplink": _bridge_public(ctx, include_form=True)})
+
+
+def route_bridge_context(ctx, req):
+    """GET /api/bridge/context — the active save target (no secrets), so the UI
+    can keep the Save-to-cloud button enabled across a reload."""
+    req.send_json({"ok": True, "context": _bridge_public(ctx, include_form=False)})
+
+
+def _bridge_backup_summary(store, site_id, sid):
+    """A short, value-free summary line for the saved Document (counts only —
+    never field values, which could be passwords)."""
+    try:
+        entry = store.get_entry(site_id, sid) or {}
+    except Exception:  # noqa: BLE001
+        return "Toshiba CIX backup"
+    counts = entry.get("counts") or {}
+    bits = []
+    if counts.get("programs"):
+        bits.append(f"{counts['programs']} programs")
+    if counts.get("rows"):
+        bits.append(f"{counts['rows']} rows")
+    if entry.get("swid"):
+        bits.append(f"swid {entry['swid']}")
+    return "Toshiba CIX backup" + (" — " + ", ".join(bits) if bits else "")
+
+
+def route_bridge_backup(ctx, req):
+    """POST /api/bridge/backup {site_id, snapshot?, redact?} — Save to cloud.
+
+    Exports the existing ``.cixbak`` backup the app already produces (the newest
+    snapshot for the site, or an explicit ``snapshot`` sid) and POSTs it to
+    Conduit, which attaches it to the component as a Document. Unredacted by
+    default: Conduit is the system of record and stores it encrypted at rest, so
+    a redacted copy would be useless for restore (pass ``redact: true`` to mask
+    secrets). Returns ``{ok, document_id, filename}`` or ``{ok: False, error}``.
+    """
+    b = _bridge_get(ctx)
+    if not b:
+        req.send_json({"ok": False, "error": "no cloud context — open this system "
+                       "from Conduit first"}, 409)
+        return
+    body = req.body() or {}
+    site_id = (body.get("site_id") or "").strip()
+    sid = (body.get("snapshot") or "").strip() or None
+    redact = bool(body.get("redact"))
+    if not site_id:
+        req.send_json({"ok": False, "error": "site_id is required"}, 400)
+        return
+    store = ctx.snapshots()
+    if sid is None:
+        entries = store.index(site_id)
+        if not entries:
+            req.send_json({"ok": False, "error": "no snapshot to save — connect "
+                           "and snapshot the CIX first"}, 409)
+            return
+        sid = entries[0]["id"]
+    out = store.export(site_id, sid, redact_secrets=redact, container="cixbak")
+    if out is None:
+        req.send_json({"ok": False, "error": "no such snapshot"}, 404)
+        return
+    filename, data = out
+    summary = _bridge_backup_summary(store, site_id, sid)
+    result = post_backup(b["conduit"], b["component"], b["token"],
+                         filename=filename, content=data,
+                         content_type="application/zip", summary=summary)
+    result.setdefault("filename", filename)
+    # Always 200: a Conduit-side failure is an operational result the UI shows,
+    # not a transport fault (the api.ts helper throws only on >=500).
+    req.send_json(result)
+
+
+def register_bridge_routes(ctx: ServerContext) -> None:
+    """Manager bridge: deep-link intake + pending pickup + Save to cloud."""
+    r = ctx.router
+    r.post("/api/deeplink", route_deeplink_post)
+    r.get("/api/deeplink/pending", route_deeplink_pending)
+    r.get("/api/bridge/context", route_bridge_context)
+    r.post("/api/bridge/backup", route_bridge_backup)
+
+
 def make_context(*, token=None, appdirs=None) -> ServerContext:
     """A context with the core P0 routes + the browse + legacy routes registered."""
     ctx = ServerContext(token=token, appdirs=appdirs)
@@ -1664,6 +1832,7 @@ def make_context(*, token=None, appdirs=None) -> ServerContext:
     register_browse_routes(ctx)
     register_write_routes(ctx)
     register_vm_routes(ctx)
+    register_bridge_routes(ctx)
     register_legacy_routes(ctx)
     return ctx
 
@@ -1716,6 +1885,32 @@ def _background_update_check() -> None:
             print("  Use 'Check for updates' in the web UI to install it.")
 
 
+def _seed_deeplink_from_env(ctx) -> None:
+    """Seed the manager-bridge context from ``$SWITCHROOM_DEEPLINK`` at launch.
+
+    The stdlib / browser launcher moves a ``switchroom://…`` launch arg into this
+    env var (the Tauri shell uses POST /api/deeplink instead). Seeded on a daemon
+    thread so a slow / unreachable Conduit can never block the server coming up;
+    the UI picks the result up via the SSE ``deeplink`` event + the pending poll.
+    """
+    raw = os.environ.get("SWITCHROOM_DEEPLINK")
+    if not raw:
+        return
+    params = parse_deeplink(raw)
+    if not params:
+        log.warning("ignoring malformed $SWITCHROOM_DEEPLINK")
+        return
+
+    def _go():
+        try:
+            seed_bridge_context(ctx, params["conduit"], params["component"],
+                                params["token"])
+        except Exception:  # noqa: BLE001 — seeding must never crash the server
+            log.warning("deeplink seed failed", exc_info=True)
+
+    threading.Thread(target=_go, daemon=True).start()
+
+
 def _emit_endpoint_line(url: str, token: str | None, port: int) -> None:
     """Print the loopback endpoint as one machine-readable line, then flush.
 
@@ -1757,6 +1952,7 @@ def serve(host: str = "127.0.0.1", port: int = 8765, *,
     print(f"Toshiba CIX Manager {__version__}")
     print("  Read-only SNMP. Writes gated behind explicit confirm. Ctrl-C to stop.")
     threading.Thread(target=_background_update_check, daemon=True).start()
+    _seed_deeplink_from_env(ctx)
 
     def _on_ready(url: str) -> None:
         print(f"  Open: {url}")
@@ -1772,6 +1968,14 @@ def serve(host: str = "127.0.0.1", port: int = 8765, *,
 
 def main(argv=None) -> int:
     import argparse
+    # A browser-launched `switchroom://…` link arrives as a launch argument; move
+    # it into $SWITCHROOM_DEEPLINK (serve() seeds the bridge from it) so argparse
+    # doesn't choke on the unknown positional.
+    base_argv = list(sys.argv[1:] if argv is None else argv)
+    base_argv, deeplink = pop_deeplink_arg(base_argv)
+    if deeplink:
+        os.environ["SWITCHROOM_DEEPLINK"] = deeplink
+    argv = base_argv
     p = argparse.ArgumentParser(
         prog="toshiba-cix-manager",
         description="Local web app to read/view a Toshiba Strata CIX over SNMP "
