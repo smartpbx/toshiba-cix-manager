@@ -39,6 +39,10 @@ export interface UpdateApplyResult {
   message?: string;
   path?: string;
   needs_restart?: boolean;
+  // True when the app should relaunch itself to finish (self-replace: AppImage /
+  // .exe). False for the installer hand-off (.deb/.msi), where the OS installer
+  // runs and the user reopens — relaunching then would kill the app mid-install.
+  relaunch?: boolean;
   launched?: boolean;
   error?: string;
 }

@@ -44,6 +44,13 @@ use tauri_plugin_shell::ShellExt;
 const SIDECAR: &str = "switchroom-engine";
 const ENDPOINT_MARKER: &str = "@@SWITCHROOM_ENDPOINT@@ ";
 
+// The engine exits with this code (toshiba_cix/update.py::TAURI_RELAUNCH_EXIT_CODE)
+// after it applies an update. os.execv in the Python sidecar would replace the
+// sidecar but leave this Rust shell running the old WebView, so the engine hands
+// the restart back to us: we relaunch the whole app on seeing this exit code.
+// Keep in sync with the Python constant.
+const RELAUNCH_EXIT_CODE: i32 = 42;
+
 /// Holds the sidecar child so we can kill it when the app exits.
 #[derive(Default)]
 struct Engine {
@@ -73,6 +80,32 @@ fn open_engine(app: &AppHandle, url_str: &str) {
         }
         Err(e) => eprintln!("[switchroom] bad endpoint url {url_str:?}: {e}"),
     }
+}
+
+/// Relaunch the whole app after the engine applied an update and exited with
+/// `RELAUNCH_EXIT_CODE`.
+fn relaunch_app(app: &AppHandle) {
+    // The old sidecar has already exited — drop our (dead) handle to it so the
+    // RunEvent::Exit cleanup below has nothing to kill.
+    let _ = app.state::<Engine>().child.lock().unwrap().take();
+
+    // An AppImage's `current_exe()` points inside the read-only mount, which
+    // still holds the OLD bytes; the update was written to the `$APPIMAGE` file
+    // on disk. Re-exec that file directly so the restart runs the NEW version —
+    // Tauri's own `restart()` would re-exec `current_exe()` (the stale mount).
+    if let Ok(appimage) = std::env::var("APPIMAGE") {
+        if !appimage.is_empty() {
+            match std::process::Command::new(&appimage).spawn() {
+                Ok(_) => {
+                    app.exit(0);
+                    return;
+                }
+                Err(e) => eprintln!("[switchroom] relaunch spawn failed: {e}"),
+            }
+        }
+    }
+    // Non-AppImage packaging (or a failed spawn): let Tauri restart the process.
+    app.restart();
 }
 
 /// Parse the engine's endpoint line into the URL to load, if this is it.
@@ -117,6 +150,12 @@ fn spawn_engine(app: &AppHandle) {
                 }
                 CommandEvent::Terminated(payload) => {
                     eprintln!("[switchroom] engine exited: {payload:?}");
+                    // The engine asks for a full-app restart (after applying an
+                    // update) by exiting with RELAUNCH_EXIT_CODE; any other exit
+                    // is a normal shutdown we just stop watching.
+                    if payload.code == Some(RELAUNCH_EXIT_CODE) {
+                        relaunch_app(&handle);
+                    }
                     break;
                 }
                 CommandEvent::Error(err) => {

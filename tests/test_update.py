@@ -354,6 +354,7 @@ def test_apply_appimage_replaces_binary_and_is_executable():
 
         assert res["ok"] is True
         assert res["action"] == "replaced"
+        assert res["relaunch"] is True          # self-replace → app relaunches itself
         with open(target, "rb") as fh:
             assert fh.read().startswith(b"NEW-BINARY-")
         assert os.stat(target).st_mode & stat.S_IXUSR
@@ -658,6 +659,7 @@ def test_apply_deb_downloads_and_hands_off_without_touching_target():
         assert res["action"] == "downloaded"
         assert res["packaging"] == "deb"
         assert res["needs_restart"] is True
+        assert res["relaunch"] is False         # installer hand-off → user reopens
         assert res["launched"] is True
         expected = os.path.join(d, "Switchroom_2.1.1_amd64.deb")
         assert res["path"] == expected
@@ -866,6 +868,35 @@ def test_ssl_context_recovers_when_defaults_are_empty():
         assert ctx.verify_mode == ssl.CERT_REQUIRED
     finally:
         shutil.rmtree(d, ignore_errors=True)
+
+
+# ===========================================================================
+# relaunch(): Tauri sidecar exits with a sentinel code the Rust shell restarts
+# on; every other build re-execs the (updated) binary in place.
+# ===========================================================================
+def test_relaunch_tauri_sidecar_exits_with_sentinel():
+    exits = []
+
+    def fake_exit(code):
+        exits.append(code)
+        raise SystemExit(code)   # stop here as a real os._exit would end the process
+
+    with _env("SWITCHROOM_TOKEN", "deadbeef"), \
+            _patched(update.os, "_exit", fake_exit):
+        try:
+            update.relaunch()
+        except SystemExit:
+            pass
+    assert exits == [update.TAURI_RELAUNCH_EXIT_CODE]
+
+
+def test_relaunch_webapp_execs_binary():
+    calls = []
+    with _env("SWITCHROOM_TOKEN", None), \
+            _patched(update, "_tauri_sidecar", lambda: False), \
+            _patched(update.os, "execv", lambda path, argv: calls.append((path, argv))):
+        update.relaunch(["/opt/app", "--flag"])
+    assert calls == [("/opt/app", ["/opt/app", "--flag"])]
 
 
 def _run_all():

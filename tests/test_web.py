@@ -380,6 +380,36 @@ def test_update_apply_confirm_calls_apply():
     assert j["ok"] is True and j["action"] == "replaced"
 
 
+def test_open_external_rejects_non_http():
+    status, j = _post("/api/open-external", {"url": "file:///etc/passwd"})
+    assert status == 400 and j["ok"] is False
+
+
+def test_open_external_opens_http_url():
+    calls = []
+    orig = webapp.webbrowser.open
+    webapp.webbrowser.open = lambda u, *a, **k: calls.append(u) or True
+    try:
+        status, j = _post("/api/open-external",
+                          {"url": "https://example.test/releases"})
+    finally:
+        webapp.webbrowser.open = orig
+    assert status == 200 and j["ok"] is True
+    assert calls == ["https://example.test/releases"]
+
+
+def test_update_relaunch_triggers_relaunch():
+    scheduled = []
+    orig = webapp._schedule_relaunch
+    webapp._schedule_relaunch = lambda *a, **k: scheduled.append(True)
+    try:
+        status, j = _post("/api/update/relaunch", {})
+    finally:
+        webapp._schedule_relaunch = orig
+    assert status == 200 and j["ok"] is True
+    assert scheduled == [True]
+
+
 def test_404():
     status, j = _get("/api/nope")
     assert status == 404 and j["ok"] is False

@@ -73,6 +73,14 @@ _MIN_ASSET_BYTES = 500_000
 # Hard ceiling so a hostile / runaway response can't fill the disk.
 _MAX_ASSET_BYTES = 500_000_000
 
+# Exit code the Tauri desktop shell watches for to relaunch the whole app. Under
+# Tauri the engine runs as a PyInstaller *sidecar*; os.execv'ing it would replace
+# the sidecar but leave the Rust shell (and its WebView) running the old code, so
+# :func:`relaunch` instead exits with this sentinel and the shell
+# (``desktop/src-tauri/src/main.rs``) restarts the app. Keep this in sync with the
+# ``RELAUNCH_EXIT_CODE`` constant on the Rust side.
+TAURI_RELAUNCH_EXIT_CODE = 42
+
 # Per-packaging release-asset matching. CI attaches BOTH the self-contained
 # stdlib builds (``Toshiba CIX Manager.exe``, ``Toshiba_CIX_Manager-x86_64.AppImage``)
 # AND the Tauri "Switchroom" bundles (``*.deb`` / ``*.AppImage`` on Linux,
@@ -519,7 +527,8 @@ def _install_unix(tmp: str, target: str, size: int) -> dict:
     os.replace(staged, target)   # Linux lets us replace a file that is still open
     return {
         "ok": True, "action": "replaced", "path": target, "size": size,
-        "needs_restart": True, "relaunch_argv": [target] + sys.argv[1:],
+        "needs_restart": True, "relaunch": True,
+        "relaunch_argv": [target] + sys.argv[1:],
         "message": (f"Updated {os.path.basename(target)}. "
                     "Relaunch to run the new version."),
     }
@@ -533,7 +542,7 @@ def _install_windows(tmp: str, target: str, size: int) -> dict:
     os.replace(tmp, staged)
     return {
         "ok": True, "action": "staged", "path": target, "staged_path": staged,
-        "size": size, "needs_restart": True,
+        "size": size, "needs_restart": True, "relaunch": True,
         "message": ("Update staged. It installs automatically the next time you "
                     "start the app (Windows can't replace a running .exe)."),
     }
@@ -602,7 +611,7 @@ def _install_deb(path: str, size: int, *, launcher=None) -> dict:
                    "double-click it in Files, then reopen Switchroom.")
     return {"ok": True, "action": "downloaded", "packaging": "deb",
             "path": path, "size": size, "needs_restart": True,
-            "launched": bool(launched), "message": message}
+            "relaunch": False, "launched": bool(launched), "message": message}
 
 
 def _install_msi(path: str, size: int, *, launcher=None) -> dict:
@@ -617,7 +626,7 @@ def _install_msi(path: str, size: int, *, launcher=None) -> dict:
                    "reopen Switchroom.")
     return {"ok": True, "action": "downloaded", "packaging": "msi",
             "path": path, "size": size, "needs_restart": True,
-            "launched": bool(launched), "message": message}
+            "relaunch": False, "launched": bool(launched), "message": message}
 
 
 def apply_update(check: dict | None = None, *, confirm: bool = False,
@@ -742,10 +751,25 @@ def finalize_pending_update() -> dict:
         return {"ok": False, "action": "error", "message": str(exc)}
 
 
-def relaunch(argv=None):  # pragma: no cover  — replaces the process image
-    """Replace the current process with a fresh launch of the (updated) binary.
+def relaunch(argv=None):  # pragma: no cover  — replaces / exits the process
+    """Restart the app into the (updated) binary.
 
-    ``os.execv`` does not return on success.
+    Two paths, picked from how this build is packaged:
+
+    * **Raw web-app / PyInstaller build** — ``os.execv`` replaces this process
+      with a fresh launch of the binary. Does not return on success.
+    * **Tauri desktop sidecar** — the engine is a child of the Rust shell, so
+      ``os.execv`` here would swap the sidecar out from under a shell that keeps
+      running the old WebView. Instead exit with :data:`TAURI_RELAUNCH_EXIT_CODE`;
+      the shell (``desktop/src-tauri/src/main.rs``) watches for that code and
+      relaunches the whole app.
     """
+    if _tauri_sidecar():
+        try:
+            sys.stdout.flush()
+            sys.stderr.flush()
+        except Exception:  # noqa: BLE001 — flushing must never block the exit
+            pass
+        os._exit(TAURI_RELAUNCH_EXIT_CODE)
     argv = argv or [sys.executable] + sys.argv[1:]
     os.execv(argv[0], argv)

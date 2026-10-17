@@ -62,6 +62,14 @@ export const api = {
   // confirm-gated install. See webapp route_update_check / route_update_apply.
   checkUpdate: () => jget<UpdateInfo>("/api/update"),
   applyUpdate: () => jpost<UpdateApplyResult>("/api/update", { confirm: true }),
+  // Open an external URL in the user's default browser, server-side. The engine
+  // runs on the user's machine, so this works both in the Tauri desktop WebView
+  // (which has no Tauri JS API and swallows <a target="_blank"> to https) and in
+  // the plain web app. See webapp route_open_external.
+  openExternal: (url: string) =>
+    jpost<{ ok: boolean; error?: string }>("/api/open-external", { url }),
+  // Restart the app to finish an applied update. See route_update_relaunch.
+  updateRelaunch: () => jpost<{ ok: boolean }>("/api/update/relaunch"),
 
   // P4: config linter (Problems panel) over the working copy.
   lint: (sessionId: string) =>
