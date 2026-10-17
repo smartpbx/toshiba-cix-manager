@@ -73,5 +73,51 @@
     "memoryAccess"
   ],
 
-  "simplified_hidden_areas": ["IP-Telephony"]
+  "simplified_hidden_areas": ["IP-Telephony"],
+
+  "_field_meta_note": "Per-field grouping + plain-English description for single-record form pages (Switchroom 2a System settings screen). Keyed catalog_key -> field name -> {group, desc}. The builder attaches group/desc onto the field; the UI groups by 'group' (first-appearance order) and falls back to an 'Advanced (N)' group for anything without one.",
+  "field_meta": {
+    "105SystemData": {
+      "systemDataExecutiveOverride": { "group": "Call handling", "desc": "Let privileged stations break into a busy call." },
+      "systemDataRingingTransfer": { "group": "Call handling", "desc": "How a transferred call rings at the destination." },
+      "systemDataTransferPrivacy": { "group": "Call handling", "desc": "Block others from joining a transferred call." },
+      "systemDataPrivacyOverride": { "group": "Call handling", "desc": "Let a station override privacy on a line." },
+      "systemDataConvertHooking": { "group": "Call handling", "desc": "Treat a hook-flash as a transfer request." },
+      "systemDataAutoStationRelease": { "group": "Call handling", "desc": "Free a station that is left off-hook." },
+      "systemDataCascadingSystemCF": { "group": "Call handling", "desc": "Allow call-forward to chain across systems." },
+      "systemDataManyMemberConference": { "group": "Call handling", "desc": "Enable large multi-party conferences." },
+      "systemDataLostCallDest": { "group": "Call handling", "desc": "Where unanswered or abandoned calls land." },
+      "systemDataTROverride": { "group": "Call handling", "desc": "Allow toll-restriction override on this system." },
+
+      "systemDataDomesticCode": { "group": "Dialing & codes", "desc": "National / long-distance dialing prefix." },
+      "systemDataInternationalCode": { "group": "Dialing & codes", "desc": "International dialing prefix." },
+      "systemDataServiceCodeCreditCard": { "group": "Dialing & codes", "desc": "Service code for credit-card calls." },
+      "systemDataMinDialDigitsCreditCard": { "group": "Dialing & codes", "desc": "Minimum digits before a credit-card call dials." },
+      "systemDataCosOverrideCodeDigits": { "group": "Dialing & codes", "desc": "Length of the class-of-service override code." },
+
+      "systemDataMusicOnHold": { "group": "Audio & paging", "desc": "Source for music a caller hears on hold." },
+      "systemDataPlayMelody": { "group": "Audio & paging", "desc": "Play a melody instead of ringback." },
+      "systemDataSelectMelody": { "group": "Audio & paging", "desc": "Which built-in melody plays." },
+      "systemDataInternalPad": { "group": "Audio & paging", "desc": "Volume padding on internal calls." },
+      "systemDataExternalPagingZoneNum": { "group": "Audio & paging", "desc": "Number of external paging zones." },
+      "systemDataRingingCadence": { "group": "Audio & paging", "desc": "Ring cadence pattern used system-wide." },
+
+      "systemDataCallerNumberDisplay": { "group": "Caller ID & numbering", "desc": "Show the caller's number on phones." },
+      "systemDataDefaultCallingNumberId": { "group": "Caller ID & numbering", "desc": "Default outbound caller ID when none is set." },
+      "systemDataNumberingPlanIdOnCPN": { "group": "Caller ID & numbering", "desc": "Numbering-plan id sent on the calling-party number." },
+      "systemDataDNISorCallerIDDisplay": { "group": "Caller ID & numbering", "desc": "Prefer DNIS or caller ID on the display." },
+      "systemDataCLIDForTransferCall": { "group": "Caller ID & numbering", "desc": "Which caller ID shows on a transferred call." },
+      "systemDataTypeOfNumberOnCallingPartyNumber": { "group": "Caller ID & numbering", "desc": "Type-of-number tag on the calling-party number." },
+      "systemDataNumberingPlanIdOnCallingPartyNumber": { "group": "Caller ID & numbering", "desc": "Numbering-plan id on the calling-party number." },
+      "systemDataPrefix1InCallHistory": { "group": "Caller ID & numbering", "desc": "Prefix added to numbers in call history." },
+      "systemDataCallHistoryRecallPrefix": { "group": "Caller ID & numbering", "desc": "Digits dialled to recall a call-history entry." },
+
+      "systemDataE911Service": { "group": "Emergency (E911)", "desc": "Enable E911 emergency-call handling." },
+      "systemDataE911SendingDigits": { "group": "Emergency (E911)", "desc": "Digits prepended to an E911 call." },
+
+      "systemDataPrimaryClockSource": { "group": "Clock & timing", "desc": "Primary network clock reference (card / port)." },
+      "systemDataSecondaryClockSource": { "group": "Clock & timing", "desc": "Backup network clock reference." },
+      "systemDataLCDKeystripRefreshInterval": { "group": "Clock & timing", "desc": "How often LCD key labels refresh." }
+    }
+  }
 }

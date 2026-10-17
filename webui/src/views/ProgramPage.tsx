@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { RecordForm } from "@/components/program/RecordForm";
 import { GridRecord } from "@/components/program/GridRecord";
 import { SpecialLayout } from "@/components/program/SpecialLayout";
+import { StationsScreen } from "@/views/StationsScreen";
+import { SystemSettingsScreen } from "@/views/SystemSettingsScreen";
 import { useStore } from "@/store/useStore";
 import { useShallow } from "zustand/react/shallow";
 
@@ -70,6 +72,19 @@ export function ProgramPage({ programKey }: { programKey: string }) {
     (outcome === "error"
       ? "The device did not answer for this program during the snapshot."
       : "The read hit its per-program budget before finishing.");
+
+  // Redesigned full-bleed screens (Switchroom 2a): Stations (200) and System
+  // settings (105) render their own layout with no PageHeader — the breadcrumb
+  // lives in the shell header. They open once data has arrived; loading / failed
+  // / empty states fall through to the generic handling below.
+  if (view && view.row_count > 0) {
+    if (prog.special_layout === "station_key_strip") {
+      return <StationsScreen program={prog} view={view} />;
+    }
+    if (prog.catalog_key === "105SystemData") {
+      return <SystemSettingsScreen program={prog} view={view} />;
+    }
+  }
 
   const header = (
     <PageHeader

@@ -45,6 +45,10 @@ export interface SchemaField {
   enc?: string;
   ui_type?: string;
   writable: boolean;
+  // Hand-maintained grouping + plain-English copy for single-record form pages
+  // (Switchroom 2a System settings). Absent for ungrouped fields.
+  group?: string;
+  desc?: string;
 }
 
 export interface SchemaProgram {
@@ -83,12 +87,30 @@ export interface MenuArea {
   items: MenuItem[];
 }
 
+// The hand-maintained task-first navigation (Switchroom 2a), emitted by
+// build_ui_schema.py next to menu_tree. A "home" item opens the Overview; a
+// "program" item opens its first program via the SAME openProgram() the
+// eManager tree uses, so tabs / pages / the write path are untouched.
+export interface TaskItem {
+  title: string;
+  icon: string;
+  kind: "home" | "program";
+  programs: string[];
+  num: string | null;
+}
+
+export interface TaskGroup {
+  label: string | null;
+  items: TaskItem[];
+}
+
 export interface UISchema {
   schema_version: string;
   catalog_version: string;
   counts: Record<string, number>;
   menu_area_order: string[];
   menu_tree: MenuArea[];
+  task_tree: TaskGroup[];
   programs: Record<string, SchemaProgram>;
   binary_pairs: Array<{ on: string; off: string }>;
   feature_keys: Array<{ code: string; name: string }>;

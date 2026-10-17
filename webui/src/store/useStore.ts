@@ -20,6 +20,7 @@ import type {
 } from "@/lib/types";
 
 type Theme = "system" | "light" | "dark";
+export type NavMode = "task" | "emanager";
 
 export type VmScreen =
   | "status"
@@ -163,6 +164,18 @@ interface AppState {
   theme: Theme;
   setTheme: (t: Theme) => void;
 
+  // tech preferences (per-laptop, persisted to localStorage switchroom.prefs) --
+  navMode: NavMode;
+  setNavMode: (m: NavMode) => void;
+  showProgramNumbers: boolean;
+  setShowProgramNumbers: (b: boolean) => void;
+  prefsOpen: boolean;
+  setPrefsOpen: (open: boolean) => void;
+  // the trailing breadcrumb crumb a screen contributes (e.g. the selected
+  // station's name on the Stations screen); cleared when that screen unmounts.
+  recordCrumb: string | null;
+  setRecordCrumb: (s: string | null) => void;
+
   // self-updater (toshiba_cix/update.py via /api/update) -------------------
   updateInfo: UpdateInfo | null;
   updateChecking: boolean;
@@ -176,15 +189,50 @@ interface AppState {
   dismissUpdateToast: () => void;
 }
 
-function readStoredTheme(): Theme {
+// Per-laptop tech preferences live in one JSON key so a tech's theme, menu mode
+// and "show program numbers" choice travel together. Every access is guarded
+// (private mode / blocked storage throws), and a legacy single-key theme is
+// migrated on read so earlier installs keep their choice.
+const PREFS_KEY = "switchroom.prefs";
+
+interface StoredPrefs {
+  theme?: Theme;
+  navMode?: NavMode;
+  showProgramNumbers?: boolean;
+}
+
+function readStoredPrefs(): StoredPrefs {
+  try {
+    const raw = localStorage.getItem(PREFS_KEY);
+    if (raw) {
+      const p = JSON.parse(raw) as StoredPrefs;
+      if (p && typeof p === "object") return p;
+    }
+  } catch {
+    /* private mode / blocked storage / bad JSON */
+  }
   try {
     const t = localStorage.getItem("switchroom.theme");
-    if (t === "light" || t === "dark" || t === "system") return t;
+    if (t === "light" || t === "dark" || t === "system") return { theme: t };
   } catch {
-    /* private mode / blocked storage */
+    /* ignore */
   }
-  return "system";
+  return {};
 }
+
+function persistPrefs(p: {
+  theme: Theme;
+  navMode: NavMode;
+  showProgramNumbers: boolean;
+}): void {
+  try {
+    localStorage.setItem(PREFS_KEY, JSON.stringify(p));
+  } catch {
+    /* ignore */
+  }
+}
+
+const STORED_PREFS = readStoredPrefs();
 
 // A saved snapshot records only its non-clean programs (meta.program_problems);
 // turn that list into the key→status map the nav / Problems panel read, so a
@@ -756,15 +804,29 @@ export const useStore = create<AppState>((set, get) => ({
     set((s) => ({ openAreas: { ...s.openAreas, [area]: open } })),
   paletteOpen: false,
   setPaletteOpen: (paletteOpen) => set({ paletteOpen }),
-  theme: readStoredTheme(),
+  theme: STORED_PREFS.theme ?? "system",
   setTheme: (theme) => {
-    try {
-      localStorage.setItem("switchroom.theme", theme);
-    } catch {
-      /* ignore */
-    }
+    const { navMode, showProgramNumbers } = get();
+    persistPrefs({ theme, navMode, showProgramNumbers });
     set({ theme });
   },
+
+  navMode: STORED_PREFS.navMode === "emanager" ? "emanager" : "task",
+  setNavMode: (navMode) => {
+    const { theme, showProgramNumbers } = get();
+    persistPrefs({ theme, navMode, showProgramNumbers });
+    set({ navMode });
+  },
+  showProgramNumbers: STORED_PREFS.showProgramNumbers !== false,
+  setShowProgramNumbers: (showProgramNumbers) => {
+    const { theme, navMode } = get();
+    persistPrefs({ theme, navMode, showProgramNumbers });
+    set({ showProgramNumbers });
+  },
+  prefsOpen: false,
+  setPrefsOpen: (prefsOpen) => set({ prefsOpen }),
+  recordCrumb: null,
+  setRecordCrumb: (recordCrumb) => set({ recordCrumb }),
 
   updateInfo: null,
   updateChecking: false,
