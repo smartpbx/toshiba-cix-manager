@@ -1,0 +1,94 @@
+{
+  "version": "1.1.0",
+  "entrypoints": [
+    "lg:1"
+  ],
+  "nodes": [
+    {
+      "id": "lg:1",
+      "kind": "line_group",
+      "num": "1",
+      "label": "Analog line group 1",
+      "meta": "3 member analog CO lines \u00b7 day/night switch-over times are set at the switch, not stored in SNMP",
+      "ports": [
+        {
+          "id": "grp:1/trunk:1",
+          "label": "Loop CO 5551000",
+          "equipment": "1/2/1",
+          "type": "loop_start"
+        },
+        {
+          "id": "grp:1/trunk:2",
+          "label": "Loop CO 5551001",
+          "equipment": "1/2/2",
+          "type": "loop_start"
+        },
+        {
+          "id": "grp:1/trunk:3",
+          "label": "Loop CO 5551002",
+          "equipment": "1/2/3",
+          "type": "loop_start"
+        }
+      ]
+    },
+    {
+      "id": "ext:201",
+      "kind": "extension",
+      "num": "201",
+      "label": "Reception",
+      "meta": ""
+    },
+    {
+      "id": "ext:202",
+      "kind": "extension",
+      "num": "202",
+      "label": "Front Desk",
+      "meta": ""
+    },
+    {
+      "id": "ext:203",
+      "kind": "extension",
+      "num": "203",
+      "label": "Back Office",
+      "meta": ""
+    },
+    {
+      "id": "ext:204",
+      "kind": "extension",
+      "num": "204",
+      "label": "Warehouse",
+      "meta": ""
+    }
+  ],
+  "edges": [
+    {
+      "src": "lg:1",
+      "tgt": "ext:201",
+      "kind": "ring_key",
+      "label": "rings"
+    },
+    {
+      "src": "lg:1",
+      "tgt": "ext:202",
+      "kind": "ring_key",
+      "label": "rings"
+    },
+    {
+      "src": "lg:1",
+      "tgt": "ext:203",
+      "kind": "ring_key",
+      "label": "rings"
+    },
+    {
+      "src": "lg:1",
+      "tgt": "ext:204",
+      "kind": "ring_key",
+      "label": "rings"
+    }
+  ],
+  "stats": {
+    "nodes": 5,
+    "edges": 4,
+    "unresolved": 0
+  }
+}

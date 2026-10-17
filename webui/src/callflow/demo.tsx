@@ -1,11 +1,11 @@
 /**
  * Dev / QA harness for the Call Flow renderer — NOT part of the shipped
  * webui.html (the main build only bundles index.html → main.tsx → App). It
- * mounts the ported CallFlowCanvas against the three frozen contract fixtures
+ * mounts the ported CallFlowCanvas against the frozen contract fixtures
  * (callflow-port/contract/fixtures) so the renderer can be validated (lays out
  * + draws without error) and screenshotted offline, with no backend.
  *
- * Pick a fixture with the URL hash: #a | #b | #c (default #b, the owner's
+ * Pick a fixture with the URL hash: #a | #b | #c | #d (default #b, the owner's
  * analog-line-group-with-ports case). Built via vite.demo.config.ts.
  */
 import * as React from "react";
@@ -16,11 +16,13 @@ import type { CallFlowGraph, LayoutModel } from "./types";
 import a from "./__fixtures__/a_did_ivr.json";
 import b from "./__fixtures__/b_analog_line_group.json";
 import c from "./__fixtures__/c_day_night_vm_fallback.json";
+import d from "./__fixtures__/d_ring_by_key.json";
 
 const FIXTURES: Record<string, { title: string; graph: CallFlowGraph }> = {
   a: { title: "a — DID → auto-attendant (IVR keys, unresolved option)", graph: a as unknown as CallFlowGraph },
   b: { title: "b — analog line group with member ports (day/night)", graph: b as unknown as CallFlowGraph },
   c: { title: "c — trunk group day/night + no-answer → VM fallback", graph: c as unknown as CallFlowGraph },
+  d: { title: "d — ring-by-key: line group rings its keyset stations (1.1.0)", graph: d as unknown as CallFlowGraph },
 };
 
 function Demo() {

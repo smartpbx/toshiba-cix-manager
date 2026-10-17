@@ -1,9 +1,10 @@
 /**
- * Call Flow — neutral graph contract types.  [FROZEN v1.0.0 — 2026-10-17]
+ * Call Flow — neutral graph contract types.  [v1.1.0 — 2026-10-18]
  *
  * Mirrors callflow-port/contract/callflow.ts. The Python adapter PRODUCES this
  * shape and the React renderer CONSUMES it. Edge source/target fields are
  * `src`/`tgt` VERBATIM so the ported layout engine needs no edits.
+ * 1.1.0 adds the `ring_key` edge kind (backward-compatible).
  */
 
 export type NodeKind =
@@ -38,6 +39,7 @@ export type EdgeKind =
   | "cf_off"
   | "timeout"
   | "fwd"
+  | "ring_key"
   | "vm";
 
 export type Condition =
@@ -105,8 +107,8 @@ export interface CallFlowCoverage {
 }
 
 /** The callflow endpoint envelope the engine returns. The `graph` stays the
- * FROZEN v1.0.0 contract; everything that explains an empty/partial diagram
- * rides here on the envelope, never inside the graph. */
+ * versioned contract shape (1.1.0); everything that explains an empty/partial
+ * diagram rides here on the envelope, never inside the graph. */
 export interface CallFlowResult {
   ok: boolean;
   available: boolean;
