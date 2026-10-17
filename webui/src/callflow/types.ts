@@ -90,11 +90,30 @@ export interface CallFlowGraph {
   stats: CallFlowStats;
 }
 
-/** The callflow endpoint envelope the engine returns. */
+/** Read coverage of one inbound-routing program (envelope metadata). */
+export interface RoutingProgramStatus {
+  title: string;
+  /** "present" = has rows, "empty" = read but no rows, "missing" = not read. */
+  status: "present" | "empty" | "missing";
+}
+
+/** Envelope metadata: which routing tables the read covered, and how many
+ * answer points are actually programmed (a non-"no data" destination). */
+export interface CallFlowCoverage {
+  programs: Record<string, RoutingProgramStatus>;
+  answer_points_programmed: number;
+}
+
+/** The callflow endpoint envelope the engine returns. The `graph` stays the
+ * FROZEN v1.0.0 contract; everything that explains an empty/partial diagram
+ * rides here on the envelope, never inside the graph. */
 export interface CallFlowResult {
   ok: boolean;
   available: boolean;
+  /** False when entry points exist but no onward routing could be drawn. */
+  routing_complete?: boolean;
   reason?: string | null;
+  coverage?: CallFlowCoverage | null;
   graph?: CallFlowGraph | null;
 }
 

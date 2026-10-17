@@ -44,6 +44,11 @@ export interface CallFlowCanvasHandle {
 
 const EMPTY = new Set<string>();
 
+// Fit may zoom IN, not just out: a handful of nodes used to sit tiny in the
+// middle of a big canvas because fit was clamped at 1×. Cap the zoom-in so a
+// small graph fills the viewport without the boxes becoming cartoonishly large.
+const FIT_MAX_ZOOM = 1.6;
+
 export const CallFlowCanvas = React.forwardRef<CallFlowCanvasHandle, CallFlowCanvasProps>(
   function CallFlowCanvas(props, ref) {
     const {
@@ -139,7 +144,7 @@ export const CallFlowCanvas = React.forwardRef<CallFlowCanvasHandle, CallFlowCan
       view.current.zoom = Math.max(0.1, Math.min(
         (c.clientWidth - pad * 2) / model.width,
         (c.clientHeight - pad * 2) / model.height,
-        1,
+        FIT_MAX_ZOOM,
       ));
       view.current.tx = (c.clientWidth - model.width * view.current.zoom) / 2;
       view.current.ty = Math.max(pad, (c.clientHeight - model.height * view.current.zoom) / 2);

@@ -593,5 +593,139 @@ def build_callflow(program_views: dict) -> dict:
     return _Builder(program_views or {}).graph()
 
 
-__all__ = ["build_callflow", "callflow_available", "CONTRACT_VERSION",
-           "ROUTING_PROGRAMS"]
+# --------------------------------------------------------------------------
+# Read coverage + honest diagnosis — ENVELOPE metadata, not the graph.
+#
+# The graph object is the FROZEN v1.0.0 contract (callflow.schema.json has
+# additionalProperties:false on the object *and* on stats), so none of this can
+# live inside it. It rides on the /callflow endpoint envelope instead, so the UI
+# can tell three cases apart that otherwise all look like an empty diagram:
+#   1. CORE-only read            → routing programs not read at all
+#   2. partial / scoped read     → an answer-point table (310/318/309) is missing
+#   3. genuinely unrouted system → the tables ARE read but every destination is
+#      'no data' (the CIX rings stations directly by CO-line key, which SNMP's
+#      routing tables do not express — so there is nothing to draw, truthfully).
+# --------------------------------------------------------------------------
+_ENTRYPOINT_PROGRAMS = {"309": "DID numbers",
+                        "304": "Incoming line / trunk groups"}
+_ANSWER_POINT_PROGRAMS = {"310": "DIT — per-line answer points",
+                          "318": "No-DID answer points",
+                          "309": "DID answer points"}
+
+# Per program, the (day1, day2, night) destination-TYPE field triple whose value
+# says whether a mode answers anywhere. Mirrors what build_groups/build_dids read.
+_ANSWER_TYPE_FIELDS = {
+    "310": ("ditDay1AudioDestinationType", "ditDay2AudioDestinationType",
+            "ditNightAudioDestinationType"),
+    "318": ("noDidDay1AudioDestinationType", "noDidDay2AudioDestinationType",
+            "noDidNightAudioDestinationType"),
+    "309": ("didDay1AudioDestinationType", "didDay2AudioDestinationType",
+            "didNightAudioDestinationType"),
+}
+# Destination types that actually send a call somewhere (vs noData / none).
+_ROUTING_DEST_TYPES = {"dialingDigits", "dISA", "nightBell", "built-inModem"}
+
+
+def _program_rows(program_views: dict, num: str):
+    """Rows of program ``num``, or ``None`` when the program is absent entirely.
+
+    ``None`` (not read) is deliberately distinct from ``[]`` (read, no rows)."""
+    for pv in (program_views or {}).get("programs", []):
+        if str(pv.get("program_number")) == num:
+            return pv.get("rows") or []
+    return None
+
+
+def callflow_coverage(program_views: dict) -> dict:
+    """Read coverage of the inbound-routing tables + a count of answer points
+    actually programmed (a non-'no data' destination in any mode). Pure."""
+    def status(num: str) -> str:
+        rows = _program_rows(program_views, num)
+        if rows is None:
+            return "missing"
+        return "present" if rows else "empty"
+
+    programs = {num: {"title": title, "status": status(num)}
+                for num, title in {**_ENTRYPOINT_PROGRAMS,
+                                    **_ANSWER_POINT_PROGRAMS}.items()}
+    programmed = 0
+    for num, type_fields in _ANSWER_TYPE_FIELDS.items():
+        for row in (_program_rows(program_views, num) or []):
+            cells = {c.get("field_name"): c for c in row.get("cells", [])}
+            if any(_s(cells.get(f)) in _ROUTING_DEST_TYPES for f in type_fields):
+                programmed += 1
+    return {"programs": programs, "answer_points_programmed": programmed}
+
+
+def callflow_diagnosis(program_views: dict) -> dict:
+    """Everything the /callflow endpoint returns: availability, the frozen-shape
+    graph, read coverage, and — when entry points exist but nothing could be
+    drawn — an honest reason distinguishing an incomplete read from a system
+    whose inbound routing simply is not in the SNMP routing tables. Pure.
+
+    ``routing_complete`` is True when every entry point reaches an answer (or
+    there are no entry points at all); False means the diagram would be entry
+    points with no onward edges, and ``reason`` says why.
+    """
+    available = callflow_available(program_views)
+    coverage = callflow_coverage(program_views)
+    if not available:
+        return {
+            "available": False,
+            "routing_complete": False,
+            "graph": None,
+            "coverage": coverage,
+            "reason": (
+                "No inbound-routing programs (304 / 309 / 310 / 318) in this "
+                "read — it was almost certainly a CORE-only read. Run a full "
+                "read (Connect does core→all; the Backups page can take a full "
+                "snapshot) so the routing tables are present."),
+        }
+
+    graph = build_callflow(program_views)
+    entry_ids = set(graph["entrypoints"])
+    answer_edges = sum(1 for e in graph["edges"] if e["src"] in entry_ids)
+    complete = (not entry_ids) or answer_edges > 0
+
+    reason = None
+    if entry_ids and answer_edges == 0:
+        progs = coverage["programs"]
+        has_did = bool(_program_rows(program_views, "309"))
+        # Answer-point tables that matter for what is present: the ILG tables
+        # always, the DID table only when there are DIDs.
+        critical = ["310", "318"] + (["309"] if has_did else [])
+        missing = [n for n in critical
+                   if progs.get(n, {}).get("status") == "missing"]
+        if missing:
+            names = ", ".join(f"program {n}" for n in missing)
+            reason = (
+                f"Routing data is incomplete — the answer-point "
+                f"{'tables' if len(missing) != 1 else 'table'} ({names}) "
+                f"{'were' if len(missing) != 1 else 'was'} not in this read. "
+                "Run a full read (Connect does core→all, or take a full "
+                "snapshot) so the inbound routing can be drawn.")
+        elif coverage["answer_points_programmed"] == 0:
+            reason = (
+                "Entry points were found, but no inbound answer points are "
+                "programmed — the DID / DIT tables (309 / 310 / 318) are "
+                "present but every destination is set to ‘no data’. "
+                "On a system like this the incoming lines ring stations "
+                "directly by CO-line key assignment, which the CIX does not "
+                "express in its SNMP routing tables, so there is nothing to "
+                "draw here.")
+        else:
+            reason = (
+                "Entry points were found, but none routes onward in the read "
+                "routing tables. The read may be partial — try a full read.")
+
+    return {
+        "available": True,
+        "routing_complete": complete,
+        "graph": graph,
+        "coverage": coverage,
+        "reason": reason,
+    }
+
+
+__all__ = ["build_callflow", "callflow_available", "callflow_coverage",
+           "callflow_diagnosis", "CONTRACT_VERSION", "ROUTING_PROGRAMS"]
