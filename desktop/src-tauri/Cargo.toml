@@ -1,6 +1,6 @@
 [package]
 name = "switchroom"
-version = "2.3.0"
+version = "2.4.0"
 description = "Switchroom — native desktop shell for the Toshiba CIX Manager engine"
 authors = ["E-wee"]
 license = "MIT"

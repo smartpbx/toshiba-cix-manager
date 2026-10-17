@@ -1,6 +1,6 @@
 {
   "name": "switchroom-desktop",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "private": true,
   "description": "Tauri v2 native desktop shell for the Toshiba CIX Manager engine. Node + the Tauri CLI are a build-time toolchain only; nothing here ships in the Python wheel or amalgam.",
   "scripts": {

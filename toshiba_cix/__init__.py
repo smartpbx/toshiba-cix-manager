@@ -26,7 +26,7 @@ from __future__ import annotations
 # Defined BEFORE the submodule imports below: backup.py does
 # ``from . import __version__`` at import time, so the name must already exist
 # on the package when that import runs.
-__version__ = "2.3.0"
+__version__ = "2.4.0"
 
 # NOTE: ``backup`` and ``restore`` are intentionally *not* re-exported as
 # functions here — that would shadow the ``toshiba_cix.backup`` /

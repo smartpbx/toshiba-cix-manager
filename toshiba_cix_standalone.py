@@ -10,7 +10,7 @@ import argparse, json, logging, socket, sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Iterable
-__version__ = "2.3.0"
+__version__ = "2.4.0"
 
 # ===== snmp.py =====================================================
 """Pure-stdlib SNMPv1 client (BER GET / GETNEXT), no external dependencies.
