@@ -48,8 +48,10 @@ export function UpdateButton() {
     <button
       onClick={() => {
         setDialogOpen(true);
-        // Re-check on open unless we already have a current reading.
-        if (!info) void checkUpdate();
+        // Always re-check on open: the launch-time reading goes stale once a
+        // newer release ships while the app stays open, so a cached result
+        // must never short-circuit the fetch.
+        void checkUpdate();
       }}
       className="relative flex h-8 w-8 items-center justify-center rounded-md border border-border bg-surface-2 text-fg-2 hover:border-line-strong"
       title={
@@ -142,11 +144,24 @@ function UpdatesBody() {
   // Up to date.
   if (!info.newer) {
     return (
-      <div className="flex items-start gap-2 rounded-md bg-ok-tint p-3 text-sm">
-        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-ok" />
-        <span className="text-fg">
-          You're on the latest — <strong>v{info.current}</strong>.
-        </span>
+      <div className="space-y-3">
+        <div className="flex items-start gap-2 rounded-md bg-ok-tint p-3 text-sm">
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-ok" />
+          <span className="text-fg">
+            You're on the latest — <strong>v{info.current}</strong>.
+          </span>
+        </div>
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => void checkUpdate()}
+            disabled={checking}
+          >
+            <RefreshCw className={"h-4 w-4 " + (checking ? "animate-spin" : "")} />
+            Check again
+          </Button>
+        </div>
       </div>
     );
   }
